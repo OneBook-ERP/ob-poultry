@@ -26,6 +26,15 @@
             "label": "% of Batch",
             "read_only": 1,
             "in_list_view": 1
+        },
+        {
+            "fieldname": "category",
+            "fieldtype": "Select",
+            "label": "Category",
+            "options": "Raw Material\nMedicine",
+            "default": "Raw Material",
+            "reqd": 1,
+            "in_list_view": 1
         }
     ]
 }

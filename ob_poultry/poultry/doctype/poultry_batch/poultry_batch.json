@@ -100,8 +100,95 @@
             "description": "Warehouse that feed stock is issued from when logging daily feed consumption"
         },
         {
+            "fieldname": "cumulative_feed_kg",
+            "fieldtype": "Float",
+            "label": "Cumulative Feed (kg)",
+            "read_only": 1
+        },
+        {
             "fieldname": "column_break_batch_3",
             "fieldtype": "Column Break"
+        },
+        {
+            "fieldname": "fcr",
+            "fieldtype": "Float",
+            "label": "FCR",
+            "read_only": 1,
+            "precision": "3",
+            "default": "0"
+        },
+        {
+            "fieldname": "cfcr",
+            "fieldtype": "Float",
+            "label": "CFCR",
+            "read_only": 1,
+            "precision": "3",
+            "default": "0",
+            "description": "Mortality-corrected FCR. Uses the batch's latest recorded average body weight to value mortality weight — an approximation; confirm the formula with farm operations before using it for any payout calculation."
+        },
+        {
+            "fieldname": "section_break_batch_sexed",
+            "fieldtype": "Section Break",
+            "label": "Sexed Count",
+            "collapsible": 1,
+            "description": "Optional breakdown for breeder flocks; initial_bird_count remains the total."
+        },
+        {
+            "fieldname": "male_bird_count",
+            "fieldtype": "Int",
+            "label": "Male Bird Count"
+        },
+        {
+            "fieldname": "column_break_batch_4",
+            "fieldtype": "Column Break"
+        },
+        {
+            "fieldname": "female_bird_count",
+            "fieldtype": "Int",
+            "label": "Female Bird Count"
+        },
+        {
+            "fieldname": "section_break_batch_contract",
+            "fieldtype": "Section Break",
+            "label": "Contract Farming",
+            "collapsible": 1
+        },
+        {
+            "fieldname": "flock_source",
+            "fieldtype": "Select",
+            "label": "Flock Source",
+            "options": "Owned\nContract",
+            "default": "Owned",
+            "in_list_view": 1
+        },
+        {
+            "fieldname": "farmer",
+            "fieldtype": "Link",
+            "label": "Farmer",
+            "options": "Poultry Farmer",
+            "depends_on": "eval:doc.flock_source=='Contract'"
+        },
+        {
+            "fieldname": "column_break_batch_5",
+            "fieldtype": "Column Break"
+        },
+        {
+            "fieldname": "growing_charge_scheme",
+            "fieldtype": "Link",
+            "label": "Growing Charge Scheme",
+            "options": "Poultry Growing Charge Scheme",
+            "depends_on": "eval:doc.flock_source=='Contract'"
+        },
+        {
+            "fieldname": "growing_charge_amount",
+            "fieldtype": "Currency",
+            "label": "Growing Charge Amount",
+            "read_only": 1,
+            "depends_on": "eval:doc.flock_source=='Contract'"
+        },
+        {
+            "fieldname": "section_break_batch_source",
+            "fieldtype": "Section Break"
         },
         {
             "fieldname": "source",
@@ -123,6 +210,25 @@
             "write": 1,
             "create": 1,
             "delete": 1
+        },
+        {
+            "role": "Poultry Manager",
+            "read": 1,
+            "write": 1,
+            "create": 1,
+            "delete": 1
+        },
+        {
+            "role": "Poultry Attendant",
+            "read": 1
+        },
+        {
+            "role": "Vaccination In-charge",
+            "read": 1
+        },
+        {
+            "role": "Feed Mill Operator",
+            "read": 1
         }
     ]
 }

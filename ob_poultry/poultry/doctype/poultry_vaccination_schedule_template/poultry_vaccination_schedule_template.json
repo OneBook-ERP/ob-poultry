@@ -1,0 +1,67 @@
+{
+    "doctype": "DocType",
+    "name": "Poultry Vaccination Schedule Template",
+    "module": "Poultry",
+    "engine": "InnoDB",
+    "autoname": "field:template_name",
+    "track_changes": 1,
+    "fields": [
+        {
+            "fieldname": "template_name",
+            "fieldtype": "Data",
+            "label": "Template Name",
+            "reqd": 1,
+            "unique": 1,
+            "in_list_view": 1
+        },
+        {
+            "fieldname": "breed",
+            "fieldtype": "Link",
+            "label": "Breed",
+            "options": "Poultry Breed",
+            "reqd": 1,
+            "in_list_view": 1
+        },
+        {
+            "fieldname": "column_break_template_1",
+            "fieldtype": "Column Break"
+        },
+        {
+            "fieldname": "is_active",
+            "fieldtype": "Check",
+            "label": "Is Active",
+            "default": "1",
+            "in_list_view": 1
+        },
+        {
+            "fieldname": "section_break_template_items",
+            "fieldtype": "Section Break",
+            "label": "Schedule"
+        },
+        {
+            "fieldname": "items",
+            "fieldtype": "Table",
+            "label": "Items",
+            "options": "Poultry Vaccination Schedule Item",
+            "reqd": 1
+        }
+    ],
+    "sort_field": "modified",
+    "sort_order": "DESC",
+    "permissions": [
+        {
+            "role": "System Manager",
+            "read": 1,
+            "write": 1,
+            "create": 1,
+            "delete": 1
+        },
+        {
+            "role": "Poultry Manager",
+            "read": 1,
+            "write": 1,
+            "create": 1,
+            "delete": 1
+        }
+    ]
+}

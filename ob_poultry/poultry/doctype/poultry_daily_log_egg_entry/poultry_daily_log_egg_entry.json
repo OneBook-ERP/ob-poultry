@@ -1,0 +1,43 @@
+{
+    "doctype": "DocType",
+    "name": "Poultry Daily Log Egg Entry",
+    "module": "Poultry",
+    "engine": "InnoDB",
+    "istable": 1,
+    "fields": [
+        {
+            "fieldname": "grade",
+            "fieldtype": "Select",
+            "label": "Grade",
+            "options": "Hatching Egg\nTable Egg\nJumbo Egg\nCracked Egg\nWaste Egg",
+            "reqd": 1,
+            "in_list_view": 1
+        },
+        {
+            "fieldname": "opening_count",
+            "fieldtype": "Int",
+            "label": "Opening Count",
+            "read_only": 1,
+            "in_list_view": 1
+        },
+        {
+            "fieldname": "production_count",
+            "fieldtype": "Int",
+            "label": "Production Count",
+            "reqd": 1,
+            "in_list_view": 1
+        },
+        {
+            "fieldname": "closing_count",
+            "fieldtype": "Int",
+            "label": "Closing Count",
+            "read_only": 1,
+            "in_list_view": 1
+        },
+        {
+            "fieldname": "avg_weight_g",
+            "fieldtype": "Float",
+            "label": "Avg Weight (g)"
+        }
+    ]
+}

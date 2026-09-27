@@ -1,0 +1,124 @@
+{
+    "doctype": "DocType",
+    "name": "Poultry Hatch",
+    "module": "Poultry",
+    "engine": "InnoDB",
+    "autoname": "format:HTCH-{YYYY}-{#####}",
+    "naming_rule": "Expression (old style)",
+    "track_changes": 1,
+    "fields": [
+        {
+            "fieldname": "hatchery",
+            "fieldtype": "Link",
+            "label": "Hatchery",
+            "options": "Poultry Hatchery",
+            "reqd": 1,
+            "in_list_view": 1
+        },
+        {
+            "fieldname": "status",
+            "fieldtype": "Select",
+            "label": "Status",
+            "options": "Scheduled\nSetting\nHatching\nClosed",
+            "default": "Scheduled",
+            "in_list_view": 1
+        },
+        {
+            "fieldname": "column_break_hatch_1",
+            "fieldtype": "Column Break"
+        },
+        {
+            "fieldname": "schedule_date",
+            "fieldtype": "Date",
+            "label": "Schedule Date",
+            "default": "Today",
+            "reqd": 1,
+            "in_list_view": 1
+        },
+        {
+            "fieldname": "setting_date",
+            "fieldtype": "Date",
+            "label": "Setting Date"
+        },
+        {
+            "fieldname": "section_break_hatch_dates",
+            "fieldtype": "Section Break",
+            "label": "Incubation"
+        },
+        {
+            "fieldname": "candling_date",
+            "fieldtype": "Date",
+            "label": "Candling Date"
+        },
+        {
+            "fieldname": "transfer_date",
+            "fieldtype": "Date",
+            "label": "Transfer Date"
+        },
+        {
+            "fieldname": "column_break_hatch_2",
+            "fieldtype": "Column Break"
+        },
+        {
+            "fieldname": "hatch_date",
+            "fieldtype": "Date",
+            "label": "Hatch Date"
+        },
+        {
+            "fieldname": "section_break_hatch_yield",
+            "fieldtype": "Section Break",
+            "label": "Eggs & Chicks"
+        },
+        {
+            "fieldname": "eggs_set",
+            "fieldtype": "Int",
+            "label": "Eggs Set",
+            "reqd": 1,
+            "in_list_view": 1
+        },
+        {
+            "fieldname": "standard_hatchability_pct",
+            "fieldtype": "Percent",
+            "label": "Standard Hatchability %"
+        },
+        {
+            "fieldname": "column_break_hatch_3",
+            "fieldtype": "Column Break"
+        },
+        {
+            "fieldname": "estimated_chicks",
+            "fieldtype": "Int",
+            "label": "Estimated Chicks",
+            "read_only": 1
+        },
+        {
+            "fieldname": "actual_chicks",
+            "fieldtype": "Int",
+            "label": "Actual Chicks",
+            "in_list_view": 1
+        },
+        {
+            "fieldname": "notes",
+            "fieldtype": "Small Text",
+            "label": "Notes"
+        }
+    ],
+    "sort_field": "schedule_date",
+    "sort_order": "DESC",
+    "permissions": [
+        {
+            "role": "System Manager",
+            "read": 1,
+            "write": 1,
+            "create": 1,
+            "delete": 1
+        },
+        {
+            "role": "Poultry Manager",
+            "read": 1,
+            "write": 1,
+            "create": 1,
+            "delete": 1
+        }
+    ]
+}

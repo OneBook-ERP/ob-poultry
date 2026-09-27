@@ -45,6 +45,17 @@
             "write": 1,
             "create": 1,
             "delete": 1
+        },
+        {
+            "role": "Poultry Manager",
+            "read": 1,
+            "write": 1,
+            "create": 1,
+            "delete": 1
+        },
+        {
+            "role": "Poultry Attendant",
+            "read": 1
         }
     ]
 }

@@ -1,0 +1,18 @@
+{
+ "app": "ob_poultry",
+ "docstatus": 0,
+ "doctype": "Desktop Icon",
+ "hidden": 0,
+ "icon": "bird",
+ "icon_type": "Link",
+ "idx": 1,
+ "label": "Poultry",
+ "link_to": "Poultry",
+ "link_type": "Workspace Sidebar",
+ "name": "Poultry",
+ "owner": "Administrator",
+ "parent_icon": "",
+ "restrict_removal": 0,
+ "roles": [],
+ "standard": 1
+}

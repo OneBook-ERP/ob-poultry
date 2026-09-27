@@ -15,6 +15,13 @@
             "in_list_view": 1
         },
         {
+            "fieldname": "due",
+            "fieldtype": "Link",
+            "label": "Due",
+            "options": "Poultry Vaccination Due",
+            "description": "Optional: link this record to a generated due item to close it out automatically"
+        },
+        {
             "fieldname": "vaccine_name",
             "fieldtype": "Data",
             "label": "Vaccine Name",
@@ -64,6 +71,19 @@
             "write": 1,
             "create": 1,
             "delete": 1
+        },
+        {
+            "role": "Poultry Manager",
+            "read": 1,
+            "write": 1,
+            "create": 1,
+            "delete": 1
+        },
+        {
+            "role": "Vaccination In-charge",
+            "read": 1,
+            "write": 1,
+            "create": 1
         }
     ]
 }

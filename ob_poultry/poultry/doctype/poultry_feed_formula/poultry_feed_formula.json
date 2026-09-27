@@ -54,6 +54,34 @@
             "reqd": 1
         },
         {
+            "fieldname": "raw_material_total_kg",
+            "fieldtype": "Float",
+            "label": "Raw Material Total (kg)",
+            "read_only": 1
+        },
+        {
+            "fieldname": "column_break_formula_2",
+            "fieldtype": "Column Break"
+        },
+        {
+            "fieldname": "medicine_total_kg",
+            "fieldtype": "Float",
+            "label": "Medicine Total (kg)",
+            "read_only": 1
+        },
+        {
+            "fieldname": "section_break_formula_nutrients",
+            "fieldtype": "Section Break",
+            "label": "Nutrients",
+            "collapsible": 1
+        },
+        {
+            "fieldname": "nutrients",
+            "fieldtype": "Table",
+            "label": "Nutrients",
+            "options": "Poultry Feed Formula Nutrient"
+        },
+        {
             "fieldname": "section_break_formula_bom",
             "fieldtype": "Section Break",
             "label": "Manufacturing"
@@ -71,6 +99,20 @@
     "permissions": [
         {
             "role": "System Manager",
+            "read": 1,
+            "write": 1,
+            "create": 1,
+            "delete": 1
+        },
+        {
+            "role": "Poultry Manager",
+            "read": 1,
+            "write": 1,
+            "create": 1,
+            "delete": 1
+        },
+        {
+            "role": "Feed Mill Operator",
             "read": 1,
             "write": 1,
             "create": 1,

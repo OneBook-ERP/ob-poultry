@@ -1,0 +1,16 @@
+{
+    "doctype": "Number Card",
+    "name": "Total Active Birds",
+    "module": "Poultry",
+    "document_type": "Poultry Batch",
+    "type": "Document Type",
+    "function": "Sum",
+    "aggregate_function_based_on": "current_bird_count",
+    "filters_json": "[[\"Poultry Batch\",\"status\",\"=\",\"Active\"]]",
+    "dynamic_filters_json": "[]",
+    "label": "Total Active Birds",
+    "is_public": 1,
+    "is_standard": 1,
+    "show_percentage_stats": 1,
+    "stats_time_interval": "Daily"
+}

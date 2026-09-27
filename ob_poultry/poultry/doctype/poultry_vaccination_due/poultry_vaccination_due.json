@@ -1,0 +1,94 @@
+{
+    "doctype": "DocType",
+    "name": "Poultry Vaccination Due",
+    "module": "Poultry",
+    "engine": "InnoDB",
+    "autoname": "format:PVD-{YYYY}-{#####}",
+    "naming_rule": "Expression (old style)",
+    "fields": [
+        {
+            "fieldname": "batch",
+            "fieldtype": "Link",
+            "label": "Batch",
+            "options": "Poultry Batch",
+            "reqd": 1,
+            "in_list_view": 1
+        },
+        {
+            "fieldname": "vaccine_name",
+            "fieldtype": "Data",
+            "label": "Vaccine Name",
+            "read_only": 1,
+            "in_list_view": 1
+        },
+        {
+            "fieldname": "dose",
+            "fieldtype": "Data",
+            "label": "Dose",
+            "read_only": 1
+        },
+        {
+            "fieldname": "method",
+            "fieldtype": "Select",
+            "label": "Method",
+            "options": "SubCutaneous\nIntramuscular\nEye Drop\nBeak Dip\nDrinking Water\nSpray\nWing Web\nOther",
+            "read_only": 1
+        },
+        {
+            "fieldname": "column_break_due_1",
+            "fieldtype": "Column Break"
+        },
+        {
+            "fieldname": "age_in_days",
+            "fieldtype": "Int",
+            "label": "Age (Days)",
+            "read_only": 1,
+            "in_list_view": 1
+        },
+        {
+            "fieldname": "due_date",
+            "fieldtype": "Date",
+            "label": "Due Date",
+            "read_only": 1,
+            "in_list_view": 1
+        },
+        {
+            "fieldname": "status",
+            "fieldtype": "Select",
+            "label": "Status",
+            "options": "Pending\nDone\nSkipped",
+            "default": "Pending",
+            "in_list_view": 1
+        },
+        {
+            "fieldname": "vaccination_record",
+            "fieldtype": "Link",
+            "label": "Vaccination Record",
+            "options": "Poultry Vaccination Record",
+            "read_only": 1
+        }
+    ],
+    "sort_field": "due_date",
+    "sort_order": "ASC",
+    "permissions": [
+        {
+            "role": "System Manager",
+            "read": 1,
+            "write": 1,
+            "create": 1,
+            "delete": 1
+        },
+        {
+            "role": "Poultry Manager",
+            "read": 1,
+            "write": 1,
+            "create": 1,
+            "delete": 1
+        },
+        {
+            "role": "Vaccination In-charge",
+            "read": 1,
+            "write": 1
+        }
+    ]
+}

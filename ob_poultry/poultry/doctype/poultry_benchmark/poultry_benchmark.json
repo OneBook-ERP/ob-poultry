@@ -1,0 +1,66 @@
+{
+    "doctype": "DocType",
+    "name": "Poultry Benchmark",
+    "module": "Poultry",
+    "engine": "InnoDB",
+    "autoname": "hash",
+    "fields": [
+        {
+            "fieldname": "breed",
+            "fieldtype": "Link",
+            "label": "Breed",
+            "options": "Poultry Breed",
+            "reqd": 1,
+            "in_list_view": 1
+        },
+        {
+            "fieldname": "age_in_days",
+            "fieldtype": "Int",
+            "label": "Age (Days)",
+            "reqd": 1,
+            "in_list_view": 1
+        },
+        {
+            "fieldname": "column_break_benchmark_1",
+            "fieldtype": "Column Break"
+        },
+        {
+            "fieldname": "standard_mortality_pct",
+            "fieldtype": "Percent",
+            "label": "Standard Mortality %"
+        },
+        {
+            "fieldname": "standard_feed_per_bird_g",
+            "fieldtype": "Float",
+            "label": "Standard Feed / Bird (g)"
+        },
+        {
+            "fieldname": "standard_body_weight_g",
+            "fieldtype": "Float",
+            "label": "Standard Body Weight (g)"
+        },
+        {
+            "fieldname": "standard_fcr",
+            "fieldtype": "Float",
+            "label": "Standard FCR"
+        }
+    ],
+    "sort_field": "age_in_days",
+    "sort_order": "ASC",
+    "permissions": [
+        {
+            "role": "System Manager",
+            "read": 1,
+            "write": 1,
+            "create": 1,
+            "delete": 1
+        },
+        {
+            "role": "Poultry Manager",
+            "read": 1,
+            "write": 1,
+            "create": 1,
+            "delete": 1
+        }
+    ]
+}

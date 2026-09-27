@@ -1,0 +1,30 @@
+{
+    "doctype": "DocType",
+    "name": "Poultry Growing Charge Rate",
+    "module": "Poultry",
+    "engine": "InnoDB",
+    "istable": 1,
+    "fields": [
+        {
+            "fieldname": "min_weight_g",
+            "fieldtype": "Float",
+            "label": "Min Weight (g)",
+            "reqd": 1,
+            "in_list_view": 1
+        },
+        {
+            "fieldname": "max_weight_g",
+            "fieldtype": "Float",
+            "label": "Max Weight (g)",
+            "description": "Leave blank for no upper bound",
+            "in_list_view": 1
+        },
+        {
+            "fieldname": "rate_per_kg",
+            "fieldtype": "Currency",
+            "label": "Rate per Kg",
+            "reqd": 1,
+            "in_list_view": 1
+        }
+    ]
+}

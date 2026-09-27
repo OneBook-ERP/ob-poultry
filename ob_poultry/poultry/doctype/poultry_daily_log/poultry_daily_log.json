@@ -34,15 +34,28 @@
             "label": "Average Body Weight (g)"
         },
         {
+            "fieldname": "std_body_weight_g",
+            "fieldtype": "Float",
+            "label": "Standard Body Weight (g)",
+            "read_only": 1
+        },
+        {
             "fieldname": "section_break_log_birds",
             "fieldtype": "Section Break",
             "label": "Birds"
+        },
+        {
+            "fieldname": "mortality_details",
+            "fieldtype": "Table",
+            "label": "Mortality Detail",
+            "options": "Poultry Daily Log Mortality Entry"
         },
         {
             "fieldname": "mortality_count",
             "fieldtype": "Int",
             "label": "Mortality Count",
             "default": "0",
+            "read_only": 1,
             "in_list_view": 1
         },
         {
@@ -54,6 +67,12 @@
             "fieldtype": "Int",
             "label": "Cull Count",
             "default": "0"
+        },
+        {
+            "fieldname": "std_mortality_pct",
+            "fieldtype": "Percent",
+            "label": "Standard Mortality %",
+            "read_only": 1
         },
         {
             "fieldname": "section_break_log_feed",
@@ -80,6 +99,12 @@
             "read_only": 1
         },
         {
+            "fieldname": "std_feed_per_bird_g",
+            "fieldtype": "Float",
+            "label": "Standard Feed / Bird (g)",
+            "read_only": 1
+        },
+        {
             "fieldname": "column_break_log_3",
             "fieldtype": "Column Break"
         },
@@ -91,12 +116,37 @@
         {
             "fieldname": "section_break_log_production",
             "fieldtype": "Section Break",
-            "label": "Production"
+            "label": "Egg Production"
+        },
+        {
+            "fieldname": "egg_entries",
+            "fieldtype": "Table",
+            "label": "Egg Entries",
+            "options": "Poultry Daily Log Egg Entry"
+        },
+        {
+            "fieldname": "total_eggs_produced",
+            "fieldtype": "Int",
+            "label": "Total Eggs Produced",
+            "read_only": 1,
+            "in_list_view": 1
+        },
+        {
+            "fieldname": "column_break_log_4",
+            "fieldtype": "Column Break"
+        },
+        {
+            "fieldname": "hdep_percent",
+            "fieldtype": "Percent",
+            "label": "HDEP %",
+            "read_only": 1
         },
         {
             "fieldname": "egg_count",
             "fieldtype": "Int",
-            "label": "Eggs Collected"
+            "label": "Eggs Collected (Deprecated)",
+            "read_only": 1,
+            "description": "Superseded by Egg Entries above; kept read-only for historical rows."
         },
         {
             "fieldname": "notes",
@@ -115,6 +165,22 @@
             "delete": 1,
             "submit": 1,
             "cancel": 1
+        },
+        {
+            "role": "Poultry Manager",
+            "read": 1,
+            "write": 1,
+            "create": 1,
+            "delete": 1,
+            "submit": 1,
+            "cancel": 1
+        },
+        {
+            "role": "Poultry Attendant",
+            "read": 1,
+            "write": 1,
+            "create": 1,
+            "submit": 1
         }
     ]
 }

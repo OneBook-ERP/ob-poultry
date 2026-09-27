@@ -9,10 +9,18 @@ class PoultryFeedFormula(Document):
 		self.calculate_percentages()
 
 	def calculate_percentages(self):
+		raw_material_total = 0
+		medicine_total = 0
 		for ingredient in self.ingredients:
 			ingredient.percentage = (
 				flt(ingredient.quantity_kg) / flt(self.batch_size_kg) * 100 if self.batch_size_kg else 0
 			)
+			if ingredient.category == "Medicine":
+				medicine_total += flt(ingredient.quantity_kg)
+			else:
+				raw_material_total += flt(ingredient.quantity_kg)
+		self.raw_material_total_kg = raw_material_total
+		self.medicine_total_kg = medicine_total
 
 	@frappe.whitelist()
 	def create_or_update_bom(self):

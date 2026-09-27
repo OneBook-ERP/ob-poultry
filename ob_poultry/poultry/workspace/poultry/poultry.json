@@ -1,0 +1,284 @@
+{
+ "app": "ob_poultry",
+ "charts": [],
+ "content": "[{\"id\":\"poultryHeader\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h4\\\"><b>Poultry</b></span>\",\"col\":12}},{\"id\":\"poultryShortcuts1\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Poultry Batch\",\"col\":3}},{\"id\":\"poultryShortcuts2\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"New Daily Log\",\"col\":3}},{\"id\":\"poultryShortcuts3\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Vaccination Due\",\"col\":3}},{\"id\":\"poultryShortcuts4\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Feed Formulas\",\"col\":3}},{\"id\":\"poultryOverviewHeader\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h4\\\"><b>Overview</b></span>\",\"col\":12}},{\"id\":\"poultryNC1\",\"type\":\"number_card\",\"data\":{\"number_card_name\":\"Active Batches\",\"col\":3}},{\"id\":\"poultryNC2\",\"type\":\"number_card\",\"data\":{\"number_card_name\":\"Total Active Birds\",\"col\":3}},{\"id\":\"poultryNC3\",\"type\":\"number_card\",\"data\":{\"number_card_name\":\"Pending Vaccinations\",\"col\":3}},{\"id\":\"poultryNC4\",\"type\":\"number_card\",\"data\":{\"number_card_name\":\"Active Feed Formulas\",\"col\":3}},{\"id\":\"poultryNCSpacer\",\"type\":\"spacer\",\"data\":{\"col\":12}},{\"id\":\"poultrySpacer1\",\"type\":\"spacer\",\"data\":{\"col\":12}},{\"id\":\"poultryCardsHeader\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h4\\\"><b>Masters &amp; Reports</b></span>\",\"col\":12}},{\"id\":\"poultryCardFlock\",\"type\":\"card\",\"data\":{\"card_name\":\"Flock Management\",\"col\":4}},{\"id\":\"poultryCardVac\",\"type\":\"card\",\"data\":{\"card_name\":\"Vaccination\",\"col\":4}},{\"id\":\"poultryCardFeed\",\"type\":\"card\",\"data\":{\"card_name\":\"Feed Mill\",\"col\":4}},{\"id\":\"poultryCardHatchery\",\"type\":\"card\",\"data\":{\"card_name\":\"Hatchery\",\"col\":4}},{\"id\":\"poultryCardContract\",\"type\":\"card\",\"data\":{\"card_name\":\"Contract Farming\",\"col\":4}}]",
+ "custom_blocks": [],
+ "docstatus": 0,
+ "doctype": "Workspace",
+ "for_user": "",
+ "hide_custom": 0,
+ "icon": "bird",
+ "idx": 0,
+ "is_hidden": 0,
+ "label": "Poultry",
+ "links": [
+  {
+   "type": "Card Break",
+   "label": "Flock Management",
+   "hidden": 0,
+   "is_query_report": 0,
+   "link_count": 0,
+   "onboard": 0
+  },
+  {
+   "type": "Link",
+   "label": "Shed",
+   "link_to": "Poultry Shed",
+   "link_type": "DocType",
+   "hidden": 0,
+   "is_query_report": 0,
+   "link_count": 0,
+   "onboard": 0,
+   "dependencies": ""
+  },
+  {
+   "type": "Link",
+   "label": "Breed",
+   "link_to": "Poultry Breed",
+   "link_type": "DocType",
+   "hidden": 0,
+   "is_query_report": 0,
+   "link_count": 0,
+   "onboard": 0,
+   "dependencies": ""
+  },
+  {
+   "type": "Link",
+   "label": "Batch",
+   "link_to": "Poultry Batch",
+   "link_type": "DocType",
+   "hidden": 0,
+   "is_query_report": 0,
+   "link_count": 0,
+   "onboard": 0,
+   "dependencies": ""
+  },
+  {
+   "type": "Link",
+   "label": "Daily Log",
+   "link_to": "Poultry Daily Log",
+   "link_type": "DocType",
+   "hidden": 0,
+   "is_query_report": 0,
+   "link_count": 0,
+   "onboard": 0,
+   "dependencies": ""
+  },
+  {
+   "type": "Link",
+   "label": "Benchmark",
+   "link_to": "Poultry Benchmark",
+   "link_type": "DocType",
+   "hidden": 0,
+   "is_query_report": 0,
+   "link_count": 0,
+   "onboard": 0,
+   "dependencies": ""
+  },
+  {
+   "type": "Card Break",
+   "label": "Vaccination",
+   "hidden": 0,
+   "is_query_report": 0,
+   "link_count": 0,
+   "onboard": 0
+  },
+  {
+   "type": "Link",
+   "label": "Vaccination Record",
+   "link_to": "Poultry Vaccination Record",
+   "link_type": "DocType",
+   "hidden": 0,
+   "is_query_report": 0,
+   "link_count": 0,
+   "onboard": 0,
+   "dependencies": ""
+  },
+  {
+   "type": "Link",
+   "label": "Vaccination Due",
+   "link_to": "Poultry Vaccination Due",
+   "link_type": "DocType",
+   "hidden": 0,
+   "is_query_report": 0,
+   "link_count": 0,
+   "onboard": 0,
+   "dependencies": ""
+  },
+  {
+   "type": "Link",
+   "label": "Schedule Template",
+   "link_to": "Poultry Vaccination Schedule Template",
+   "link_type": "DocType",
+   "hidden": 0,
+   "is_query_report": 0,
+   "link_count": 0,
+   "onboard": 0,
+   "dependencies": ""
+  },
+  {
+   "type": "Card Break",
+   "label": "Feed Mill",
+   "hidden": 0,
+   "is_query_report": 0,
+   "link_count": 0,
+   "onboard": 0
+  },
+  {
+   "type": "Link",
+   "label": "Feed Formula",
+   "link_to": "Poultry Feed Formula",
+   "link_type": "DocType",
+   "hidden": 0,
+   "is_query_report": 0,
+   "link_count": 0,
+   "onboard": 0,
+   "dependencies": ""
+  },
+  {
+   "type": "Link",
+   "label": "Feed Production",
+   "link_to": "Poultry Feed Production",
+   "link_type": "DocType",
+   "hidden": 0,
+   "is_query_report": 0,
+   "link_count": 0,
+   "onboard": 0,
+   "dependencies": ""
+  },
+  {
+   "type": "Card Break",
+   "label": "Hatchery",
+   "hidden": 0,
+   "is_query_report": 0,
+   "link_count": 0,
+   "onboard": 0
+  },
+  {
+   "type": "Link",
+   "label": "Hatchery",
+   "link_to": "Poultry Hatchery",
+   "link_type": "DocType",
+   "hidden": 0,
+   "is_query_report": 0,
+   "link_count": 0,
+   "onboard": 0,
+   "dependencies": ""
+  },
+  {
+   "type": "Link",
+   "label": "Hatch",
+   "link_to": "Poultry Hatch",
+   "link_type": "DocType",
+   "hidden": 0,
+   "is_query_report": 0,
+   "link_count": 0,
+   "onboard": 0,
+   "dependencies": ""
+  },
+  {
+   "type": "Link",
+   "label": "Chick Transfer",
+   "link_to": "Poultry Chick Transfer",
+   "link_type": "DocType",
+   "hidden": 0,
+   "is_query_report": 0,
+   "link_count": 0,
+   "onboard": 0,
+   "dependencies": ""
+  },
+  {
+   "type": "Card Break",
+   "label": "Contract Farming",
+   "hidden": 0,
+   "is_query_report": 0,
+   "link_count": 0,
+   "onboard": 0
+  },
+  {
+   "type": "Link",
+   "label": "Farmer",
+   "link_to": "Poultry Farmer",
+   "link_type": "DocType",
+   "hidden": 0,
+   "is_query_report": 0,
+   "link_count": 0,
+   "onboard": 0,
+   "dependencies": ""
+  },
+  {
+   "type": "Link",
+   "label": "Growing Charge Scheme",
+   "link_to": "Poultry Growing Charge Scheme",
+   "link_type": "DocType",
+   "hidden": 0,
+   "is_query_report": 0,
+   "link_count": 0,
+   "onboard": 0,
+   "dependencies": ""
+  }
+ ],
+ "module": "Poultry",
+ "name": "Poultry",
+ "number_cards": [
+  {
+   "number_card_name": "Active Batches",
+   "label": "Active Batches"
+  },
+  {
+   "number_card_name": "Total Active Birds",
+   "label": "Total Active Birds"
+  },
+  {
+   "number_card_name": "Pending Vaccinations",
+   "label": "Pending Vaccinations"
+  },
+  {
+   "number_card_name": "Active Feed Formulas",
+   "label": "Active Feed Formulas"
+  }
+ ],
+ "owner": "Administrator",
+ "parent_page": "",
+ "public": 1,
+ "quick_lists": [],
+ "restrict_to_domain": "",
+ "roles": [],
+ "sequence_id": 1.0,
+ "shortcuts": [
+  {
+   "label": "Poultry Batch",
+   "link_to": "Poultry Batch",
+   "type": "DocType",
+   "doc_view": "List",
+   "color": "Blue",
+   "stats_filter": "{}"
+  },
+  {
+   "label": "New Daily Log",
+   "link_to": "Poultry Daily Log",
+   "type": "DocType",
+   "doc_view": "New",
+   "color": "Green",
+   "stats_filter": "{}"
+  },
+  {
+   "label": "Vaccination Due",
+   "link_to": "Poultry Vaccination Due",
+   "type": "DocType",
+   "doc_view": "List",
+   "color": "Orange",
+   "stats_filter": "{}"
+  },
+  {
+   "label": "Feed Formulas",
+   "link_to": "Poultry Feed Formula",
+   "type": "DocType",
+   "doc_view": "List",
+   "color": "Yellow",
+   "stats_filter": "{}"
+  }
+ ],
+ "title": "Poultry",
+ "type": "Workspace"
+}

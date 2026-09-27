@@ -1,0 +1,15 @@
+{
+    "doctype": "Number Card",
+    "name": "Pending Vaccinations",
+    "module": "Poultry",
+    "document_type": "Poultry Vaccination Due",
+    "type": "Document Type",
+    "function": "Count",
+    "filters_json": "[[\"Poultry Vaccination Due\",\"status\",\"=\",\"Pending\"]]",
+    "dynamic_filters_json": "[]",
+    "label": "Pending Vaccinations",
+    "is_public": 1,
+    "is_standard": 1,
+    "show_percentage_stats": 0,
+    "stats_time_interval": "Daily"
+}

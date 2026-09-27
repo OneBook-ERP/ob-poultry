@@ -1,0 +1,70 @@
+{
+    "doctype": "DocType",
+    "name": "Poultry Farmer",
+    "module": "Poultry",
+    "engine": "InnoDB",
+    "autoname": "format:FMR-{YYYY}-{#####}",
+    "naming_rule": "Expression (old style)",
+    "fields": [
+        {
+            "fieldname": "farmer_name",
+            "fieldtype": "Data",
+            "label": "Farmer Name",
+            "reqd": 1,
+            "in_list_view": 1
+        },
+        {
+            "fieldname": "phone",
+            "fieldtype": "Data",
+            "label": "Phone"
+        },
+        {
+            "fieldname": "column_break_farmer_1",
+            "fieldtype": "Column Break"
+        },
+        {
+            "fieldname": "branch",
+            "fieldtype": "Data",
+            "label": "Branch",
+            "description": "Region or collection branch this farmer belongs to",
+            "in_list_view": 1
+        },
+        {
+            "fieldname": "line",
+            "fieldtype": "Data",
+            "label": "Line",
+            "description": "Route within the branch",
+            "in_list_view": 1
+        },
+        {
+            "fieldname": "is_active",
+            "fieldtype": "Check",
+            "label": "Is Active",
+            "default": "1",
+            "in_list_view": 1
+        },
+        {
+            "fieldname": "address",
+            "fieldtype": "Small Text",
+            "label": "Address"
+        }
+    ],
+    "sort_field": "modified",
+    "sort_order": "DESC",
+    "permissions": [
+        {
+            "role": "System Manager",
+            "read": 1,
+            "write": 1,
+            "create": 1,
+            "delete": 1
+        },
+        {
+            "role": "Poultry Manager",
+            "read": 1,
+            "write": 1,
+            "create": 1,
+            "delete": 1
+        }
+    ]
+}

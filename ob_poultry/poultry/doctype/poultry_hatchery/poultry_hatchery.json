@@ -1,0 +1,55 @@
+{
+    "doctype": "DocType",
+    "name": "Poultry Hatchery",
+    "module": "Poultry",
+    "engine": "InnoDB",
+    "autoname": "field:hatchery_name",
+    "fields": [
+        {
+            "fieldname": "hatchery_name",
+            "fieldtype": "Data",
+            "label": "Hatchery Name",
+            "reqd": 1,
+            "unique": 1,
+            "in_list_view": 1
+        },
+        {
+            "fieldname": "location",
+            "fieldtype": "Data",
+            "label": "Location"
+        },
+        {
+            "fieldname": "column_break_hatchery_1",
+            "fieldtype": "Column Break"
+        },
+        {
+            "fieldname": "capacity_eggs",
+            "fieldtype": "Int",
+            "label": "Capacity (Eggs)"
+        },
+        {
+            "fieldname": "is_active",
+            "fieldtype": "Check",
+            "label": "Is Active",
+            "default": "1"
+        }
+    ],
+    "sort_field": "modified",
+    "sort_order": "DESC",
+    "permissions": [
+        {
+            "role": "System Manager",
+            "read": 1,
+            "write": 1,
+            "create": 1,
+            "delete": 1
+        },
+        {
+            "role": "Poultry Manager",
+            "read": 1,
+            "write": 1,
+            "create": 1,
+            "delete": 1
+        }
+    ]
+}

@@ -1,0 +1,96 @@
+{
+    "doctype": "DocType",
+    "name": "Poultry Feed Production",
+    "module": "Poultry",
+    "engine": "InnoDB",
+    "autoname": "format:PFP-{YYYY}-{#####}",
+    "naming_rule": "Expression (old style)",
+    "track_changes": 1,
+    "fields": [
+        {
+            "fieldname": "formula",
+            "fieldtype": "Link",
+            "label": "Formula",
+            "options": "Poultry Feed Formula",
+            "reqd": 1,
+            "in_list_view": 1
+        },
+        {
+            "fieldname": "planned_batches",
+            "fieldtype": "Float",
+            "label": "Planned Batches",
+            "reqd": 1,
+            "in_list_view": 1
+        },
+        {
+            "fieldname": "planned_qty_kg",
+            "fieldtype": "Float",
+            "label": "Planned Quantity (kg)",
+            "read_only": 1
+        },
+        {
+            "fieldname": "column_break_prod_1",
+            "fieldtype": "Column Break"
+        },
+        {
+            "fieldname": "work_order",
+            "fieldtype": "Link",
+            "label": "Work Order",
+            "options": "Work Order",
+            "read_only": 1,
+            "in_list_view": 1
+        },
+        {
+            "fieldname": "section_break_prod_output",
+            "fieldtype": "Section Break",
+            "label": "Output"
+        },
+        {
+            "fieldname": "actual_output_kg",
+            "fieldtype": "Float",
+            "label": "Actual Output (kg)"
+        },
+        {
+            "fieldname": "yield_percent",
+            "fieldtype": "Percent",
+            "label": "Yield %",
+            "read_only": 1,
+            "in_list_view": 1
+        },
+        {
+            "fieldname": "column_break_prod_2",
+            "fieldtype": "Column Break"
+        },
+        {
+            "fieldname": "cost_per_kg",
+            "fieldtype": "Currency",
+            "label": "Cost per Kg",
+            "read_only": 1
+        }
+    ],
+    "sort_field": "creation",
+    "sort_order": "DESC",
+    "permissions": [
+        {
+            "role": "System Manager",
+            "read": 1,
+            "write": 1,
+            "create": 1,
+            "delete": 1
+        },
+        {
+            "role": "Poultry Manager",
+            "read": 1,
+            "write": 1,
+            "create": 1,
+            "delete": 1
+        },
+        {
+            "role": "Feed Mill Operator",
+            "read": 1,
+            "write": 1,
+            "create": 1,
+            "delete": 1
+        }
+    ]
+}
