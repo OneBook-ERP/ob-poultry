@@ -1,5 +1,7 @@
 # Poultry Module Documentation
 
+**Using the app, not building it?** Start and stay at [USER_GUIDE.md](./USER_GUIDE.md) — day-to-day workflows for Farm Managers, Attendants, Vaccination In-charges, and Feed Mill Operators. Everything below this point is for people building or extending the module, not running a farm with it.
+
 Reading order for the Poultry module of `ob_poultry`:
 
 1. [BRD.md](./BRD.md) — Business Requirements Document. Why the module exists, who uses it, and what the business needs it to do, numbered as traceable `BR-*` requirements.
