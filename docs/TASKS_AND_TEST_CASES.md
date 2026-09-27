@@ -200,6 +200,145 @@ Requested after the epics above were implemented and verified, so the module is 
 | TC-WS-02 | Sidebar registers correctly | Query `Workspace Sidebar` "Poultry" | Exists, 13 items covering all 10 non-child doctypes plus the Home/Workspace link |
 | TC-WS-03 | Desktop icon registers correctly | Query `Desktop Icon` "Poultry" | Exists, `link_to == "Poultry"`, `link_type == "Workspace Sidebar"` |
 
+## Epic 11 — Per-day mortality % (FRD §3.1)
+
+### Tasks
+
+- [ ] Add read-only `daily_mortality_pct` (Percent) to `Poultry Daily Log`.
+- [ ] Compute it in `validate()`: `mortality_count &divide; batch.current_bird_count &times; 100`, `0` when `current_bird_count` is `0`.
+
+### Test cases
+
+| ID | Scenario | Steps | Success criteria |
+|---|---|---|---|
+| TC-DMP-01 | Computed correctly | Batch with `current_bird_count = 1000`, log with `mortality_details` summing to 5 | `daily_mortality_pct == 0.5` |
+| TC-DMP-02 | Safe at zero birds | Log against a batch with `current_bird_count == 0` | `daily_mortality_pct == 0`, no divide-by-zero error |
+
+## Epic 12 — Double Yolk grade + tray counts (FRD §3.2)
+
+### Tasks
+
+- [ ] Add `Double Yolk` to `Poultry Daily Log Egg Entry.grade`'s Select options.
+- [ ] Add Single doctype `Poultry Settings` with `eggs_per_tray` (Int, default 30).
+- [ ] Add read-only `trays` (Float) to `Poultry Daily Log Egg Entry`, computed in `compute_egg_rollup()` as `production_count &divide; eggs_per_tray`.
+
+### Test cases
+
+| ID | Scenario | Steps | Success criteria |
+|---|---|---|---|
+| TC-TRAY-01 | Double Yolk accepted as a grade | Submit a log with an egg entry `grade = "Double Yolk"` | Insert succeeds, row saved with that grade |
+| TC-TRAY-02 | Trays computed from default setting | `Poultry Settings.eggs_per_tray` at default 30, egg entry `production_count = 300` | `trays == 10` |
+| TC-TRAY-03 | Trays respect a changed setting | Set `eggs_per_tray = 20`, submit a log with `production_count = 300` | `trays == 15` |
+
+## Epic 13 — Feed logged in an alternate unit (FRD §3.3)
+
+### Tasks
+
+- [ ] Add `feed_uom` (Link &rarr; UOM) and `feed_qty` (Float) to `Poultry Daily Log`.
+- [ ] In `validate()`, before `create_feed_stock_entry()` runs on submit: if both are set, compute `feed_consumed_kg` via `erpnext.stock.get_item_details.get_conversion_factor(feed_item, feed_uom)`.
+- [ ] Confirm existing behavior (direct `feed_consumed_kg` entry, `feed_uom` blank) is completely unaffected — this must be provably backward compatible.
+
+### Test cases
+
+| ID | Scenario | Steps | Success criteria |
+|---|---|---|---|
+| TC-UOM-01 | Bag quantity converts to kg | Item with a UOM Conversion Detail row `Bag = 50 Kg`; log with `feed_uom = "Bag"`, `feed_qty = 3` | `feed_consumed_kg == 150` |
+| TC-UOM-02 | Blank feed_uom is unchanged (regression) | Log with `feed_consumed_kg = 25` set directly, `feed_uom` blank | `feed_consumed_kg` stays `25`, Stock Entry posts exactly as before this epic |
+| TC-UOM-03 | Feeds into Stock Entry correctly | Log with `feed_uom`/`feed_qty` set, submit | Linked Stock Entry's `qty` equals the converted `feed_consumed_kg`, not the raw `feed_qty` |
+
+## Epic 14 — Feed cost per batch/date (FRD §3.4, report only)
+
+### Tasks
+
+- [ ] Extend `poultry_feed_consumption_report.py` to join `Stock Entry Detail` on `Poultry Daily Log.stock_entry` and add a `feed_cost` column.
+
+### Test cases
+
+| ID | Scenario | Steps | Success criteria |
+|---|---|---|---|
+| TC-FCOST-01 | Cost pulled from real valuation | Submit a feed-consuming log against stock with a known valuation rate | Report's `feed_cost` column matches `Stock Entry Detail.amount` for that entry exactly |
+| TC-FCOST-02 | No stock entry, no cost shown | A log with `feed_consumed_kg` unset (no stock entry created) | Report row shows blank/zero cost, not an error |
+
+## Epic 15 — Production cost per egg (FRD §3.5, report only)
+
+### Tasks
+
+- [ ] New report `Poultry Egg Production Cost`: per batch/date range, `sum(feed_cost) / sum(total_eggs_produced)`.
+
+### Test cases
+
+| ID | Scenario | Steps | Success criteria |
+|---|---|---|---|
+| TC-EPC-01 | Computed correctly | Batch with feed cost 1000 and 200 eggs produced in range | Report shows cost/egg `== 5` |
+| TC-EPC-02 | Safe with zero eggs | Batch with feed cost but zero eggs produced (e.g. a broiler batch) | Cost/egg blank or `0`, not a divide-by-zero error |
+
+## Epic 16 — Daily expenses (FRD §3.6)
+
+### Tasks
+
+- [ ] Add child doctype `Poultry Daily Log Expense` (`description`, `amount`).
+- [ ] Add `expenses` table field and read-only `total_expenses` rollup to `Poultry Daily Log`.
+
+### Test cases
+
+| ID | Scenario | Steps | Success criteria |
+|---|---|---|---|
+| TC-EXP-01 | Total rolls up | Log with two expense rows, 500 and 668 | `total_expenses == 1168` |
+| TC-EXP-02 | Empty is zero | Log with no expense rows | `total_expenses == 0`, no error |
+
+## Epic 17 — Egg sales (FRD §3.7)
+
+### Tasks
+
+- [ ] Add `Poultry Egg Sale` (submittable) and `Poultry Egg Sale Item` (child) doctypes.
+- [ ] Implement the per-grade available-balance validation (cumulative production minus cumulative other sold, mirroring `Poultry Chick Transfer.validate_against_hatch()`).
+- [ ] New/extended report showing net egg stock (production minus sales) per batch and grade.
+
+### Test cases
+
+| ID | Scenario | Steps | Success criteria |
+|---|---|---|---|
+| TC-SALE-01 | Sale within available stock succeeds | Batch has produced 500 Table Eggs; sell 200 | Insert and submit succeed, `total_amount` computed correctly from `quantity &times; rate` |
+| TC-SALE-02 | Over-selling is blocked | Same batch, attempt to sell 400 more (600 total against 500 produced) | Rejected with a `ValidationError` naming the batch and grade |
+| TC-SALE-03 | Net stock report reflects sales | After TC-SALE-01, run the net-stock report for that batch/grade | Shows `300` remaining (500 produced &minus; 200 sold) |
+| TC-SALE-04 | Daily Log ledger untouched by sales | Before/after TC-SALE-01, compare the batch's `Poultry Daily Log Egg Entry.closing_count` for that date/grade | Unchanged — sales never mutate a submitted Daily Log |
+
+## Epic 18 — Shed default feed warehouse (FRD §3.8)
+
+### Tasks
+
+- [ ] Add `default_feed_warehouse` (Link &rarr; Warehouse) to `Poultry Shed`.
+- [ ] In `Poultry Batch.validate()`, default `feed_warehouse` from the shed's default when the batch is new and `feed_warehouse` is blank.
+
+### Test cases
+
+| ID | Scenario | Steps | Success criteria |
+|---|---|---|---|
+| TC-DWH-01 | Default applied on new batch | Shed with `default_feed_warehouse` set; create a batch in that shed with `feed_warehouse` left blank | Batch's `feed_warehouse` is populated from the shed's default after insert |
+| TC-DWH-02 | Explicit choice is never overridden | Create a batch in the same shed, explicitly setting a *different* `feed_warehouse` | That explicit value is kept, not overwritten by the shed's default |
+| TC-DWH-03 | No default, no error | Shed with `default_feed_warehouse` blank; create a batch with `feed_warehouse` also blank | Insert succeeds, `feed_warehouse` stays blank (existing behavior, e.g. feed logging will ask for it later) |
+
+## Epic 19 — Daily operational dashboard (from customer's own field list, 2026-09-28)
+
+A second piece of customer evidence (a plain list of what they enter daily vs. what they want to see on a dashboard) confirmed Epics 11-18 above and added two things: **"Dirty Egg"** as a grade distinct from damage/cracked (soiled shell, not broken), and an explicit ask for farm-wide daily totals to be visible without opening a report.
+
+### Tasks
+
+- [ ] Add `Dirty Egg` to `Poultry Daily Log Egg Entry.grade`'s options, alongside `Double Yolk` from Epic 12.
+- [ ] Add `feed_per_bird_g` (Float, read-only) to `Poultry Daily Log` — `feed_consumed_kg * 1000 / batch.current_bird_count`, same zero-guard pattern as everywhere else.
+- [ ] Add `damage_pct` (Percent, read-only) to `Poultry Daily Log` — damaged egg count (grades Cracked/Waste/Dirty) &divide; `total_eggs_produced` &times; 100.
+- [ ] Add 4 new Number Cards to the Poultry workspace, each using a dynamic "Today" date filter: **Eggs Produced Today** (sum `total_eggs_produced` where `log_date = Today`), **Feed Consumed Today (Kg)** (sum `feed_consumed_kg` where `log_date = Today`), **Mortality Today** (sum `mortality_count` where `log_date = Today`), **Culled Today** (sum `cull_count` where `log_date = Today`).
+- [ ] Confirm Age (already computed per-log via `date_diff`), Bird Closing Stock (`current_bird_count`), and Shed Tray Stock (closing `trays` from Epic 12) are all visible on the Batch/Daily Log forms — batch-level and ratio metrics (age in weeks, damage %, tray stock) don't reduce to a single farm-wide Number Card, so they stay on the record itself rather than being forced into the dashboard.
+
+### Test cases
+
+| ID | Scenario | Steps | Success criteria |
+|---|---|---|---|
+| TC-DASH-01 | Dirty Egg accepted as a grade | Submit a log with an egg entry `grade = "Dirty Egg"` | Insert succeeds |
+| TC-DASH-02 | Feed per bird computed | `feed_consumed_kg = 100`, `current_bird_count = 1000` | `feed_per_bird_g == 100` |
+| TC-DASH-03 | Damage % computed | Total eggs produced 500, 20 of them Cracked/Waste/Dirty combined | `damage_pct == 4` |
+| TC-DASH-04 | Today's Number Cards reflect only today | Submit logs for yesterday and today with different egg/feed/mortality/cull values | Each Number Card's value matches only today's sum, not yesterday's |
+
 ## Definition of done
 
 An epic is done when every task is checked, every test case above passes, and Epic 0's regression suite still passes unchanged (proving the new work didn't disturb bird-count or stock-entry correctness). `uv run ruff check` (or this app's own `ruff check`, per its `pyproject.toml`) is clean before any epic is considered mergeable.

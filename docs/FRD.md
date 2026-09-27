@@ -242,6 +242,64 @@ Four new roles, replacing the current "System Manager only" grant on every docty
 
 `System Manager` keeps full access to everything as the administrative fallback, per Frappe convention.
 
-## 3. Traceability
+## 3. Daily Register Parity (new, 2026-09-28)
 
-Every `BR-*` in the BRD maps to exactly one row above (as-built §1 or proposed §2), with the sole exception of `BR-SYS-01`, which is a structural constraint satisfied by the whole document rather than one field (no doctype anywhere in §1 or §2 introduces a parallel Item/stock/BOM model).
+Sourced from a real customer's paper daily register (BRD §3.3). Closes `BR-FLK-12`, `BR-EGG-03`, `BR-FED-06` through `BR-FED-08`, `BR-EXP-01`, `BR-SALES-01`/`02`, `BR-SYS-03`.
+
+### 3.1 Per-day mortality % on Poultry Daily Log — *BR-FLK-12*
+
+Add read-only field `daily_mortality_pct` (Percent). Computed in `validate()`, alongside the existing `compute_mortality_rollup()`: `mortality_count &divide; batch.current_bird_count &times; 100` (the batch's count as it stands before this log submits — the same "safe at zero" guard already used for `hdep_percent` applies here: `0` when `current_bird_count` is `0`, not a divide-by-zero error).
+
+### 3.2 Double Yolk grade + tray counts — *BR-EGG-01 (amended), BR-EGG-03*
+
+Add `Double Yolk` to `Poultry Daily Log Egg Entry.grade`'s Select options (`Hatching Egg\nTable Egg\nJumbo Egg\nCracked Egg\nWaste Egg\nDouble Yolk`).
+
+Add a new Single doctype **Poultry Settings** (global config, one record) with `eggs_per_tray` (Int, default `30`) — farms pack differently, so this is configurable, not hardcoded.
+
+Add read-only field `trays` (Float) to `Poultry Daily Log Egg Entry`, computed in the same `compute_egg_rollup()` pass as `closing_count`: `production_count &divide; eggs_per_tray` (fetched once from `Poultry Settings` per save, not per row).
+
+### 3.3 Feed logged in an alternate unit — *BR-FED-06*
+
+Add two fields to `Poultry Daily Log`: `feed_uom` (Link &rarr; UOM, optional) and `feed_qty` (Float, optional — the quantity entered in `feed_uom`). `feed_consumed_kg` stays the canonical field everything else (Stock Entry, FCR, reports) already reads.
+
+Business rule in `create_feed_stock_entry()` (or a new `apply_feed_uom_conversion()` called from `validate()` before it): if `feed_uom` and `feed_qty` are both set, compute `feed_consumed_kg = feed_qty &times; conversion_factor`, where the conversion factor comes from ERPNext's own `erpnext.stock.get_item_details.get_conversion_factor(feed_item, feed_uom)` — reusing ERPNext's existing Item UOM Conversion Detail table rather than inventing a bag-size field ourselves (per this app's own "use standard APIs before adding custom logic" rule). If `feed_uom` is left blank, behavior is unchanged: `feed_consumed_kg` is entered directly, exactly as today — fully backward compatible with every existing Daily Log.
+
+### 3.4 Feed cost per batch/date — *BR-FED-07* (report, no schema change)
+
+`Poultry Daily Log.stock_entry` already links to a real, valued ERPNext Stock Entry. Extend the **Poultry Feed Consumption Report** (already built) to join `Stock Entry Detail` on that link and pull its `amount` (ERPNext's own FIFO/valuation-computed cost) alongside `feed_consumed_kg` — no new field anywhere, this is purely a report-side join onto data ERPNext already has.
+
+### 3.5 Production cost per egg — *BR-FED-08* (report, no schema change)
+
+New report **Poultry Egg Production Cost**: per batch and date range, sum feed cost (§3.4's join) &divide; sum `total_eggs_produced` (already on `Poultry Daily Log`). Depends only on §3.4 existing.
+
+### 3.6 Daily expenses — *BR-EXP-01*
+
+New child doctype **Poultry Daily Log Expense** (`istable: 1`, no permissions block): `description` (Data, required), `amount` (Currency, required).
+
+Add `expenses` (Table &rarr; Poultry Daily Log Expense) and a read-only rollup `total_expenses` (Currency, summed in `validate()`) to `Poultry Daily Log`.
+
+### 3.7 Egg sales — *BR-SALES-01, BR-SALES-02*
+
+New doctype **Poultry Egg Sale** — submittable, autoname `format:PES-{YYYY}-{#####}`:
+
+| Field | Type | Rule |
+|---|---|---|
+| `batch` | Link &rarr; Poultry Batch, required | |
+| `customer` | Link &rarr; Customer, required | reuses ERPNext's own Customer master rather than a new Poultry-specific buyer list |
+| `sale_date` | Date, required, default Today | |
+| `items` | Table &rarr; Poultry Egg Sale Item, required | |
+| `total_amount` | Currency, read-only | summed from `items` |
+
+**Poultry Egg Sale Item** (child, `istable: 1`): `grade` (Select, same options as `Poultry Daily Log Egg Entry.grade`, required), `quantity` (Int, required), `rate` (Currency, required), `amount` (Currency, read-only, `quantity &times; rate`).
+
+Validation on submit, per grade row: compute cumulative production for that batch+grade up to `sale_date` (same query shape as `get_previous_closing()` on `Poultry Daily Log`) minus cumulative already-sold quantity for that batch+grade up to `sale_date` from other submitted `Poultry Egg Sale` rows; reject if this sale's `quantity` would exceed that available balance — mirrors `Poultry Chick Transfer.validate_against_hatch()`'s cap-checking pattern exactly.
+
+**Design note on BR-SALES-02 ("reduces the egg stock ledger"):** `Poultry Egg Sale` does **not** mutate `Poultry Daily Log Egg Entry` rows — those stay a pure production ledger, submittable and immutable once submitted, exactly as already built and tested. Instead, "current egg stock" becomes a **report-time computation**: cumulative production (from Egg Entry) minus cumulative sales (from Egg Sale) per batch and grade. This avoids retroactively touching submitted, immutable Daily Log documents to reflect a later sale, and keeps one clear owner per concern (Daily Log owns production, Egg Sale owns sales, a report nets them) rather than two doctypes both claiming ownership of "closing stock."
+
+### 3.8 Shed default feed warehouse — *BR-SYS-03*
+
+Add `default_feed_warehouse` (Link &rarr; Warehouse) to `Poultry Shed`. In `Poultry Batch.validate()`, when the batch is new and `feed_warehouse` is blank, default it from `shed.default_feed_warehouse` if set — explicit controller logic (`if not self.feed_warehouse: self.feed_warehouse = frappe.db.get_value(...)`), not a `fetch_from`, so a user who deliberately picks a different warehouse for one batch is never silently overridden. Once every shed has a default warehouse, a genuine per-shed feed stock ledger (BRD §3.3's original ask) is just ERPNext's own Stock Ledger report filtered to that warehouse — nothing new to build there.
+
+## 4. Traceability
+
+Every `BR-*` in the BRD maps to exactly one row above (as-built §1, proposed-and-now-built §2, or newly-proposed §3), with the sole exception of `BR-SYS-01`, which is a structural constraint satisfied by the whole document rather than one field (no doctype anywhere introduces a parallel Item/stock/BOM model).

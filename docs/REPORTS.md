@@ -22,8 +22,8 @@ All "Build now" reports should be built as Frappe **Query Reports** (Script Repo
 | Birds Placement / Chicks Placement | **Build now** | `Poultry Batch` list by placement date range. (Same report, two names in their menu.) |
 | Farmers | **Build now** | Trivial `Poultry Farmer` list/directory. |
 | Matured Birds | **Build now** | Batches where `age >= threshold` (age derived the same way `Poultry Daily Log.apply_benchmarks()` already computes it). |
-| Farm Stock Cost | **Needs schema** | Needs feed cost attributed per farm/warehouse; possible once each contract farm has its own Warehouse rather than sharing one. |
-| Lifting (Batchout) / Lifting (Pending) / Birds Sales Summary / Birds Sales With Date | **Needs schema** | All depend on a bird-sale transaction linked to a batch — we don't model bird sales yet (Sales module is deliberately out of scope per BRD §3.2 until it's needed). |
+| Farm Stock Cost | **Needs schema (now scoped)** | Needs feed cost attributed per farm/warehouse — closed by ROADMAP.md's Daily Register Parity Epic 18 (shed default feed warehouse); once every shed has one, this is ERPNext's own Stock Ledger report filtered by warehouse, not a custom build. |
+| Lifting (Batchout) / Lifting (Pending) / Birds Sales Summary / Birds Sales With Date | **Needs schema** | All depend on a *bird*-sale transaction linked to a batch — still not modeled. Note this is distinct from the *egg* sales ledger now scoped as Epic 17 (Daily Register Parity); egg sales and bird sales are separate gaps that happen to sound similar. |
 | Inter Farm Feed Transfer | **Needs schema** | ERPNext's own Stock Entry (Material Transfer) already does the mechanics; needs each farm to have its own Warehouse before this is meaningful. |
 | Month Wise Cost Report | **Needs schema** | Same gap as Farm Stock Cost, aggregated monthly. |
 | Lineruns / Unvisited Farms | **Skip** | Field-officer visit logging — explicitly v3+ (GPS-verified field visits), not built. |
@@ -98,3 +98,15 @@ Every report in these seven categories is a standard business report (sales/purc
 - Weekly breeder Performance rollup, lighter substitute for the full sexed-daily version
 
 **Not building:** bird-sale-dependent reports (Lifting/Birds Sales, both modules) until a bird-sale transaction exists; settlement-voucher Growing Charges (TCS/TDS) until that's actually needed; field-visit reports (Lineruns/Unvisited Farms); egg-as-inventory reports (Egg Stock/Transfer/Economy Report); hatchery equipment sub-stage reports (Setting/Candling/Transfer); all 27 standard-ERPNext-covered reports.
+
+## Daily Register Parity reports (new, Epics 14/15/17)
+
+Not in poultry.care's own catalog — surfaced directly from a customer's paper register (BRD §3.3), not benchmarked against the reference ERP:
+
+| Report | What it answers | Epic |
+|---|---|---|
+| Poultry Feed Consumption Report (extended) | Feed cost per batch/date, pulled from the Stock Entry's own ERPNext valuation | 14 |
+| Poultry Egg Production Cost | Cost per egg produced (feed cost &divide; eggs produced) per batch/date range | 15 |
+| Poultry Net Egg Stock (new) | True closing egg stock per batch/grade — production minus sales, not just production | 17 |
+
+These three complete the paper register's "Production Cost 4.19/4.17" and "SALES" blocks, which had no equivalent anywhere in either the original Batch 1 list or the reference ERP's own catalog for this exact shape.

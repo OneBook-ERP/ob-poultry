@@ -1,0 +1,24 @@
+{
+    "add_total_row": 0,
+    "columns": [],
+    "disabled": 0,
+    "docstatus": 0,
+    "doctype": "Report",
+    "filters": [],
+    "is_standard": "Yes",
+    "module": "Poultry",
+    "name": "Poultry Net Egg Stock",
+    "owner": "Administrator",
+    "prepared_report": 0,
+    "ref_doctype": "Poultry Daily Log",
+    "report_name": "Poultry Net Egg Stock",
+    "report_type": "Script Report",
+    "roles": [
+        {
+            "role": "System Manager"
+        },
+        {
+            "role": "Poultry Manager"
+        }
+    ]
+}

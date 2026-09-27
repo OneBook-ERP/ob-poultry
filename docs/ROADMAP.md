@@ -18,6 +18,19 @@ Where the module is, what closes the known gaps next, and what's been considered
 
 **Rate Matrix**, as noted above, is done &mdash; folded into Growing Charge Scheme rather than built as a standalone generic pricing engine, since the only consumer of it in this app is growing-charge calculation.
 
+**Daily Register Parity, shipped** (from real customer evidence): a real customer's paper daily register (photographed and reviewed 2026-09-28) surfaced eight concrete gaps &mdash; not inferred, directly observed in what the business already tracks by hand. Scoped in [BRD.md](./BRD.md) &sect;3.3, designed in [FRD.md](./FRD.md) &sect;3, built and verified (21/21 integration tests) as [TASKS_AND_TEST_CASES.md](./TASKS_AND_TEST_CASES.md) Epics 11&ndash;19:
+
+1. Per-day mortality % per batch (Epic 11).
+2. Double Yolk and Dirty Egg egg grades + tray counts, via a new `Poultry Settings` singleton holding a configurable `eggs_per_tray` (Epic 12).
+3. Feed logged in bags, converted to kg via ERPNext's own UOM conversion (Epic 13) &mdash; reuses ERPNext's existing conversion-factor API rather than inventing a bag-size field; blank `feed_uom` keeps direct-kg entry working exactly as before.
+4. Feed cost per batch/date, sourced from ERPNext's own stock valuation (Epic 14, report-only: `Poultry Feed Consumption Report` extended with a `Stock Entry Detail` join).
+5. Production cost per egg (Epic 15, new `Poultry Egg Production Cost` report).
+6. Ad hoc daily expenses per batch, via new child doctype `Poultry Daily Log Expense` (Epic 16).
+7. An egg sales ledger &mdash; buyer, quantity, rate &mdash; via new submittable doctype `Poultry Egg Sale` + `Poultry Egg Sale Item`, capped against a report-time net-stock computation (`Poultry Net Egg Stock`) rather than mutating the immutable production ledger (Epic 17).
+8. Shed default feed warehouse (Epic 18) &mdash; closes the "Farm Stock Cost" gap via ERPNext's own Stock Ledger report, nothing custom needed.
+
+Plus, folded in from a second image of the customer's own "Data Entry"/"dashboard" field list (Epic 19): `feed_per_bird_g` and `damage_pct` computed fields on `Poultry Daily Log`, and four farm-wide "Today" Number Cards (Eggs Produced, Feed Consumed Kg, Mortality, Culled) on the Poultry workspace. Ratio/per-batch metrics from that same list (age in weeks, tray stock) were deliberately left on records/reports rather than forced into single farm-wide Number Cards &mdash; they don't reduce to one number across every active batch.
+
 ## Next — v2 depth (not yet built, real gaps in what shipped above)
 
 Concrete follow-ups on the lean v2 slice, roughly in the order they'd bite:

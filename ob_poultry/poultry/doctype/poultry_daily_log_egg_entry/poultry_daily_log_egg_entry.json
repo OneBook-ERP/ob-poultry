@@ -9,7 +9,7 @@
             "fieldname": "grade",
             "fieldtype": "Select",
             "label": "Grade",
-            "options": "Hatching Egg\nTable Egg\nJumbo Egg\nCracked Egg\nWaste Egg",
+            "options": "Hatching Egg\nTable Egg\nJumbo Egg\nCracked Egg\nWaste Egg\nDouble Yolk\nDirty Egg",
             "reqd": 1,
             "in_list_view": 1
         },
@@ -38,6 +38,13 @@
             "fieldname": "avg_weight_g",
             "fieldtype": "Float",
             "label": "Avg Weight (g)"
+        },
+        {
+            "fieldname": "trays",
+            "fieldtype": "Float",
+            "label": "Trays",
+            "read_only": 1,
+            "in_list_view": 1
         }
     ]
 }

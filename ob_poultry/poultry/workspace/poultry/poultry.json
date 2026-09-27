@@ -1,7 +1,7 @@
 {
  "app": "ob_poultry",
  "charts": [],
- "content": "[{\"id\":\"poultryHeader\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h4\\\"><b>Poultry</b></span>\",\"col\":12}},{\"id\":\"poultryShortcuts1\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Poultry Batch\",\"col\":3}},{\"id\":\"poultryShortcuts2\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"New Daily Log\",\"col\":3}},{\"id\":\"poultryShortcuts3\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Vaccination Due\",\"col\":3}},{\"id\":\"poultryShortcuts4\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Feed Formulas\",\"col\":3}},{\"id\":\"poultryOverviewHeader\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h4\\\"><b>Overview</b></span>\",\"col\":12}},{\"id\":\"poultryNC1\",\"type\":\"number_card\",\"data\":{\"number_card_name\":\"Active Batches\",\"col\":3}},{\"id\":\"poultryNC2\",\"type\":\"number_card\",\"data\":{\"number_card_name\":\"Total Active Birds\",\"col\":3}},{\"id\":\"poultryNC3\",\"type\":\"number_card\",\"data\":{\"number_card_name\":\"Pending Vaccinations\",\"col\":3}},{\"id\":\"poultryNC4\",\"type\":\"number_card\",\"data\":{\"number_card_name\":\"Active Feed Formulas\",\"col\":3}},{\"id\":\"poultryNCSpacer\",\"type\":\"spacer\",\"data\":{\"col\":12}},{\"id\":\"poultrySpacer1\",\"type\":\"spacer\",\"data\":{\"col\":12}},{\"id\":\"poultryCardsHeader\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h4\\\"><b>Masters &amp; Reports</b></span>\",\"col\":12}},{\"id\":\"poultryCardFlock\",\"type\":\"card\",\"data\":{\"card_name\":\"Flock Management\",\"col\":4}},{\"id\":\"poultryCardVac\",\"type\":\"card\",\"data\":{\"card_name\":\"Vaccination\",\"col\":4}},{\"id\":\"poultryCardFeed\",\"type\":\"card\",\"data\":{\"card_name\":\"Feed Mill\",\"col\":4}},{\"id\":\"poultryCardHatchery\",\"type\":\"card\",\"data\":{\"card_name\":\"Hatchery\",\"col\":4}},{\"id\":\"poultryCardContract\",\"type\":\"card\",\"data\":{\"card_name\":\"Contract Farming\",\"col\":4}},{\"id\":\"poultryCardReports\",\"type\":\"card\",\"data\":{\"card_name\":\"Reports\",\"col\":4}}]",
+ "content": "[{\"id\":\"poultryHeader\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h4\\\"><b>Poultry</b></span>\",\"col\":12}},{\"id\":\"poultryShortcuts1\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Poultry Batch\",\"col\":3}},{\"id\":\"poultryShortcuts2\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"New Daily Log\",\"col\":3}},{\"id\":\"poultryShortcuts3\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Vaccination Due\",\"col\":3}},{\"id\":\"poultryShortcuts4\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Feed Formulas\",\"col\":3}},{\"id\":\"poultryOverviewHeader\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h4\\\"><b>Overview</b></span>\",\"col\":12}},{\"id\":\"poultryNC1\",\"type\":\"number_card\",\"data\":{\"number_card_name\":\"Active Batches\",\"col\":3}},{\"id\":\"poultryNC2\",\"type\":\"number_card\",\"data\":{\"number_card_name\":\"Total Active Birds\",\"col\":3}},{\"id\":\"poultryNC3\",\"type\":\"number_card\",\"data\":{\"number_card_name\":\"Pending Vaccinations\",\"col\":3}},{\"id\":\"poultryNC4\",\"type\":\"number_card\",\"data\":{\"number_card_name\":\"Active Feed Formulas\",\"col\":3}},{\"id\":\"poultryNC5\",\"type\":\"number_card\",\"data\":{\"number_card_name\":\"Eggs Produced Today\",\"col\":3}},{\"id\":\"poultryNC6\",\"type\":\"number_card\",\"data\":{\"number_card_name\":\"Feed Consumed Today (Kg)\",\"col\":3}},{\"id\":\"poultryNC7\",\"type\":\"number_card\",\"data\":{\"number_card_name\":\"Mortality Today\",\"col\":3}},{\"id\":\"poultryNC8\",\"type\":\"number_card\",\"data\":{\"number_card_name\":\"Culled Today\",\"col\":3}},{\"id\":\"poultryNCSpacer\",\"type\":\"spacer\",\"data\":{\"col\":12}},{\"id\":\"poultrySpacer1\",\"type\":\"spacer\",\"data\":{\"col\":12}},{\"id\":\"poultryCardsHeader\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h4\\\"><b>Masters &amp; Reports</b></span>\",\"col\":12}},{\"id\":\"poultryCardFlock\",\"type\":\"card\",\"data\":{\"card_name\":\"Flock Management\",\"col\":4}},{\"id\":\"poultryCardVac\",\"type\":\"card\",\"data\":{\"card_name\":\"Vaccination\",\"col\":4}},{\"id\":\"poultryCardFeed\",\"type\":\"card\",\"data\":{\"card_name\":\"Feed Mill\",\"col\":4}},{\"id\":\"poultryCardHatchery\",\"type\":\"card\",\"data\":{\"card_name\":\"Hatchery\",\"col\":4}},{\"id\":\"poultryCardContract\",\"type\":\"card\",\"data\":{\"card_name\":\"Contract Farming\",\"col\":4}},{\"id\":\"poultryCardSales\",\"type\":\"card\",\"data\":{\"card_name\":\"Sales\",\"col\":4}},{\"id\":\"poultryCardReports\",\"type\":\"card\",\"data\":{\"card_name\":\"Reports\",\"col\":4}}]",
  "custom_blocks": [],
  "docstatus": 0,
  "doctype": "Workspace",
@@ -68,6 +68,17 @@
    "type": "Link",
    "label": "Benchmark",
    "link_to": "Poultry Benchmark",
+   "link_type": "DocType",
+   "hidden": 0,
+   "is_query_report": 0,
+   "link_count": 0,
+   "onboard": 0,
+   "dependencies": ""
+  },
+  {
+   "type": "Link",
+   "label": "Settings",
+   "link_to": "Poultry Settings",
    "link_type": "DocType",
    "hidden": 0,
    "is_query_report": 0,
@@ -210,6 +221,25 @@
    "type": "Link",
    "label": "Growing Charge Scheme",
    "link_to": "Poultry Growing Charge Scheme",
+   "link_type": "DocType",
+   "hidden": 0,
+   "is_query_report": 0,
+   "link_count": 0,
+   "onboard": 0,
+   "dependencies": ""
+  },
+  {
+   "type": "Card Break",
+   "label": "Sales",
+   "hidden": 0,
+   "is_query_report": 0,
+   "link_count": 0,
+   "onboard": 0
+  },
+  {
+   "type": "Link",
+   "label": "Egg Sale",
+   "link_to": "Poultry Egg Sale",
    "link_type": "DocType",
    "hidden": 0,
    "is_query_report": 0,
@@ -367,6 +397,28 @@
    "link_count": 0,
    "onboard": 0,
    "dependencies": ""
+  },
+  {
+   "type": "Link",
+   "label": "Egg Production Cost",
+   "link_to": "Poultry Egg Production Cost",
+   "link_type": "Report",
+   "hidden": 0,
+   "is_query_report": 1,
+   "link_count": 0,
+   "onboard": 0,
+   "dependencies": ""
+  },
+  {
+   "type": "Link",
+   "label": "Net Egg Stock",
+   "link_to": "Poultry Net Egg Stock",
+   "link_type": "Report",
+   "hidden": 0,
+   "is_query_report": 1,
+   "link_count": 0,
+   "onboard": 0,
+   "dependencies": ""
   }
  ],
  "module": "Poultry",
@@ -387,6 +439,22 @@
   {
    "number_card_name": "Active Feed Formulas",
    "label": "Active Feed Formulas"
+  },
+  {
+   "number_card_name": "Eggs Produced Today",
+   "label": "Eggs Produced Today"
+  },
+  {
+   "number_card_name": "Feed Consumed Today (Kg)",
+   "label": "Feed Consumed Today (Kg)"
+  },
+  {
+   "number_card_name": "Mortality Today",
+   "label": "Mortality Today"
+  },
+  {
+   "number_card_name": "Culled Today",
+   "label": "Culled Today"
   }
  ],
  "owner": "Administrator",

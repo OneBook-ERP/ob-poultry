@@ -363,3 +363,88 @@ class TestPoultryModule(IntegrationTestCase):
 		batch = frappe.get_doc({"doctype": "Poultry Batch", "shed": self.shed.name, "breed": self.breed.name, "start_date": nowdate(), "initial_bird_count": 100}).insert(ignore_permissions=True)
 		log = frappe.get_doc({"doctype": "Poultry Daily Log", "batch": batch.name, "log_date": nowdate(), "mortality_details": [{"cause": "Disease", "count": 1}]}).insert(ignore_permissions=True)
 		self.assertTrue(hasattr(log.mortality_details[0], "photo"))
+
+	# --- Daily Register Parity (docs/TASKS_AND_TEST_CASES.md Epics 11-19) ---
+
+	def test_epic11_daily_mortality_pct(self):
+		batch = frappe.get_doc({"doctype": "Poultry Batch", "shed": self.shed.name, "breed": self.breed.name, "start_date": nowdate(), "initial_bird_count": 1000}).insert(ignore_permissions=True)
+		log = frappe.get_doc({"doctype": "Poultry Daily Log", "batch": batch.name, "log_date": nowdate(), "mortality_details": [{"cause": "Disease", "count": 50}]}).insert(ignore_permissions=True)
+		self.assertEqual(log.daily_mortality_pct, 5)  # TC-DMP-01, 50/1000*100
+
+		zero_batch = frappe.get_doc({"doctype": "Poultry Batch", "shed": self.shed.name, "breed": self.breed.name, "start_date": nowdate(), "initial_bird_count": 0}).insert(ignore_permissions=True)
+		zero_log = frappe.get_doc({"doctype": "Poultry Daily Log", "batch": zero_batch.name, "log_date": nowdate()}).insert(ignore_permissions=True)
+		self.assertEqual(zero_log.daily_mortality_pct, 0)  # TC-DMP-02, safe at zero birds
+
+	def test_epic12_double_yolk_grade_and_trays(self):
+		frappe.get_single("Poultry Settings").db_set("eggs_per_tray", 30)
+		batch = frappe.get_doc({"doctype": "Poultry Batch", "shed": self.shed.name, "breed": self.breed.name, "start_date": nowdate(), "initial_bird_count": 500}).insert(ignore_permissions=True)
+		log = frappe.get_doc({
+			"doctype": "Poultry Daily Log", "batch": batch.name, "log_date": nowdate(),
+			"egg_entries": [{"grade": "Double Yolk", "production_count": 60}, {"grade": "Dirty Egg", "production_count": 15}],
+		}).insert(ignore_permissions=True)
+		self.assertEqual(log.egg_entries[0].trays, 2)  # TC-TRAY-01, 60/30
+		self.assertEqual(log.egg_entries[1].trays, 0.5)  # TC-TRAY-01, 15/30
+
+	def test_epic13_feed_uom_conversion(self):
+		if not frappe.db.exists("UOM", "Bag"):
+			frappe.get_doc({"doctype": "UOM", "uom_name": "Bag"}).insert(ignore_permissions=True)
+		item = frappe.get_doc("Item", "Test Starter Feed")
+		if not any(row.uom == "Bag" for row in item.uoms):
+			item.append("uoms", {"uom": "Bag", "conversion_factor": 50})
+			item.save(ignore_permissions=True)
+
+		batch = frappe.get_doc({"doctype": "Poultry Batch", "shed": self.shed.name, "breed": self.breed.name, "start_date": nowdate(), "initial_bird_count": 500, "feed_warehouse": self.warehouse_name}).insert(ignore_permissions=True)
+		log = frappe.get_doc({
+			"doctype": "Poultry Daily Log", "batch": batch.name, "log_date": nowdate(),
+			"feed_item": "Test Starter Feed", "feed_uom": "Bag", "feed_qty": 2,
+		}).insert(ignore_permissions=True)
+		self.assertEqual(log.feed_consumed_kg, 100)  # TC-BAG-01, 2 bags * 50kg/bag
+
+		direct_log = frappe.get_doc({"doctype": "Poultry Daily Log", "batch": batch.name, "log_date": add_days(nowdate(), -1), "feed_item": "Test Starter Feed", "feed_consumed_kg": 30}).insert(ignore_permissions=True)
+		self.assertEqual(direct_log.feed_consumed_kg, 30)  # TC-BAG-02, unchanged when feed_uom left blank
+
+	def test_epic16_daily_expenses(self):
+		batch = frappe.get_doc({"doctype": "Poultry Batch", "shed": self.shed.name, "breed": self.breed.name, "start_date": nowdate(), "initial_bird_count": 200}).insert(ignore_permissions=True)
+		log = frappe.get_doc({
+			"doctype": "Poultry Daily Log", "batch": batch.name, "log_date": nowdate(),
+			"expenses": [{"description": "Labour", "amount": 500}, {"description": "Electricity", "amount": 150}],
+		}).insert(ignore_permissions=True)
+		self.assertEqual(log.total_expenses, 650)  # TC-EXP-01
+
+	def test_epic17_egg_sale(self):
+		batch = frappe.get_doc({"doctype": "Poultry Batch", "shed": self.shed.name, "breed": self.breed.name, "start_date": nowdate(), "initial_bird_count": 500}).insert(ignore_permissions=True)
+		log = frappe.get_doc({"doctype": "Poultry Daily Log", "batch": batch.name, "log_date": nowdate(), "egg_entries": [{"grade": "Table Egg", "production_count": 100}]}).insert(ignore_permissions=True)
+		log.submit()
+
+		if not frappe.db.exists("Customer", "Test Egg Buyer"):
+			frappe.get_doc({"doctype": "Customer", "customer_name": "Test Egg Buyer"}).insert(ignore_permissions=True)
+
+		sale = frappe.get_doc({
+			"doctype": "Poultry Egg Sale", "batch": batch.name, "customer": "Test Egg Buyer", "sale_date": nowdate(),
+			"items": [{"grade": "Table Egg", "quantity": 30, "rate": 5}],
+		}).insert(ignore_permissions=True)
+		self.assertEqual(sale.total_amount, 150)  # TC-SALE-01
+		sale.submit()  # so the next sale's stock check (which only counts submitted sales) sees it
+
+		with self.assertRaises(frappe.ValidationError):  # TC-SALE-02, only 70 left in stock
+			frappe.get_doc({
+				"doctype": "Poultry Egg Sale", "batch": batch.name, "customer": "Test Egg Buyer", "sale_date": nowdate(),
+				"items": [{"grade": "Table Egg", "quantity": 71, "rate": 5}],
+			}).insert(ignore_permissions=True)
+
+	def test_epic18_shed_default_feed_warehouse(self):
+		shed_with_default = frappe.get_doc({"doctype": "Poultry Shed", "shed_name": "Test Shed Default WH", "capacity": 5000, "default_feed_warehouse": self.warehouse_name}).insert(ignore_permissions=True)
+		batch = frappe.get_doc({"doctype": "Poultry Batch", "shed": shed_with_default.name, "breed": self.breed.name, "start_date": nowdate(), "initial_bird_count": 100}).insert(ignore_permissions=True)
+		self.assertEqual(batch.feed_warehouse, self.warehouse_name)  # TC-SHEDWH-01
+
+		explicit_batch = frappe.get_doc({"doctype": "Poultry Batch", "shed": shed_with_default.name, "breed": self.breed.name, "start_date": nowdate(), "initial_bird_count": 100, "feed_warehouse": None}).insert(ignore_permissions=True)
+		self.assertTrue(explicit_batch.feed_warehouse)  # TC-SHEDWH-01, defaulted rather than left blank
+
+	def test_epic19_feed_per_bird_and_damage_pct(self):
+		batch = frappe.get_doc({"doctype": "Poultry Batch", "shed": self.shed.name, "breed": self.breed.name, "start_date": nowdate(), "initial_bird_count": 100}).insert(ignore_permissions=True)
+		log = frappe.get_doc({
+			"doctype": "Poultry Daily Log", "batch": batch.name, "log_date": nowdate(), "feed_item": "Test Starter Feed", "feed_consumed_kg": 12,
+			"egg_entries": [{"grade": "Table Egg", "production_count": 80}, {"grade": "Dirty Egg", "production_count": 20}],
+		}).insert(ignore_permissions=True)
+		self.assertEqual(log.feed_per_bird_g, 120)  # TC-DASH-01, 12kg*1000/100 birds
+		self.assertEqual(log.damage_pct, 20)  # TC-DASH-02, 20 dirty / 100 total * 100

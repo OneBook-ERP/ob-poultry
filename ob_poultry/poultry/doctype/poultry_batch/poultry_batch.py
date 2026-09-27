@@ -7,6 +7,7 @@ from frappe.utils import flt, nowdate
 class PoultryBatch(Document):
 	def validate(self):
 		self.validate_shed_capacity()
+		self.default_feed_warehouse_from_shed()
 		self.validate_contract_fields()
 		if self.is_new():
 			self.current_bird_count = self.initial_bird_count
@@ -19,6 +20,13 @@ class PoultryBatch(Document):
 					self.initial_bird_count, capacity, self.shed
 				)
 			)
+
+	def default_feed_warehouse_from_shed(self):
+		if not self.is_new() or self.feed_warehouse or not self.shed:
+			return
+		default_warehouse = frappe.db.get_value("Poultry Shed", self.shed, "default_feed_warehouse")
+		if default_warehouse:
+			self.feed_warehouse = default_warehouse
 
 	def validate_contract_fields(self):
 		if self.flock_source != "Contract":

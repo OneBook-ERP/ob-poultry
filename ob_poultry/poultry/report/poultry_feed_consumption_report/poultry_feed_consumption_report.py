@@ -16,28 +16,35 @@ def get_columns():
 		{"label": _("Feed Item"), "fieldname": "feed_item", "fieldtype": "Link", "options": "Item", "width": 160},
 		{"label": _("Feed Consumed (kg)"), "fieldname": "feed_consumed_kg", "fieldtype": "Float", "width": 140},
 		{"label": _("Cumulative in Range (kg)"), "fieldname": "cumulative_feed_kg", "fieldtype": "Float", "width": 170},
+		{"label": _("Feed Cost"), "fieldname": "feed_cost", "fieldtype": "Currency", "width": 120},
+		{"label": _("Cumulative Cost in Range"), "fieldname": "cumulative_feed_cost", "fieldtype": "Currency", "width": 180},
 	]
 
 
 def get_data(filters):
-	conditions = ["docstatus = 1", "feed_consumed_kg > 0", "log_date between %(from_date)s and %(to_date)s"]
+	conditions = ["d.docstatus = 1", "d.feed_consumed_kg > 0", "d.log_date between %(from_date)s and %(to_date)s"]
 	if filters.get("batch"):
-		conditions.append("batch = %(batch)s")
+		conditions.append("d.batch = %(batch)s")
 
 	rows = frappe.db.sql(
 		f"""
-		select batch, log_date, feed_item, feed_consumed_kg
-		from `tabPoultry Daily Log`
+		select d.batch, d.log_date, d.feed_item, d.feed_consumed_kg, sed.amount as feed_cost
+		from `tabPoultry Daily Log` d
+		left join `tabStock Entry Detail` sed
+			on sed.parent = d.stock_entry and sed.item_code = d.feed_item
 		where {" and ".join(conditions)}
-		order by batch, log_date
+		order by d.batch, d.log_date
 		""",
 		filters,
 		as_dict=True,
 	)
 
 	running_total = {}
+	running_cost = {}
 	for row in rows:
 		running_total[row.batch] = running_total.get(row.batch, 0) + (row.feed_consumed_kg or 0)
+		running_cost[row.batch] = running_cost.get(row.batch, 0) + (row.feed_cost or 0)
 		row["cumulative_feed_kg"] = running_total[row.batch]
+		row["cumulative_feed_cost"] = running_cost[row.batch]
 
 	return rows

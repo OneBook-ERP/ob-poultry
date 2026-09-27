@@ -29,6 +29,19 @@ The business raises poultry (broiler/layer/breeder flocks) across one or more sh
 - **Sales, purchase, HR, and accounting workflows** — these are already covered by ERPNext's own Selling, Buying, HR, and Accounts modules; the Poultry module integrates with them (e.g. feed stock) rather than re-implementing them.
 - **Dashboards/report library** — deferred to a later pass once the underlying data (FCR, benchmarks, cause-coded mortality) actually exists to report on.
 
+### 3.3 In scope (v3 — Daily Register Parity)
+
+Sourced directly from a real customer's paper daily register (a per-shed layer/breeder log covering egg grading, feed, mortality, cost, and sales), photographed and reviewed 2026-09-28. Everything below is something the business already tracks by hand today, not a hypothetical feature:
+
+- Daily mortality/loss % per batch (we track cumulative; the register shows it daily, per shed).
+- Double-yolk eggs as a distinct, trackable egg grade.
+- Egg counts expressed in trays (eggs are physically stored and counted in trays on the farm floor), not just raw counts.
+- Feed logged in the unit the floor actually uses (bags), converted to kg via standard quantity conversion rather than requiring kg entry by hand.
+- Feed cost/valuation surfaced per batch and date, sourced from ERPNext's own stock valuation rather than manually entered.
+- Production cost per egg (feed cost &divide; eggs produced), a number the register computes by hand today.
+- Ad hoc daily expenses per batch (the register has a dedicated "EXPENCES" line per shed).
+- An egg sales ledger — buyer, quantity, rate — since the register's "SALES" block is literally a sales register, not just a production log.
+
 ## 4. Stakeholders / user roles
 
 | Role | Responsibility |
@@ -70,11 +83,13 @@ Numbered for traceability into the FIT-GAP analysis and FRD. `Shall` requirement
 - **BR-FLK-09** — The system should compute Feed Conversion Ratio (FCR) and mortality-corrected FCR (CFCR) per batch from cumulative feed consumption and body weight.
 - **BR-FLK-10** — The system should maintain breed/age-specific standard benchmarks (mortality %, feed per bird, body weight, FCR) and show actuals against them.
 - **BR-FLK-11** — The system shall allow closing a batch with an end date and shall reject further daily entries against a closed batch.
+- **BR-FLK-12** — The system should compute a per-day mortality/loss % per batch (today's mortality &divide; current bird count), not only the cumulative batch-level mortality %.
 
 ### Egg production (BR-EGG)
 
-- **BR-EGG-01** — The system should record daily egg production per batch broken down by grade (Hatching / Table / Jumbo / Cracked / Waste), each with an opening count, production count, closing count, and average egg weight.
+- **BR-EGG-01** — The system should record daily egg production per batch broken down by grade (Hatching / Table / Jumbo / Cracked / Waste / Double Yolk), each with an opening count, production count, closing count, and average egg weight.
 - **BR-EGG-02** — The system should compute Hen-Day Egg Production % (HDEP) automatically from daily egg records and current bird count.
+- **BR-EGG-03** — The system should record a tray count alongside the raw egg count per grade, using a configurable eggs-per-tray conversion.
 
 ### Vaccination (BR-VAC)
 
@@ -89,17 +104,32 @@ Numbered for traceability into the FIT-GAP analysis and FRD. `Shall` requirement
 - **BR-FED-03** — The system shall generate a manufacturing Bill of Materials from a feed formula and allow producing it in configurable batch multiples via a Work Order.
 - **BR-FED-04** — The system should record actual production output and compute a yield % against the theoretical target (formula quantity &times; batch multiple).
 - **BR-FED-05** — The system should surface feed production cost per kg from ingredient valuation.
+- **BR-FED-06** — The system should allow daily feed consumption to be entered in an alternate unit (e.g. bags) and converted to the feed item's stock unit automatically, rather than requiring the kg figure to be calculated by hand.
+- **BR-FED-07** — The system should surface the actual cost (valuation) of feed consumed per batch and date, sourced from ERPNext's stock valuation rather than a manually entered rate.
+- **BR-FED-08** — The system should compute production cost per egg (feed cost &divide; eggs produced) per batch and date range.
+
+### Expenses (BR-EXP)
+
+- **BR-EXP-01** — The system should allow ad hoc daily expenses to be recorded against a batch, each with a description and amount.
+
+### Egg sales (BR-SALES)
+
+- **BR-SALES-01** — The system should record an egg sale against a customer, itemized by grade, quantity, and rate, with a computed total amount.
+- **BR-SALES-02** — The system should reduce a batch's egg stock ledger (per-grade closing balance) by quantities sold, so closing stock always reconciles against production minus sales minus damage.
 
 ### System (BR-SYS)
 
 - **BR-SYS-01** — The system shall integrate with ERPNext's existing Item, BOM, Work Order, and Stock Entry doctypes for inventory and manufacturing rather than duplicating that logic.
 - **BR-SYS-02** — The system should restrict data entry and approval actions by role, distinguishing at minimum Farm Manager, Farm Attendant, Vaccination In-charge, and Feed Mill Operator.
+- **BR-SYS-03** — The system should let a shed carry a default feed warehouse, so batches placed in it don't require re-entering the same warehouse each time, and so a per-shed feed stock ledger is possible via ERPNext's own Stock Ledger report.
 
 ## 7. Assumptions & constraints
 
 - ERPNext's Setup Wizard (Company, Chart of Accounts, Item Group, UOM, Warehouse) is completed before any feed-manufacturing or stock-consumption feature is used; this module does not perform that setup itself.
 - One bird = one unit of count; sexed bird tracking (male/female counts, as the reference system does for breeder flocks) is not required for v1 broiler/layer batches and is deferred until breeder flocks are in scope.
 - Benchmark curves (BR-FLK-10) are entered manually by a System Manager; no external breed-standard data feed is assumed.
+- Eggs-per-tray (BR-EGG-03) is a configurable number, not a hardcoded 30 — different grades and operations pack differently.
+- Egg sales (BR-SALES-01) record the transaction and its effect on egg stock; they do not themselves create an ERPNext Sales Invoice — that remains a manual step in Selling until there's a concrete need to automate it.
 
 ## 8. Success metrics
 

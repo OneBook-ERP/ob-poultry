@@ -75,6 +75,13 @@
             "read_only": 1
         },
         {
+            "fieldname": "daily_mortality_pct",
+            "fieldtype": "Percent",
+            "label": "Daily Mortality %",
+            "read_only": 1,
+            "description": "Today's mortality ÷ current bird count. Distinct from the batch's cumulative mortality %."
+        },
+        {
             "fieldname": "section_break_log_feed",
             "fieldtype": "Section Break",
             "label": "Feed & Water"
@@ -84,6 +91,18 @@
             "fieldtype": "Link",
             "label": "Feed Item",
             "options": "Item"
+        },
+        {
+            "fieldname": "feed_uom",
+            "fieldtype": "Link",
+            "label": "Feed UOM",
+            "options": "UOM",
+            "description": "Optional. If set with Feed Qty, Feed Consumed (kg) is computed via the Feed Item's UOM conversion factor."
+        },
+        {
+            "fieldname": "feed_qty",
+            "fieldtype": "Float",
+            "label": "Feed Qty (in Feed UOM)"
         },
         {
             "fieldname": "feed_consumed_kg",
@@ -102,6 +121,12 @@
             "fieldname": "std_feed_per_bird_g",
             "fieldtype": "Float",
             "label": "Standard Feed / Bird (g)",
+            "read_only": 1
+        },
+        {
+            "fieldname": "feed_per_bird_g",
+            "fieldtype": "Float",
+            "label": "Feed / Bird (g)",
             "read_only": 1
         },
         {
@@ -142,11 +167,39 @@
             "read_only": 1
         },
         {
+            "fieldname": "damage_pct",
+            "fieldtype": "Percent",
+            "label": "Damage %",
+            "read_only": 1,
+            "description": "Cracked + Waste + Dirty Egg count ÷ total eggs produced."
+        },
+        {
             "fieldname": "egg_count",
             "fieldtype": "Int",
             "label": "Eggs Collected (Deprecated)",
             "read_only": 1,
             "description": "Superseded by Egg Entries above; kept read-only for historical rows."
+        },
+        {
+            "fieldname": "section_break_log_expenses",
+            "fieldtype": "Section Break",
+            "label": "Expenses"
+        },
+        {
+            "fieldname": "expenses",
+            "fieldtype": "Table",
+            "label": "Expenses",
+            "options": "Poultry Daily Log Expense"
+        },
+        {
+            "fieldname": "total_expenses",
+            "fieldtype": "Currency",
+            "label": "Total Expenses",
+            "read_only": 1
+        },
+        {
+            "fieldname": "section_break_log_notes",
+            "fieldtype": "Section Break"
         },
         {
             "fieldname": "notes",

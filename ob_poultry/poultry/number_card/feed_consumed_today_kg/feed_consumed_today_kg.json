@@ -1,0 +1,12 @@
+{
+    "doctype": "Number Card",
+    "name": "Feed Consumed Today (Kg)",
+    "module": "Poultry",
+    "type": "Custom",
+    "method": "ob_poultry.poultry.dashboard.feed_consumed_today",
+    "label": "Feed Consumed Today (Kg)",
+    "is_public": 1,
+    "is_standard": 1,
+    "show_percentage_stats": 0,
+    "stats_time_interval": "Daily"
+}

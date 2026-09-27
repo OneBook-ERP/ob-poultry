@@ -1,0 +1,28 @@
+{
+    "doctype": "DocType",
+    "name": "Poultry Settings",
+    "module": "Poultry",
+    "engine": "InnoDB",
+    "issingle": 1,
+    "fields": [
+        {
+            "fieldname": "eggs_per_tray",
+            "fieldtype": "Int",
+            "label": "Eggs Per Tray",
+            "default": "30",
+            "reqd": 1
+        }
+    ],
+    "permissions": [
+        {
+            "role": "System Manager",
+            "read": 1,
+            "write": 1
+        },
+        {
+            "role": "Poultry Manager",
+            "read": 1,
+            "write": 1
+        }
+    ]
+}

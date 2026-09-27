@@ -80,6 +80,18 @@
   {
    "child": 0,
    "collapsible": 1,
+   "icon": "settings",
+   "indent": 0,
+   "keep_closed": 0,
+   "label": "Settings",
+   "link_to": "Poultry Settings",
+   "link_type": "DocType",
+   "show_arrow": 0,
+   "type": "Link"
+  },
+  {
+   "child": 0,
+   "collapsible": 1,
    "icon": "syringe",
    "indent": 1,
    "keep_closed": 0,
@@ -237,6 +249,29 @@
    "keep_closed": 0,
    "label": "Growing Charge Scheme",
    "link_to": "Poultry Growing Charge Scheme",
+   "link_type": "DocType",
+   "show_arrow": 0,
+   "type": "Link"
+  },
+  {
+   "child": 0,
+   "collapsible": 1,
+   "icon": "shopping-cart",
+   "indent": 1,
+   "keep_closed": 0,
+   "label": "Sales",
+   "link_type": "DocType",
+   "show_arrow": 0,
+   "type": "Section Break"
+  },
+  {
+   "child": 1,
+   "collapsible": 1,
+   "icon": "",
+   "indent": 0,
+   "keep_closed": 0,
+   "label": "Egg Sale",
+   "link_to": "Poultry Egg Sale",
    "link_type": "DocType",
    "show_arrow": 0,
    "type": "Link"
@@ -404,6 +439,30 @@
    "keep_closed": 0,
    "label": "Compare Formula",
    "link_to": "Poultry Compare Formula",
+   "link_type": "Report",
+   "show_arrow": 0,
+   "type": "Link"
+  },
+  {
+   "child": 1,
+   "collapsible": 1,
+   "icon": "",
+   "indent": 0,
+   "keep_closed": 0,
+   "label": "Egg Production Cost",
+   "link_to": "Poultry Egg Production Cost",
+   "link_type": "Report",
+   "show_arrow": 0,
+   "type": "Link"
+  },
+  {
+   "child": 1,
+   "collapsible": 1,
+   "icon": "",
+   "indent": 0,
+   "keep_closed": 0,
+   "label": "Net Egg Stock",
+   "link_to": "Poultry Net Egg Stock",
    "link_type": "Report",
    "show_arrow": 0,
    "type": "Link"

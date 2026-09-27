@@ -1,7 +1,10 @@
 import frappe
+from erpnext.stock.get_item_details import get_conversion_factor
 from frappe import _
 from frappe.model.document import Document
 from frappe.utils import date_diff, flt
+
+DAMAGED_EGG_GRADES = ("Cracked Egg", "Waste Egg", "Dirty Egg")
 
 
 class PoultryDailyLog(Document):
@@ -14,8 +17,38 @@ class PoultryDailyLog(Document):
 		self.validate_batch_not_closed()
 		self.compute_mortality_rollup()
 		self.validate_bird_count()
+		self.compute_daily_mortality_pct()
+		self.apply_feed_uom_conversion()
 		self.compute_egg_rollup()
+		self.compute_damage_pct()
+		self.compute_feed_per_bird_g()
+		self.compute_expenses_total()
 		self.apply_benchmarks()
+
+	def compute_daily_mortality_pct(self):
+		current_bird_count = self.batch_doc.current_bird_count
+		self.daily_mortality_pct = (flt(self.mortality_count) / current_bird_count * 100) if current_bird_count else 0
+
+	def apply_feed_uom_conversion(self):
+		if not (self.feed_uom and self.feed_qty):
+			return
+		if not self.feed_item:
+			frappe.throw(_("Set a Feed Item before entering Feed Qty in an alternate unit"))
+		conversion_factor = flt(get_conversion_factor(self.feed_item, self.feed_uom).get("conversion_factor"))
+		if not conversion_factor:
+			frappe.throw(_("No UOM Conversion Factor found for {0} in {1}").format(self.feed_item, self.feed_uom))
+		self.feed_consumed_kg = flt(self.feed_qty) * conversion_factor
+
+	def compute_damage_pct(self):
+		damaged = sum(flt(row.production_count) for row in self.egg_entries if row.grade in DAMAGED_EGG_GRADES)
+		self.damage_pct = (damaged / self.total_eggs_produced * 100) if self.total_eggs_produced else 0
+
+	def compute_feed_per_bird_g(self):
+		current_bird_count = self.batch_doc.current_bird_count
+		self.feed_per_bird_g = (flt(self.feed_consumed_kg) * 1000 / current_bird_count) if current_bird_count else 0
+
+	def compute_expenses_total(self):
+		self.total_expenses = sum(flt(row.amount) for row in self.expenses) if self.expenses else 0
 
 	def validate_unique_log(self):
 		existing = frappe.db.exists(
@@ -52,10 +85,12 @@ class PoultryDailyLog(Document):
 			)
 
 	def compute_egg_rollup(self):
+		eggs_per_tray = frappe.db.get_single_value("Poultry Settings", "eggs_per_tray") or 30
 		total = 0
 		for row in self.egg_entries:
 			row.opening_count = self.get_previous_closing(row.grade)
 			row.closing_count = flt(row.opening_count) + flt(row.production_count)
+			row.trays = flt(row.production_count) / eggs_per_tray
 			total += flt(row.production_count)
 		self.total_eggs_produced = total
 		current_bird_count = self.batch_doc.current_bird_count
