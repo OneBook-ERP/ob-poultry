@@ -1,0 +1,28 @@
+{
+    "add_total_row": 0,
+    "add_translate_data": 0,
+    "columns": [],
+    "disabled": 0,
+    "docstatus": 0,
+    "doctype": "Report",
+    "filters": [],
+    "idx": 0,
+    "is_standard": "Yes",
+    "module": "Poultry",
+    "name": "Poultry Compare Formula",
+    "prepared_report": 0,
+    "ref_doctype": "Poultry Feed Formula",
+    "report_name": "Poultry Compare Formula",
+    "report_type": "Script Report",
+    "roles": [
+        {
+            "role": "System Manager"
+        },
+        {
+            "role": "Poultry Manager"
+        },
+        {
+            "role": "Feed Mill Operator"
+        }
+    ]
+}

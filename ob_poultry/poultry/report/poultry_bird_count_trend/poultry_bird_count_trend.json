@@ -1,0 +1,21 @@
+{
+    "doctype": "Report",
+    "name": "Poultry Bird Count Trend",
+    "report_name": "Poultry Bird Count Trend",
+    "report_type": "Script Report",
+    "module": "Poultry",
+    "ref_doctype": "Poultry Batch",
+    "is_standard": "Yes",
+    "disabled": 0,
+    "add_total_row": 0,
+    "filters": [],
+    "columns": [],
+    "roles": [
+        {
+            "role": "System Manager"
+        },
+        {
+            "role": "Poultry Manager"
+        }
+    ]
+}

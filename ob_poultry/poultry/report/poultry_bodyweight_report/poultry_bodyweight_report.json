@@ -1,0 +1,21 @@
+{
+    "doctype": "Report",
+    "name": "Poultry Bodyweight Report",
+    "report_name": "Poultry Bodyweight Report",
+    "report_type": "Script Report",
+    "module": "Poultry",
+    "ref_doctype": "Poultry Daily Log",
+    "is_standard": "Yes",
+    "disabled": 0,
+    "add_total_row": 0,
+    "filters": [],
+    "columns": [],
+    "roles": [
+        {
+            "role": "System Manager"
+        },
+        {
+            "role": "Poultry Manager"
+        }
+    ]
+}

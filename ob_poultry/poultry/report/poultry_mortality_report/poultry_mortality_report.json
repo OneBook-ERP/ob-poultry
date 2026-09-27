@@ -1,0 +1,21 @@
+{
+    "doctype": "Report",
+    "name": "Poultry Mortality Report",
+    "report_name": "Poultry Mortality Report",
+    "module": "Poultry",
+    "ref_doctype": "Poultry Batch",
+    "report_type": "Script Report",
+    "is_standard": "Yes",
+    "disabled": 0,
+    "add_total_row": 1,
+    "filters": [],
+    "columns": [],
+    "roles": [
+        {
+            "role": "System Manager"
+        },
+        {
+            "role": "Poultry Manager"
+        }
+    ]
+}
