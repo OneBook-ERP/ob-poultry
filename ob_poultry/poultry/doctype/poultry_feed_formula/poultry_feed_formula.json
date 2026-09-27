@@ -1,0 +1,80 @@
+{
+    "doctype": "DocType",
+    "name": "Poultry Feed Formula",
+    "module": "Poultry",
+    "engine": "InnoDB",
+    "autoname": "field:feed_name",
+    "track_changes": 1,
+    "fields": [
+        {
+            "fieldname": "feed_name",
+            "fieldtype": "Data",
+            "label": "Feed Name",
+            "reqd": 1,
+            "unique": 1,
+            "in_list_view": 1
+        },
+        {
+            "fieldname": "feed_item",
+            "fieldtype": "Link",
+            "label": "Feed Item",
+            "options": "Item",
+            "reqd": 1,
+            "description": "Finished good Item that this recipe produces",
+            "in_list_view": 1
+        },
+        {
+            "fieldname": "column_break_formula_1",
+            "fieldtype": "Column Break"
+        },
+        {
+            "fieldname": "batch_size_kg",
+            "fieldtype": "Float",
+            "label": "Batch Size (kg)",
+            "default": "100",
+            "reqd": 1,
+            "in_list_view": 1
+        },
+        {
+            "fieldname": "is_active",
+            "fieldtype": "Check",
+            "label": "Is Active",
+            "default": "1"
+        },
+        {
+            "fieldname": "section_break_formula_ingredients",
+            "fieldtype": "Section Break",
+            "label": "Ingredients"
+        },
+        {
+            "fieldname": "ingredients",
+            "fieldtype": "Table",
+            "label": "Ingredients",
+            "options": "Poultry Feed Formula Ingredient",
+            "reqd": 1
+        },
+        {
+            "fieldname": "section_break_formula_bom",
+            "fieldtype": "Section Break",
+            "label": "Manufacturing"
+        },
+        {
+            "fieldname": "bom",
+            "fieldtype": "Link",
+            "label": "BOM",
+            "options": "BOM",
+            "read_only": 1
+        }
+    ],
+    "sort_field": "modified",
+    "sort_order": "DESC",
+    "permissions": [
+        {
+            "role": "System Manager",
+            "read": 1,
+            "write": 1,
+            "create": 1,
+            "delete": 1
+        }
+    ]
+}

@@ -1,0 +1,50 @@
+{
+    "doctype": "DocType",
+    "name": "Poultry Shed",
+    "module": "Poultry",
+    "engine": "InnoDB",
+    "autoname": "field:shed_name",
+    "fields": [
+        {
+            "fieldname": "shed_name",
+            "fieldtype": "Data",
+            "label": "Shed Name",
+            "reqd": 1,
+            "unique": 1,
+            "in_list_view": 1
+        },
+        {
+            "fieldname": "capacity",
+            "fieldtype": "Int",
+            "label": "Capacity (Birds)",
+            "in_list_view": 1
+        },
+        {
+            "fieldname": "location",
+            "fieldtype": "Data",
+            "label": "Location"
+        },
+        {
+            "fieldname": "column_break_shed",
+            "fieldtype": "Column Break"
+        },
+        {
+            "fieldname": "is_active",
+            "fieldtype": "Check",
+            "label": "Is Active",
+            "default": "1",
+            "in_list_view": 1
+        }
+    ],
+    "sort_field": "modified",
+    "sort_order": "DESC",
+    "permissions": [
+        {
+            "role": "System Manager",
+            "read": 1,
+            "write": 1,
+            "create": 1,
+            "delete": 1
+        }
+    ]
+}

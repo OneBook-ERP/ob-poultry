@@ -1,9 +1,9 @@
 [project]
-name = "ob_poultary"
+name = "ob_poultry"
 authors = [
     { name = "OB", email = "tools.zenpivot@gmail.com"}
 ]
-description = "Custom app for Poultary"
+description = "Custom app for Poultry"
 requires-python = ">=3.14"
 readme = "README.md"
 dynamic = ["version"]

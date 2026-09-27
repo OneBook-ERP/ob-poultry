@@ -1,0 +1,128 @@
+{
+    "doctype": "DocType",
+    "name": "Poultry Batch",
+    "module": "Poultry",
+    "engine": "InnoDB",
+    "autoname": "format:PB-{YYYY}-{#####}",
+    "naming_rule": "Expression (old style)",
+    "track_changes": 1,
+    "fields": [
+        {
+            "fieldname": "shed",
+            "fieldtype": "Link",
+            "label": "Shed",
+            "options": "Poultry Shed",
+            "reqd": 1,
+            "in_list_view": 1
+        },
+        {
+            "fieldname": "breed",
+            "fieldtype": "Link",
+            "label": "Breed",
+            "options": "Poultry Breed",
+            "reqd": 1,
+            "in_list_view": 1
+        },
+        {
+            "fieldname": "breed_type",
+            "fieldtype": "Select",
+            "label": "Breed Type",
+            "options": "Broiler\nLayer\nBreeder\nDual Purpose",
+            "fetch_from": "breed.breed_type",
+            "read_only": 1
+        },
+        {
+            "fieldname": "column_break_batch_1",
+            "fieldtype": "Column Break"
+        },
+        {
+            "fieldname": "start_date",
+            "fieldtype": "Date",
+            "label": "Start Date",
+            "default": "Today",
+            "reqd": 1,
+            "in_list_view": 1
+        },
+        {
+            "fieldname": "status",
+            "fieldtype": "Select",
+            "label": "Status",
+            "options": "Active\nClosed",
+            "default": "Active",
+            "read_only": 1,
+            "in_list_view": 1
+        },
+        {
+            "fieldname": "end_date",
+            "fieldtype": "Date",
+            "label": "End Date",
+            "read_only": 1
+        },
+        {
+            "fieldname": "section_break_batch_counts",
+            "fieldtype": "Section Break",
+            "label": "Bird Count"
+        },
+        {
+            "fieldname": "initial_bird_count",
+            "fieldtype": "Int",
+            "label": "Initial Bird Count",
+            "reqd": 1,
+            "in_list_view": 1
+        },
+        {
+            "fieldname": "column_break_batch_2",
+            "fieldtype": "Column Break"
+        },
+        {
+            "fieldname": "current_bird_count",
+            "fieldtype": "Int",
+            "label": "Current Bird Count",
+            "read_only": 1,
+            "in_list_view": 1
+        },
+        {
+            "fieldname": "total_mortality",
+            "fieldtype": "Int",
+            "label": "Total Mortality",
+            "read_only": 1
+        },
+        {
+            "fieldname": "section_break_batch_feed",
+            "fieldtype": "Section Break",
+            "label": "Feed"
+        },
+        {
+            "fieldname": "feed_warehouse",
+            "fieldtype": "Link",
+            "label": "Feed Warehouse",
+            "options": "Warehouse",
+            "description": "Warehouse that feed stock is issued from when logging daily feed consumption"
+        },
+        {
+            "fieldname": "column_break_batch_3",
+            "fieldtype": "Column Break"
+        },
+        {
+            "fieldname": "source",
+            "fieldtype": "Data",
+            "label": "Source / Hatchery"
+        },
+        {
+            "fieldname": "notes",
+            "fieldtype": "Small Text",
+            "label": "Notes"
+        }
+    ],
+    "sort_field": "creation",
+    "sort_order": "DESC",
+    "permissions": [
+        {
+            "role": "System Manager",
+            "read": 1,
+            "write": 1,
+            "create": 1,
+            "delete": 1
+        }
+    ]
+}

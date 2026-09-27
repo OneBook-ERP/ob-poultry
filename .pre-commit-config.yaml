@@ -8,7 +8,7 @@ repos:
     rev: v6.0.0
     hooks:
       - id: trailing-whitespace
-        files: "ob_poultary.*"
+        files: "ob_poultry.*"
         exclude: ".*json$|.*txt$|.*csv|.*md|.*svg"
       - id: check-merge-conflict
       - id: check-ast
@@ -38,11 +38,11 @@ repos:
         # Ignore any files that might contain jinja / bundles
         exclude: |
             (?x)^(
-                ob_poultary/public/dist/.*|
+                ob_poultry/public/dist/.*|
                 .*node_modules.*|
                 .*boilerplate.*|
-                ob_poultary/templates/includes/.*|
-                ob_poultary/public/js/lib/.*
+                ob_poultry/templates/includes/.*|
+                ob_poultry/public/js/lib/.*
             )$
 
 
@@ -55,12 +55,12 @@ repos:
         # Ignore any files that might contain jinja / bundles
         exclude: |
             (?x)^(
-                ob_poultary/public/dist/.*|
+                ob_poultry/public/dist/.*|
                 cypress/.*|
                 .*node_modules.*|
                 .*boilerplate.*|
-                ob_poultary/templates/includes/.*|
-                ob_poultary/public/js/lib/.*
+                ob_poultry/templates/includes/.*|
+                ob_poultry/public/js/lib/.*
             )$
 
 ci:

@@ -1,0 +1,31 @@
+{
+    "doctype": "DocType",
+    "name": "Poultry Feed Formula Ingredient",
+    "module": "Poultry",
+    "engine": "InnoDB",
+    "istable": 1,
+    "fields": [
+        {
+            "fieldname": "raw_material",
+            "fieldtype": "Link",
+            "label": "Raw Material",
+            "options": "Item",
+            "reqd": 1,
+            "in_list_view": 1
+        },
+        {
+            "fieldname": "quantity_kg",
+            "fieldtype": "Float",
+            "label": "Quantity (kg)",
+            "reqd": 1,
+            "in_list_view": 1
+        },
+        {
+            "fieldname": "percentage",
+            "fieldtype": "Percent",
+            "label": "% of Batch",
+            "read_only": 1,
+            "in_list_view": 1
+        }
+    ]
+}

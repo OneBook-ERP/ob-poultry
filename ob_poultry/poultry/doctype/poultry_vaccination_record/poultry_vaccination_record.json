@@ -1,0 +1,69 @@
+{
+    "doctype": "DocType",
+    "name": "Poultry Vaccination Record",
+    "module": "Poultry",
+    "engine": "InnoDB",
+    "autoname": "format:PVR-{YYYY}-{#####}",
+    "naming_rule": "Expression (old style)",
+    "fields": [
+        {
+            "fieldname": "batch",
+            "fieldtype": "Link",
+            "label": "Batch",
+            "options": "Poultry Batch",
+            "reqd": 1,
+            "in_list_view": 1
+        },
+        {
+            "fieldname": "vaccine_name",
+            "fieldtype": "Data",
+            "label": "Vaccine Name",
+            "reqd": 1,
+            "in_list_view": 1
+        },
+        {
+            "fieldname": "dose",
+            "fieldtype": "Data",
+            "label": "Dose"
+        },
+        {
+            "fieldname": "column_break_vacc_1",
+            "fieldtype": "Column Break"
+        },
+        {
+            "fieldname": "date_given",
+            "fieldtype": "Date",
+            "label": "Date Given",
+            "default": "Today",
+            "reqd": 1,
+            "in_list_view": 1
+        },
+        {
+            "fieldname": "next_due_date",
+            "fieldtype": "Date",
+            "label": "Next Due Date",
+            "in_list_view": 1
+        },
+        {
+            "fieldname": "administered_by",
+            "fieldtype": "Data",
+            "label": "Administered By"
+        },
+        {
+            "fieldname": "notes",
+            "fieldtype": "Small Text",
+            "label": "Notes"
+        }
+    ],
+    "sort_field": "date_given",
+    "sort_order": "DESC",
+    "permissions": [
+        {
+            "role": "System Manager",
+            "read": 1,
+            "write": 1,
+            "create": 1,
+            "delete": 1
+        }
+    ]
+}

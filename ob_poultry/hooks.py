@@ -1,7 +1,7 @@
-app_name = "ob_poultary"
-app_title = "OB Poultary"
+app_name = "ob_poultry"
+app_title = "OB Poultry"
 app_publisher = "OB"
-app_description = "Custom app for Poultary"
+app_description = "Custom app for Poultry"
 app_email = "tools.zenpivot@gmail.com"
 app_license = "mit"
 
@@ -13,11 +13,11 @@ app_license = "mit"
 # Each item in the list will be shown as an app in the apps page
 # add_to_apps_screen = [
 # 	{
-# 		"name": "ob_poultary",
-# 		"logo": "/assets/ob_poultary/logo.png",
-# 		"title": "OB Poultary",
-# 		"route": "/ob_poultary",
-# 		"has_permission": "ob_poultary.api.permission.has_app_permission"
+# 		"name": "ob_poultry",
+# 		"logo": "/assets/ob_poultry/logo.png",
+# 		"title": "OB Poultry",
+# 		"route": "/ob_poultry",
+# 		"has_permission": "ob_poultry.api.permission.has_app_permission"
 # 	}
 # ]
 
@@ -25,15 +25,15 @@ app_license = "mit"
 # ------------------
 
 # include js, css files in header of desk.html
-# app_include_css = "/assets/ob_poultary/css/ob_poultary.css"
-# app_include_js = "/assets/ob_poultary/js/ob_poultary.js"
+# app_include_css = "/assets/ob_poultry/css/ob_poultry.css"
+# app_include_js = "/assets/ob_poultry/js/ob_poultry.js"
 
 # include js, css files in header of web template
-# web_include_css = "/assets/ob_poultary/css/ob_poultary.css"
-# web_include_js = "/assets/ob_poultary/js/ob_poultary.js"
+# web_include_css = "/assets/ob_poultry/css/ob_poultry.css"
+# web_include_js = "/assets/ob_poultry/js/ob_poultry.js"
 
 # include custom scss in every website theme (without file extension ".scss")
-# website_theme_scss = "ob_poultary/public/scss/website"
+# website_theme_scss = "ob_poultry/public/scss/website"
 
 # include js, css files in header of web form
 # webform_include_js = {"doctype": "public/js/doctype.js"}
@@ -51,7 +51,7 @@ app_license = "mit"
 # Svg Icons
 # ------------------
 # include app icons in desk
-# app_include_icons = "ob_poultary/public/icons.svg"
+# app_include_icons = "ob_poultry/public/icons.svg"
 
 # Home Pages
 # ----------
@@ -78,55 +78,55 @@ app_license = "mit"
 
 # add methods and filters to jinja environment
 # jinja = {
-# 	"methods": "ob_poultary.utils.jinja_methods",
-# 	"filters": "ob_poultary.utils.jinja_filters"
+# 	"methods": "ob_poultry.utils.jinja_methods",
+# 	"filters": "ob_poultry.utils.jinja_filters"
 # }
 
 # Installation
 # ------------
 
-# before_install = "ob_poultary.install.before_install"
-# after_install = "ob_poultary.install.after_install"
+# before_install = "ob_poultry.install.before_install"
+# after_install = "ob_poultry.install.after_install"
 
 # Uninstallation
 # ------------
 
-# before_uninstall = "ob_poultary.uninstall.before_uninstall"
-# after_uninstall = "ob_poultary.uninstall.after_uninstall"
+# before_uninstall = "ob_poultry.uninstall.before_uninstall"
+# after_uninstall = "ob_poultry.uninstall.after_uninstall"
 
 # Integration Setup
 # ------------------
 # To set up dependencies/integrations with other apps
 # Name of the app being installed is passed as an argument
 
-# before_app_install = "ob_poultary.utils.before_app_install"
-# after_app_install = "ob_poultary.utils.after_app_install"
+# before_app_install = "ob_poultry.utils.before_app_install"
+# after_app_install = "ob_poultry.utils.after_app_install"
 
 # Integration Cleanup
 # -------------------
 # To clean up dependencies/integrations with other apps
 # Name of the app being uninstalled is passed as an argument
 
-# before_app_uninstall = "ob_poultary.utils.before_app_uninstall"
-# after_app_uninstall = "ob_poultary.utils.after_app_uninstall"
+# before_app_uninstall = "ob_poultry.utils.before_app_uninstall"
+# after_app_uninstall = "ob_poultry.utils.after_app_uninstall"
 
 # Build
 # ------------------
 # To hook into the build process
 
-# after_build = "ob_poultary.build.after_build"
+# after_build = "ob_poultry.build.after_build"
 
 # Desk Notifications
 # ------------------
 # See frappe.core.notifications.get_notification_config
 
-# notification_config = "ob_poultary.notifications.get_notification_config"
+# notification_config = "ob_poultry.notifications.get_notification_config"
 
 # Awesome Bar
 # -----------
 # Extra search results: list of dicts with label, description, route, index.
 # route: ["List", "ToDo"], "/desk/docs/some/page", or "https://example.com"
-# awesomebar_search = ["ob_poultary.search.awesomebar_results"]
+# awesomebar_search = ["ob_poultry.search.awesomebar_results"]
 
 # Permissions
 # -----------
@@ -157,47 +157,47 @@ app_license = "mit"
 
 # scheduler_events = {
 # 	"all": [
-# 		"ob_poultary.tasks.all"
+# 		"ob_poultry.tasks.all"
 # 	],
 # 	"daily": [
-# 		"ob_poultary.tasks.daily"
+# 		"ob_poultry.tasks.daily"
 # 	],
 # 	"hourly": [
-# 		"ob_poultary.tasks.hourly"
+# 		"ob_poultry.tasks.hourly"
 # 	],
 # 	"weekly": [
-# 		"ob_poultary.tasks.weekly"
+# 		"ob_poultry.tasks.weekly"
 # 	],
 # 	"monthly": [
-# 		"ob_poultary.tasks.monthly"
+# 		"ob_poultry.tasks.monthly"
 # 	],
 # }
 
 # Testing
 # -------
 
-# before_tests = "ob_poultary.install.before_tests"
+# before_tests = "ob_poultry.install.before_tests"
 
 # Extend DocType Class
 # ------------------------------
 #
 # Specify custom mixins to extend the standard doctype controller.
 # extend_doctype_class = {
-# 	"Task": "ob_poultary.custom.task.CustomTaskMixin"
+# 	"Task": "ob_poultry.custom.task.CustomTaskMixin"
 # }
 
 # Overriding Methods
 # ------------------------------
 #
 # override_whitelisted_methods = {
-# 	"frappe.desk.doctype.event.event.get_events": "ob_poultary.event.get_events"
+# 	"frappe.desk.doctype.event.event.get_events": "ob_poultry.event.get_events"
 # }
 #
 # each overriding function accepts a `data` argument;
 # generated from the base implementation of the doctype dashboard,
 # along with any modifications made in other Frappe apps
 # override_doctype_dashboards = {
-# 	"Task": "ob_poultary.task.get_dashboard_data"
+# 	"Task": "ob_poultry.task.get_dashboard_data"
 # }
 
 # exempt linked doctypes from being automatically cancelled
@@ -211,13 +211,13 @@ app_license = "mit"
 
 # Request Events
 # ----------------
-# before_request = ["ob_poultary.utils.before_request"]
-# after_request = ["ob_poultary.utils.after_request"]
+# before_request = ["ob_poultry.utils.before_request"]
+# after_request = ["ob_poultry.utils.after_request"]
 
 # Job Events
 # ----------
-# before_job = ["ob_poultary.utils.before_job"]
-# after_job = ["ob_poultary.utils.after_job"]
+# before_job = ["ob_poultry.utils.before_job"]
+# after_job = ["ob_poultry.utils.after_job"]
 
 # User Data Protection
 # --------------------
@@ -247,7 +247,7 @@ app_license = "mit"
 # --------------------------------
 
 # auth_hooks = [
-# 	"ob_poultary.auth.validate"
+# 	"ob_poultry.auth.validate"
 # ]
 
 # Automatically update python controller files with type annotations for this app.
