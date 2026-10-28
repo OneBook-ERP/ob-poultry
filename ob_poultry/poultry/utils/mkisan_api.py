@@ -243,7 +243,7 @@ def get_today_egg_rate(market=None, date=None):
 	record = frappe.db.get_value(
 		"Poultry Daily Egg Rate",
 		{"rate_date": target_date, "market": target_market},
-		["rate_date", "market", "rate_per_piece", "rate_per_tray", "rate_per_100", "trend", "synced_at"],
+		["rate_date", "market", "rate_per_piece", "rate_per_tray", "rate_per_100", "rate_per_peti", "national_average", "trend", "synced_at"],
 		as_dict=True,
 	)
 
@@ -254,7 +254,7 @@ def get_today_egg_rate(market=None, date=None):
 			record = frappe.db.get_value(
 				"Poultry Daily Egg Rate",
 				{"rate_date": target_date, "market": target_market},
-				["rate_date", "market", "rate_per_piece", "rate_per_tray", "rate_per_100", "trend", "synced_at"],
+				["rate_date", "market", "rate_per_piece", "rate_per_tray", "rate_per_100", "rate_per_peti", "national_average", "trend", "synced_at"],
 				as_dict=True,
 			)
 
@@ -265,7 +265,7 @@ def get_today_egg_rate(market=None, date=None):
 		record = frappe.db.get_value(
 			"Poultry Daily Egg Rate",
 			{"market": target_market, "rate_date": ("<=", target_date)},
-			["rate_date", "market", "rate_per_piece", "rate_per_tray", "rate_per_100", "trend", "synced_at"],
+			["rate_date", "market", "rate_per_piece", "rate_per_tray", "rate_per_100", "rate_per_peti", "national_average", "trend", "synced_at"],
 			order_by="rate_date desc",
 			as_dict=True,
 		)
@@ -280,6 +280,8 @@ def get_today_egg_rate(market=None, date=None):
 			"rate_per_piece": flt(record.rate_per_piece),
 			"rate_per_tray": flt(record.rate_per_tray),
 			"rate_per_100": flt(record.rate_per_100),
+			"rate_per_peti": flt(record.rate_per_peti),
+			"national_average": flt(record.national_average),
 			"trend": record.trend,
 			"synced_at": str(record.synced_at) if record.synced_at else None,
 		}
