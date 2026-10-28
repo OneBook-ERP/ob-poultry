@@ -17,7 +17,7 @@ frappe.ui.form.on("Poultry Settings", {
 				callback(r) {
 					if (btn) btn.prop("disabled", false);
 					if (r.message && r.message.success) {
-						if (r.message.throttled) {
+						if (r.message.already_updated) {
 							frappe.show_alert({
 								message: r.message.message,
 								indicator: "blue"

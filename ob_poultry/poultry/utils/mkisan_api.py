@@ -35,53 +35,40 @@ def get_mkisan_api_key():
 
 
 @frappe.whitelist()
-def fetch_and_store_egg_rates(market=None, force=False):
+def fetch_and_store_egg_rates(market=None, force=False, override=False):
 	"""
 	Queries the MKisan API for NECC egg rates and records them into Poultry Daily Egg Rate.
-	Conserves quota by checking local cache first unless force=True.
+	If today's rate for this market already exists in the database, skips the external API call
+	and immediately returns already updated.
 	"""
 	settings = frappe.get_single("Poultry Settings")
 	target_market = (market or settings.default_egg_market or "Namakkal").strip()
-	today = nowdate()
+	today = getdate(nowdate())
 
-	# Cooldown guard: Prevent spamming external API if already synced within the last 5 minutes
-	MIN_COOLDOWN_MINUTES = 5
-	if settings.last_egg_rate_sync and existing:
-		from frappe.utils import time_diff_in_seconds
-		elapsed_sec = time_diff_in_seconds(now_datetime(), settings.last_egg_rate_sync)
-		if elapsed_sec < (MIN_COOLDOWN_MINUTES * 60):
-			wait_min = int(((MIN_COOLDOWN_MINUTES * 60) - elapsed_sec) // 60) + 1
-			return {
-				"success": True,
-				"cached": True,
-				"throttled": True,
-				"rate_date": today,
-				"market": target_market,
-				"rate_per_piece": flt(existing.rate_per_piece),
-				"rate_per_tray": flt(existing.rate_per_tray),
-				"trend": existing.trend,
-				"message": _("Rates are already up to date (synced {0} min ago). Next API check allowed in {1} min.").format(int(elapsed_sec // 60) or "<1", wait_min),
-			}
-
-	# Cache check: If record for today already exists and force is False, return it immediately without API calls
+	# 1. Check if today's rate already exists in local database
 	existing = frappe.db.get_value(
 		"Poultry Daily Egg Rate",
 		{"rate_date": today, "market": target_market},
-		["name", "rate_per_piece", "rate_per_tray", "rate_per_100", "rate_per_peti", "trend"],
+		["name", "rate_date", "market", "rate_per_piece", "rate_per_tray", "rate_per_100", "rate_per_peti", "national_average", "trend", "synced_at"],
 		as_dict=True,
 	)
-	if existing and not force:
+
+	# 2. If today's rate is already recorded and not an emergency override, skip API call
+	if existing and not override:
+		date_str = format_date(existing.rate_date) if "format_date" in dir() else str(existing.rate_date)
 		return {
 			"success": True,
 			"cached": True,
-			"rate_date": today,
+			"already_updated": True,
+			"rate_date": str(existing.rate_date),
 			"market": target_market,
 			"rate_per_piece": flt(existing.rate_per_piece),
 			"rate_per_tray": flt(existing.rate_per_tray),
 			"trend": existing.trend,
+			"message": _("Today's rate ({0}) for {1} is already fetched and up to date.").format(date_str, target_market),
 		}
 
-	if not force and not settings.enable_mkisan_sync:
+	if not settings.enable_mkisan_sync and not override:
 		return {"success": False, "message": _("MKisan sync is disabled in Poultry Settings.")}
 
 	api_key = get_mkisan_api_key()
@@ -314,12 +301,17 @@ def get_today_egg_rate(market=None, date=None):
 def scheduled_fetch_egg_rates():
 	"""
 	Cron job scheduled daily at 1:30 PM IST (post-NECC publication).
+	Checks if today's rate is already in the database; if yes, skips API call.
 	"""
 	settings = frappe.get_single("Poultry Settings")
 	if not settings.enable_mkisan_sync:
 		return
 
+	today = getdate(nowdate())
 	market = settings.default_egg_market or "Namakkal"
+	if frappe.db.exists("Poultry Daily Egg Rate", {"rate_date": today, "market": market}):
+		return
+
 	fetch_and_store_egg_rates(market=market, force=False)
 
 
@@ -332,8 +324,9 @@ def scheduled_backup_fetch_egg_rates():
 	if not settings.enable_mkisan_sync:
 		return
 
-	today = nowdate()
+	today = getdate(nowdate())
 	market = settings.default_egg_market or "Namakkal"
-	exists = frappe.db.exists("Poultry Daily Egg Rate", {"rate_date": today, "market": market})
-	if not exists:
-		fetch_and_store_egg_rates(market=market, force=True)
+	if frappe.db.exists("Poultry Daily Egg Rate", {"rate_date": today, "market": market}):
+		return
+
+	fetch_and_store_egg_rates(market=market, force=False)
