@@ -47,24 +47,36 @@ def fetch_and_store_egg_rates(market: str | None = None, force: bool = False, ov
 	target_market = (market or settings.default_egg_market or "Namakkal").strip()
 	today = getdate(nowdate())
 
+	fields_to_fetch = [
+		"name",
+		"rate_date",
+		"market",
+		"rate_per_piece",
+		"rate_per_tray",
+		"rate_per_100",
+		"rate_per_peti",
+		"national_average",
+		"trend",
+		"synced_at",
+	]
+
 	# 1. Check if today's rate already exists in local database
 	existing = frappe.db.get_value(
 		"Poultry Daily Egg Rate",
 		{"rate_date": today, "market": target_market},
-		[
-			"name",
-			"rate_date",
-			"market",
-			"rate_per_piece",
-			"rate_per_tray",
-			"rate_per_100",
-			"rate_per_peti",
-			"national_average",
-			"trend",
-			"synced_at",
-		],
+		fields_to_fetch,
 		as_dict=True,
 	)
+
+	# If not forcing an API call and today's rate isn't out yet, fallback to latest recorded rate
+	if not existing and not force and not override:
+		existing = frappe.db.get_value(
+			"Poultry Daily Egg Rate",
+			{"market": target_market},
+			fields_to_fetch,
+			order_by="rate_date desc, creation desc",
+			as_dict=True,
+		)
 
 	# 2. If today's rate is already recorded and not an emergency override, skip API call
 	if existing and not override:

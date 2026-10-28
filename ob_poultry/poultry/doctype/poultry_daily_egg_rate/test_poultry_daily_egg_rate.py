@@ -24,9 +24,9 @@ class IntegrationTestPoultryDailyEggRate(IntegrationTestCase):
 		self.assertGreater(flt(res.get("rate_per_tray")), 0)
 
 		# Check DB record
-		today = nowdate()
-		rec = frappe.get_doc("Poultry Daily Egg Rate", f"{today}-Namakkal")
-		self.assertEqual(rec.rate_date, frappe.utils.getdate(today))
+		rate_date = str(res.get("rate_date"))
+		rec = frappe.get_doc("Poultry Daily Egg Rate", f"{rate_date}-Namakkal")
+		self.assertEqual(str(rec.rate_date), rate_date)
 		self.assertEqual(rec.market, "Namakkal")
 		self.assertEqual(flt(rec.rate_per_piece), flt(res.get("rate_per_piece")))
 
