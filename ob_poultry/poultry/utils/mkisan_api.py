@@ -44,6 +44,25 @@ def fetch_and_store_egg_rates(market=None, force=False):
 	target_market = (market or settings.default_egg_market or "Namakkal").strip()
 	today = nowdate()
 
+	# Cooldown guard: Prevent spamming external API if already synced within the last 5 minutes
+	MIN_COOLDOWN_MINUTES = 5
+	if settings.last_egg_rate_sync and existing:
+		from frappe.utils import time_diff_in_seconds
+		elapsed_sec = time_diff_in_seconds(now_datetime(), settings.last_egg_rate_sync)
+		if elapsed_sec < (MIN_COOLDOWN_MINUTES * 60):
+			wait_min = int(((MIN_COOLDOWN_MINUTES * 60) - elapsed_sec) // 60) + 1
+			return {
+				"success": True,
+				"cached": True,
+				"throttled": True,
+				"rate_date": today,
+				"market": target_market,
+				"rate_per_piece": flt(existing.rate_per_piece),
+				"rate_per_tray": flt(existing.rate_per_tray),
+				"trend": existing.trend,
+				"message": _("Rates are already up to date (synced {0} min ago). Next API check allowed in {1} min.").format(int(elapsed_sec // 60) or "<1", wait_min),
+			}
+
 	# Cache check: If record for today already exists and force is False, return it immediately without API calls
 	existing = frappe.db.get_value(
 		"Poultry Daily Egg Rate",
