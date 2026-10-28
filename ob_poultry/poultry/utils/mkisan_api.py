@@ -129,10 +129,10 @@ def fetch_and_store_egg_rates(market: str | None = None, force: bool = False, ov
 	if not data:
 		msg = f"Failed to fetch egg rate for {target_market}. Error: {last_error}"
 		frappe.log_error(title="MKisan Sync Error", message=msg)
-		frappe.db.set_value(
+		frappe.db.set_single_value(
 			"Poultry Settings",
-			"Poultry Settings",
-			{"sync_status": f"Sync failed on {today}: {last_error}"},
+			"sync_status",
+			f"Sync failed on {today}: {last_error}",
 		)
 		return {"success": False, "message": msg}
 
@@ -178,15 +178,9 @@ def fetch_and_store_egg_rates(market: str | None = None, force: bool = False, ov
 
 	# Update Poultry Settings audit fields
 	status_msg = f"Synced {target_market} rate on {now_datetime().strftime('%d-%m-%Y %I:%M %p')} (₹{flt(rate_per_piece):.2f}/egg)"
-	frappe.db.set_value(
-		"Poultry Settings",
-		"Poultry Settings",
-		{
-			"last_egg_rate_sync": now_datetime(),
-			"sync_status": status_msg,
-		},
-	)
-	frappe.db.commit()
+	frappe.db.set_single_value("Poultry Settings", "last_egg_rate_sync", now_datetime())
+	frappe.db.set_single_value("Poultry Settings", "sync_status", status_msg)
+	frappe.db.commit()  # nosemgrep: frappe-manual-commit
 
 	return {
 		"success": True,
