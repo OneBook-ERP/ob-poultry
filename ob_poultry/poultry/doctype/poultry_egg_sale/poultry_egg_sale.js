@@ -43,18 +43,23 @@ function fetch_market_egg_rate(frm) {
 				frm.egg_rate_info = r.message;
 				let info = r.message;
 				
-				let formatted_time = "";
+				let fetched_time = "";
 				if (info.synced_at && window.moment) {
-					formatted_time = moment(info.synced_at).format("DD MMM, hh:mm A");
-				} else if (info.rate_date && window.moment) {
-					formatted_time = moment(info.rate_date).format("DD MMM");
+					fetched_time = moment(info.synced_at).format("DD MMM, hh:mm A");
 				} else {
-					formatted_time = info.rate_date || "";
+					fetched_time = (info.synced_at || "").split(".")[0];
+				}
+
+				let rate_date_str = "";
+				if (info.rate_date && window.moment) {
+					rate_date_str = moment(info.rate_date).format("DD MMM YYYY");
+				} else {
+					rate_date_str = info.rate_date || "";
 				}
 
 				let piece_str = flt(info.rate_per_piece).toFixed(2);
 				let tray_str = flt(info.rate_per_tray).toFixed(2);
-				let badge_text = `NECC Rate (${info.market}): ₹${piece_str} / egg (₹${tray_str} / tray) • Updated: ${formatted_time}`;
+				let badge_text = `NECC Rate (${info.market}): ₹${piece_str} / egg (₹${tray_str} / tray) • Rate Date: ${rate_date_str} • Fetched: ${fetched_time}`;
 				
 				let badge_html = `<div style="margin-top: 5px; font-size: 11px; color: var(--text-muted); font-weight: 500;">
 					${badge_text}
