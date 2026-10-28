@@ -111,7 +111,7 @@ def fetch_and_store_egg_rates(market=None, force=False):
 		frappe.db.set_value(
 			"Poultry Settings",
 			"Poultry Settings",
-			{"sync_status": f"⚠️ Sync failed on {today}: {last_error}"},
+			{"sync_status": f"Sync failed on {today}: {last_error}"},
 		)
 		return {"success": False, "message": msg}
 
@@ -156,7 +156,7 @@ def fetch_and_store_egg_rates(market=None, force=False):
 	doc.save()
 
 	# Update Poultry Settings audit fields
-	status_msg = f"🟢 Synced {target_market} rate on {now_datetime().strftime('%d-%m-%Y %I:%M %p')} (₹{rate_per_piece}/egg)"
+	status_msg = f"Synced {target_market} rate on {now_datetime().strftime('%d-%m-%Y %I:%M %p')} (₹{flt(rate_per_piece):.2f}/egg)"
 	frappe.db.set_value(
 		"Poultry Settings",
 		"Poultry Settings",
