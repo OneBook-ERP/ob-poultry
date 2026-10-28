@@ -15,8 +15,11 @@
         },
         {
             "fieldname": "location",
-            "fieldtype": "Data",
-            "label": "Location"
+            "fieldtype": "Link",
+            "label": "Location",
+            "options": "Location",
+            "in_list_view": 1,
+            "in_standard_filter": 1
         },
         {
             "fieldname": "column_break_hatchery_1",
