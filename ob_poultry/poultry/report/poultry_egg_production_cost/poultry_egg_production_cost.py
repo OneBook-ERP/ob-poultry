@@ -11,7 +11,13 @@ def execute(filters=None):
 
 def get_columns():
 	return [
-		{"label": _("Batch"), "fieldname": "batch", "fieldtype": "Link", "options": "Poultry Batch", "width": 140},
+		{
+			"label": _("Batch"),
+			"fieldname": "batch",
+			"fieldtype": "Link",
+			"options": "Poultry Batch",
+			"width": 140,
+		},
 		{"label": _("Eggs Produced"), "fieldname": "total_eggs_produced", "fieldtype": "Int", "width": 130},
 		{"label": _("Feed Cost"), "fieldname": "feed_cost", "fieldtype": "Currency", "width": 130},
 		{"label": _("Cost per Egg"), "fieldname": "cost_per_egg", "fieldtype": "Currency", "width": 120},

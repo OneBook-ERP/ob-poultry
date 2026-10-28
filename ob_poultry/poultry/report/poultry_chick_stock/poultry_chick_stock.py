@@ -11,8 +11,20 @@ def execute(filters=None):
 
 def get_columns():
 	return [
-		{"label": _("Hatch"), "fieldname": "name", "fieldtype": "Link", "options": "Poultry Hatch", "width": 140},
-		{"label": _("Hatchery"), "fieldname": "hatchery", "fieldtype": "Link", "options": "Poultry Hatchery", "width": 160},
+		{
+			"label": _("Hatch"),
+			"fieldname": "name",
+			"fieldtype": "Link",
+			"options": "Poultry Hatch",
+			"width": 140,
+		},
+		{
+			"label": _("Hatchery"),
+			"fieldname": "hatchery",
+			"fieldtype": "Link",
+			"options": "Poultry Hatchery",
+			"width": 160,
+		},
 		{"label": _("Actual Chicks"), "fieldname": "actual_chicks", "fieldtype": "Int", "width": 120},
 		{"label": _("Transferred"), "fieldname": "transferred", "fieldtype": "Int", "width": 110},
 		{"label": _("Balance"), "fieldname": "balance", "fieldtype": "Int", "width": 100},

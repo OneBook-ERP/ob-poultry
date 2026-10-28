@@ -12,14 +12,31 @@ def execute(filters=None):
 def get_columns():
 	return [
 		{"label": _("Date"), "fieldname": "log_date", "fieldtype": "Date", "width": 100},
-		{"label": _("Batch"), "fieldname": "batch", "fieldtype": "Link", "options": "Poultry Batch", "width": 140},
+		{
+			"label": _("Batch"),
+			"fieldname": "batch",
+			"fieldtype": "Link",
+			"options": "Poultry Batch",
+			"width": 140,
+		},
 		{"label": _("Grade"), "fieldname": "grade", "fieldtype": "Data", "width": 110},
 		{"label": _("Opening Count"), "fieldname": "opening_count", "fieldtype": "Int", "width": 110},
 		{"label": _("Production Count"), "fieldname": "production_count", "fieldtype": "Int", "width": 120},
 		{"label": _("Closing Count"), "fieldname": "closing_count", "fieldtype": "Int", "width": 110},
 		{"label": _("Avg Weight (g)"), "fieldname": "avg_weight_g", "fieldtype": "Float", "width": 120},
-		{"label": _("Total Eggs (Day)"), "fieldname": "total_eggs_produced", "fieldtype": "Int", "width": 120},
-		{"label": _("HDEP %"), "fieldname": "hdep_percent", "fieldtype": "Percent", "precision": 2, "width": 90},
+		{
+			"label": _("Total Eggs (Day)"),
+			"fieldname": "total_eggs_produced",
+			"fieldtype": "Int",
+			"width": 120,
+		},
+		{
+			"label": _("HDEP %"),
+			"fieldname": "hdep_percent",
+			"fieldtype": "Percent",
+			"precision": 2,
+			"width": 90,
+		},
 	]
 
 

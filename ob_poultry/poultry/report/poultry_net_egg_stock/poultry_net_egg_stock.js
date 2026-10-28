@@ -17,7 +17,8 @@ frappe.query_reports["Poultry Net Egg Stock"] = {
 			fieldname: "grade",
 			label: __("Grade"),
 			fieldtype: "Select",
-			options: "\nHatching Egg\nTable Egg\nJumbo Egg\nCracked Egg\nWaste Egg\nDouble Yolk\nDirty Egg",
+			options:
+				"\nHatching Egg\nTable Egg\nJumbo Egg\nCracked Egg\nWaste Egg\nDouble Yolk\nDirty Egg",
 		},
 	],
 };

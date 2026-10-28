@@ -3,13 +3,15 @@
 
 import json
 import os
-import urllib.request
 import urllib.error
+import urllib.request
+
 import frappe
 from frappe import _
-from frappe.utils import flt, now_datetime, nowdate, getdate
+from frappe.utils import flt, format_date, getdate, now_datetime, nowdate
 
 MKISAN_BASE_URL = "https://mkisan.net/wp-json/mkisan/v1"
+
 
 def get_mkisan_api_key():
 	"""
@@ -34,8 +36,8 @@ def get_mkisan_api_key():
 	return None
 
 
-@frappe.whitelist()
-def fetch_and_store_egg_rates(market=None, force=False, override=False):
+@frappe.whitelist(methods=["POST"])
+def fetch_and_store_egg_rates(market: str | None = None, force: bool = False, override: bool = False) -> dict:
 	"""
 	Queries the MKisan API for NECC egg rates and records them into Poultry Daily Egg Rate.
 	If today's rate for this market already exists in the database, skips the external API call
@@ -49,13 +51,24 @@ def fetch_and_store_egg_rates(market=None, force=False, override=False):
 	existing = frappe.db.get_value(
 		"Poultry Daily Egg Rate",
 		{"rate_date": today, "market": target_market},
-		["name", "rate_date", "market", "rate_per_piece", "rate_per_tray", "rate_per_100", "rate_per_peti", "national_average", "trend", "synced_at"],
+		[
+			"name",
+			"rate_date",
+			"market",
+			"rate_per_piece",
+			"rate_per_tray",
+			"rate_per_100",
+			"rate_per_peti",
+			"national_average",
+			"trend",
+			"synced_at",
+		],
 		as_dict=True,
 	)
 
 	# 2. If today's rate is already recorded and not an emergency override, skip API call
 	if existing and not override:
-		date_str = format_date(existing.rate_date) if "format_date" in dir() else str(existing.rate_date)
+		date_str = format_date(existing.rate_date)
 		return {
 			"success": True,
 			"cached": True,
@@ -65,7 +78,9 @@ def fetch_and_store_egg_rates(market=None, force=False, override=False):
 			"rate_per_piece": flt(existing.rate_per_piece),
 			"rate_per_tray": flt(existing.rate_per_tray),
 			"trend": existing.trend,
-			"message": _("Today's rate ({0}) for {1} is already fetched and up to date.").format(date_str, target_market),
+			"message": _("Today's rate ({0}) for {1} is already fetched and up to date.").format(
+				date_str, target_market
+			),
 		}
 
 	if not settings.enable_mkisan_sync and not override:
@@ -234,8 +249,8 @@ def parse_mkisan_response(data, target_market):
 	return None
 
 
-@frappe.whitelist()
-def get_today_egg_rate(market=None, date=None):
+@frappe.whitelist(methods=["GET", "POST"])
+def get_today_egg_rate(market: str | None = None, date: str | None = None) -> dict:
 	"""
 	Frontend whitelisted API.
 	Returns today's rate or the latest available rate for the given market.
@@ -249,7 +264,17 @@ def get_today_egg_rate(market=None, date=None):
 	record = frappe.db.get_value(
 		"Poultry Daily Egg Rate",
 		{"rate_date": target_date, "market": target_market},
-		["rate_date", "market", "rate_per_piece", "rate_per_tray", "rate_per_100", "rate_per_peti", "national_average", "trend", "synced_at"],
+		[
+			"rate_date",
+			"market",
+			"rate_per_piece",
+			"rate_per_tray",
+			"rate_per_100",
+			"rate_per_peti",
+			"national_average",
+			"trend",
+			"synced_at",
+		],
 		as_dict=True,
 	)
 
@@ -260,7 +285,17 @@ def get_today_egg_rate(market=None, date=None):
 			record = frappe.db.get_value(
 				"Poultry Daily Egg Rate",
 				{"rate_date": target_date, "market": target_market},
-				["rate_date", "market", "rate_per_piece", "rate_per_tray", "rate_per_100", "rate_per_peti", "national_average", "trend", "synced_at"],
+				[
+					"rate_date",
+					"market",
+					"rate_per_piece",
+					"rate_per_tray",
+					"rate_per_100",
+					"rate_per_peti",
+					"national_average",
+					"trend",
+					"synced_at",
+				],
 				as_dict=True,
 			)
 
@@ -271,7 +306,17 @@ def get_today_egg_rate(market=None, date=None):
 		record = frappe.db.get_value(
 			"Poultry Daily Egg Rate",
 			{"market": target_market, "rate_date": ("<=", target_date)},
-			["rate_date", "market", "rate_per_piece", "rate_per_tray", "rate_per_100", "rate_per_peti", "national_average", "trend", "synced_at"],
+			[
+				"rate_date",
+				"market",
+				"rate_per_piece",
+				"rate_per_tray",
+				"rate_per_100",
+				"rate_per_peti",
+				"national_average",
+				"trend",
+				"synced_at",
+			],
 			order_by="rate_date desc",
 			as_dict=True,
 		)

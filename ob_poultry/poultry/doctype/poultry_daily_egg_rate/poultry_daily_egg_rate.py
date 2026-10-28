@@ -5,6 +5,7 @@ import frappe
 from frappe.model.document import Document
 from frappe.utils import flt
 
+
 class PoultryDailyEggRate(Document):
 	def validate(self):
 		eggs_per_tray = frappe.db.get_single_value("Poultry Settings", "eggs_per_tray") or 30

@@ -10,7 +10,7 @@ frappe.ui.form.on("Poultry Settings", {
 			frappe.call({
 				method: "ob_poultry.poultry.utils.mkisan_api.fetch_and_store_egg_rates",
 				args: {
-					force: 1
+					force: 1,
 				},
 				freeze: true,
 				freeze_message: __("Checking NECC egg rate from MKisan API..."),
@@ -20,24 +20,28 @@ frappe.ui.form.on("Poultry Settings", {
 						if (r.message.already_updated) {
 							frappe.show_alert({
 								message: r.message.message,
-								indicator: "blue"
+								indicator: "blue",
 							});
 						} else {
 							frappe.show_alert({
-								message: __("Synced successfully: {0} @ ₹{1}/egg", [r.message.market, flt(r.message.rate_per_piece).toFixed(2)]),
-								indicator: "green"
+								message: __("Synced successfully: {0} @ ₹{1}/egg", [
+									r.message.market,
+									flt(r.message.rate_per_piece).toFixed(2),
+								]),
+								indicator: "green",
 							});
 							frm.reload_doc();
 						}
 					} else {
 						frappe.msgprint({
 							title: __("Sync Notice"),
-							message: (r.message && r.message.message) || __("Unable to sync rate."),
-							indicator: "orange"
+							message:
+								(r.message && r.message.message) || __("Unable to sync rate."),
+							indicator: "orange",
 						});
 					}
-				}
+				},
 			});
 		});
-	}
+	},
 });

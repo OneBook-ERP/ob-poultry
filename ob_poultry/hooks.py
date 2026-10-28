@@ -158,13 +158,9 @@ app_license = "mit"
 scheduler_events = {
 	"cron": {
 		# Daily sync at 1:30 PM IST (post-NECC declaration window)
-		"30 13 * * *": [
-			"ob_poultry.poultry.utils.mkisan_api.scheduled_fetch_egg_rates"
-		],
+		"30 13 * * *": ["ob_poultry.poultry.utils.mkisan_api.scheduled_fetch_egg_rates"],
 		# Backup check at 2:15 PM IST if 1:30 PM was pending
-		"15 14 * * *": [
-			"ob_poultry.poultry.utils.mkisan_api.scheduled_backup_fetch_egg_rates"
-		],
+		"15 14 * * *": ["ob_poultry.poultry.utils.mkisan_api.scheduled_backup_fetch_egg_rates"],
 	},
 }
 
@@ -256,4 +252,3 @@ scheduler_events = {
 # ------------
 # List of apps whose translatable strings should be excluded from this app's translations.
 # ignore_translatable_strings_from = []
-

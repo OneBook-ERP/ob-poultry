@@ -48,14 +48,14 @@ frappe.ui.form.on("Poultry Daily Egg Rate", {
 		// Auto-calculate tray, 100 eggs, and peti when rate_per_piece is typed
 		let piece_rate = flt(frm.doc.rate_per_piece) || 0;
 		if (piece_rate > 0) {
-			frappe.db.get_single_value("Poultry Settings", "eggs_per_tray").then(val => {
+			frappe.db.get_single_value("Poultry Settings", "eggs_per_tray").then((val) => {
 				let tray_size = flt(val) || 30;
 				frm.set_value("rate_per_tray", piece_rate * tray_size);
 				frm.set_value("rate_per_100", piece_rate * 100);
 				frm.set_value("rate_per_peti", piece_rate * 210);
 			});
 		}
-	}
+	},
 });
 
 function auto_fetch_market_rate(frm, show_alert = false) {
@@ -66,7 +66,7 @@ function auto_fetch_market_rate(frm, show_alert = false) {
 		method: "ob_poultry.poultry.utils.mkisan_api.get_today_egg_rate",
 		args: {
 			market: frm.doc.market,
-			date: frm.doc.rate_date || frappe.datetime.get_today()
+			date: frm.doc.rate_date || frappe.datetime.get_today(),
 		},
 		freeze: show_alert,
 		freeze_message: __("Fetching {0} NECC egg rate from API...", [frm.doc.market]),
@@ -98,17 +98,23 @@ function auto_fetch_market_rate(frm, show_alert = false) {
 				update_sync_badge(frm);
 
 				frappe.show_alert({
-					message: __("Loaded {0} rate: ₹{1}/egg (₹{2}/tray)", [d.market, flt(d.rate_per_piece).toFixed(2), flt(d.rate_per_tray).toFixed(2)]),
-					indicator: "green"
+					message: __("Loaded {0} rate: ₹{1}/egg (₹{2}/tray)", [
+						d.market,
+						flt(d.rate_per_piece).toFixed(2),
+						flt(d.rate_per_tray).toFixed(2),
+					]),
+					indicator: "green",
 				});
 			} else if (show_alert) {
 				frappe.msgprint({
 					title: __("API Notice"),
-					message: (r.message && r.message.message) || __("No rate found for {0}.", [frm.doc.market]),
-					indicator: "orange"
+					message:
+						(r.message && r.message.message) ||
+						__("No rate found for {0}.", [frm.doc.market]),
+					indicator: "orange",
 				});
 			}
-		}
+		},
 	});
 }
 

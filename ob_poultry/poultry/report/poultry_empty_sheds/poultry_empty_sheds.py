@@ -10,7 +10,13 @@ def execute(filters=None):
 
 def get_columns():
 	return [
-		{"label": _("Shed"), "fieldname": "name", "fieldtype": "Link", "options": "Poultry Shed", "width": 150},
+		{
+			"label": _("Shed"),
+			"fieldname": "name",
+			"fieldtype": "Link",
+			"options": "Poultry Shed",
+			"width": 150,
+		},
 		{"label": _("Location"), "fieldname": "location", "fieldtype": "Data", "width": 200},
 		{"label": _("Capacity (Birds)"), "fieldname": "capacity", "fieldtype": "Int", "width": 130},
 	]

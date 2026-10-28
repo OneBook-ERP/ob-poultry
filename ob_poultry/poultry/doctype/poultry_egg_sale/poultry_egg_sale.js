@@ -14,7 +14,7 @@ frappe.ui.form.on("Poultry Egg Sale", {
 	},
 	items_remove(frm) {
 		calculate_total(frm);
-	}
+	},
 });
 
 frappe.ui.form.on("Poultry Egg Sale Item", {
@@ -29,20 +29,20 @@ frappe.ui.form.on("Poultry Egg Sale Item", {
 	},
 	rate(frm, cdt, cdn) {
 		calculate_row_amount(frm, cdt, cdn);
-	}
+	},
 });
 
 function fetch_market_egg_rate(frm) {
 	frappe.call({
 		method: "ob_poultry.poultry.utils.mkisan_api.get_today_egg_rate",
 		args: {
-			date: frm.doc.sale_date
+			date: frm.doc.sale_date,
 		},
 		callback(r) {
 			if (r.message && r.message.success) {
 				frm.egg_rate_info = r.message;
 				let info = r.message;
-				
+
 				let fetched_time = "";
 				if (info.synced_at && window.moment) {
 					fetched_time = moment(info.synced_at).format("DD MMM, hh:mm A");
@@ -60,7 +60,7 @@ function fetch_market_egg_rate(frm) {
 				let piece_str = flt(info.rate_per_piece).toFixed(2);
 				let tray_str = flt(info.rate_per_tray).toFixed(2);
 				let badge_text = `NECC Rate (${info.market}): ₹${piece_str} / egg (₹${tray_str} / tray) • Rate Date: ${rate_date_str} • Fetched: ${fetched_time}`;
-				
+
 				let badge_html = `<div style="margin-top: 5px; font-size: 11px; color: var(--text-muted); font-weight: 500;">
 					${badge_text}
 				</div>`;
@@ -70,21 +70,35 @@ function fetch_market_egg_rate(frm) {
 
 				// Also display as helper description under the Rate field in the row edit modal
 				if (frm.fields_dict && frm.fields_dict["items"] && frm.fields_dict["items"].grid) {
-					frm.fields_dict["items"].grid.update_docfield_property("rate", "description", badge_text);
+					frm.fields_dict["items"].grid.update_docfield_property(
+						"rate",
+						"description",
+						badge_text
+					);
 				}
 
 				// Auto-fill existing rows if market_rate is missing
-				(frm.doc.items || []).forEach(row => {
+				(frm.doc.items || []).forEach((row) => {
 					if (!row.market_rate) {
-						frappe.model.set_value(row.doctype, row.name, "market_rate", flt(info.rate_per_piece));
+						frappe.model.set_value(
+							row.doctype,
+							row.name,
+							"market_rate",
+							flt(info.rate_per_piece)
+						);
 						if (!row.rate || flt(row.rate) === 0) {
-							frappe.model.set_value(row.doctype, row.name, "rate", flt(info.rate_per_piece));
+							frappe.model.set_value(
+								row.doctype,
+								row.name,
+								"rate",
+								flt(info.rate_per_piece)
+							);
 						}
 					}
 				});
 				frm.refresh_field("items");
 			}
-		}
+		},
 	});
 }
 
@@ -110,7 +124,7 @@ function calculate_row_amount(frm, cdt, cdn) {
 
 function calculate_total(frm) {
 	let total = 0;
-	(frm.doc.items || []).forEach(row => {
+	(frm.doc.items || []).forEach((row) => {
 		total += flt(row.amount) || 0;
 	});
 	frm.set_value("total_amount", total);

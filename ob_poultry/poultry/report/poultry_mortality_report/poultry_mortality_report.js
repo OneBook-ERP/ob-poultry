@@ -36,7 +36,8 @@ frappe.query_reports["Poultry Mortality Report"] = {
 			fieldname: "cause",
 			label: __("Cause"),
 			fieldtype: "Select",
-			options: "\nDisease\nInjury\nHeat Stress\nCulled (Runt or Weak)\nPredator\nUnknown\nOther",
+			options:
+				"\nDisease\nInjury\nHeat Stress\nCulled (Runt or Weak)\nPredator\nUnknown\nOther",
 		},
 	],
 };

@@ -3,7 +3,8 @@
 
 import frappe
 from frappe.tests import IntegrationTestCase
-from frappe.utils import nowdate, flt
+from frappe.utils import flt, nowdate
+
 from ob_poultry.poultry.utils.mkisan_api import fetch_and_store_egg_rates, get_today_egg_rate
 
 
