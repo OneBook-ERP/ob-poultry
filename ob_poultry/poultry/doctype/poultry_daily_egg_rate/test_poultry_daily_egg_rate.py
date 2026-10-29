@@ -14,7 +14,7 @@ class IntegrationTestPoultryDailyEggRate(IntegrationTestCase):
 		settings.enable_mkisan_sync = 1
 		settings.default_egg_market = "Namakkal"
 		settings.save(ignore_permissions=True)
-		frappe.db.commit()
+		frappe.db.commit()  # nosemgrep: frappe-manual-commit
 
 	def test_fetch_and_store_egg_rates(self):
 		res = fetch_and_store_egg_rates(market="Namakkal", force=True)

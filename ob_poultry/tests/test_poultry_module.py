@@ -38,6 +38,21 @@ class TestPoultryModule(IntegrationTestCase):
 				}
 			).insert(ignore_permissions=True)
 
+		# Ensure active Fiscal Year exists for test transactions (avoids FiscalYearError in fresh test environments)
+		current_date = frappe.utils.getdate(nowdate())
+		if not frappe.db.exists(
+			"Fiscal Year",
+			{"year_start_date": ["<=", current_date], "year_end_date": [">=", current_date], "disabled": 0},
+		):
+			frappe.get_doc(
+				{
+					"doctype": "Fiscal Year",
+					"year": f"{current_date.year}",
+					"year_start_date": f"{current_date.year}-01-01",
+					"year_end_date": f"{current_date.year}-12-31",
+				}
+			).insert(ignore_permissions=True)
+
 		cls.warehouse_name = frappe.db.get_value(
 			"Warehouse", {"company": "Test Poultry Co", "warehouse_name": "Stores"}, "name"
 		)
