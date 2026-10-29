@@ -1,33 +1,35 @@
 {
  "app": "ob_poultry",
  "docstatus": 0,
- "doctype": "Workspace Sidebar",
+ "doctype": "Sidebar",
  "header_icon": "bird",
  "idx": 0,
  "items": [
   {
    "child": 0,
    "collapsible": 1,
-   "icon": "home",
+   "icon": "house",
    "indent": 0,
    "keep_closed": 0,
    "label": "Home",
    "link_to": "Poultry",
    "link_type": "Workspace",
    "show_arrow": 0,
-   "type": "Link"
+   "type": "Link",
+   "doctype": "Sidebar Item"
   },
   {
    "child": 0,
    "collapsible": 1,
-   "icon": "home",
+   "icon": "warehouse",
    "indent": 0,
    "keep_closed": 0,
    "label": "Shed",
    "link_to": "Poultry Shed",
    "link_type": "DocType",
    "show_arrow": 0,
-   "type": "Link"
+   "type": "Link",
+   "doctype": "Sidebar Item"
   },
   {
    "child": 0,
@@ -39,7 +41,8 @@
    "link_to": "Poultry Breed",
    "link_type": "DocType",
    "show_arrow": 0,
-   "type": "Link"
+   "type": "Link",
+   "doctype": "Sidebar Item"
   },
   {
    "child": 0,
@@ -51,7 +54,8 @@
    "link_to": "Poultry Batch",
    "link_type": "DocType",
    "show_arrow": 0,
-   "type": "Link"
+   "type": "Link",
+   "doctype": "Sidebar Item"
   },
   {
    "child": 0,
@@ -63,7 +67,8 @@
    "link_to": "Poultry Daily Log",
    "link_type": "DocType",
    "show_arrow": 0,
-   "type": "Link"
+   "type": "Link",
+   "doctype": "Sidebar Item"
   },
   {
    "child": 0,
@@ -75,7 +80,8 @@
    "link_to": "Poultry Benchmark",
    "link_type": "DocType",
    "show_arrow": 0,
-   "type": "Link"
+   "type": "Link",
+   "doctype": "Sidebar Item"
   },
   {
    "child": 0,
@@ -87,7 +93,8 @@
    "link_to": "Poultry Settings",
    "link_type": "DocType",
    "show_arrow": 0,
-   "type": "Link"
+   "type": "Link",
+   "doctype": "Sidebar Item"
   },
   {
    "child": 0,
@@ -98,7 +105,8 @@
    "label": "Vaccination",
    "link_type": "DocType",
    "show_arrow": 0,
-   "type": "Section Break"
+   "type": "Section Break",
+   "doctype": "Sidebar Item"
   },
   {
    "child": 1,
@@ -110,7 +118,8 @@
    "link_to": "Poultry Vaccination Record",
    "link_type": "DocType",
    "show_arrow": 0,
-   "type": "Link"
+   "type": "Link",
+   "doctype": "Sidebar Item"
   },
   {
    "child": 1,
@@ -122,7 +131,8 @@
    "link_to": "Poultry Vaccination Due",
    "link_type": "DocType",
    "show_arrow": 0,
-   "type": "Link"
+   "type": "Link",
+   "doctype": "Sidebar Item"
   },
   {
    "child": 1,
@@ -134,7 +144,8 @@
    "link_to": "Poultry Vaccination Schedule Template",
    "link_type": "DocType",
    "show_arrow": 0,
-   "type": "Link"
+   "type": "Link",
+   "doctype": "Sidebar Item"
   },
   {
    "child": 0,
@@ -145,7 +156,8 @@
    "label": "Feed Mill",
    "link_type": "DocType",
    "show_arrow": 0,
-   "type": "Section Break"
+   "type": "Section Break",
+   "doctype": "Sidebar Item"
   },
   {
    "child": 1,
@@ -157,7 +169,8 @@
    "link_to": "Poultry Feed Formula",
    "link_type": "DocType",
    "show_arrow": 0,
-   "type": "Link"
+   "type": "Link",
+   "doctype": "Sidebar Item"
   },
   {
    "child": 1,
@@ -169,7 +182,8 @@
    "link_to": "Poultry Feed Production",
    "link_type": "DocType",
    "show_arrow": 0,
-   "type": "Link"
+   "type": "Link",
+   "doctype": "Sidebar Item"
   },
   {
    "child": 0,
@@ -180,7 +194,8 @@
    "label": "Hatchery",
    "link_type": "DocType",
    "show_arrow": 0,
-   "type": "Section Break"
+   "type": "Section Break",
+   "doctype": "Sidebar Item"
   },
   {
    "child": 1,
@@ -192,7 +207,8 @@
    "link_to": "Poultry Hatchery",
    "link_type": "DocType",
    "show_arrow": 0,
-   "type": "Link"
+   "type": "Link",
+   "doctype": "Sidebar Item"
   },
   {
    "child": 1,
@@ -204,7 +220,8 @@
    "link_to": "Poultry Hatch",
    "link_type": "DocType",
    "show_arrow": 0,
-   "type": "Link"
+   "type": "Link",
+   "doctype": "Sidebar Item"
   },
   {
    "child": 1,
@@ -216,7 +233,8 @@
    "link_to": "Poultry Chick Transfer",
    "link_type": "DocType",
    "show_arrow": 0,
-   "type": "Link"
+   "type": "Link",
+   "doctype": "Sidebar Item"
   },
   {
    "child": 0,
@@ -227,7 +245,8 @@
    "label": "Contract Farming",
    "link_type": "DocType",
    "show_arrow": 0,
-   "type": "Section Break"
+   "type": "Section Break",
+   "doctype": "Sidebar Item"
   },
   {
    "child": 1,
@@ -239,7 +258,8 @@
    "link_to": "Poultry Farmer",
    "link_type": "DocType",
    "show_arrow": 0,
-   "type": "Link"
+   "type": "Link",
+   "doctype": "Sidebar Item"
   },
   {
    "child": 1,
@@ -251,7 +271,8 @@
    "link_to": "Poultry Growing Charge Scheme",
    "link_type": "DocType",
    "show_arrow": 0,
-   "type": "Link"
+   "type": "Link",
+   "doctype": "Sidebar Item"
   },
   {
    "child": 0,
@@ -262,7 +283,8 @@
    "label": "Sales",
    "link_type": "DocType",
    "show_arrow": 0,
-   "type": "Section Break"
+   "type": "Section Break",
+   "doctype": "Sidebar Item"
   },
   {
    "child": 1,
@@ -274,7 +296,8 @@
    "link_to": "Poultry Egg Sale",
    "link_type": "DocType",
    "show_arrow": 0,
-   "type": "Link"
+   "type": "Link",
+   "doctype": "Sidebar Item"
   },
   {
    "child": 0,
@@ -285,7 +308,8 @@
    "label": "Reports",
    "link_type": "DocType",
    "show_arrow": 0,
-   "type": "Section Break"
+   "type": "Section Break",
+   "doctype": "Sidebar Item"
   },
   {
    "child": 1,
@@ -297,7 +321,8 @@
    "link_to": "Poultry Mortality Report",
    "link_type": "Report",
    "show_arrow": 0,
-   "type": "Link"
+   "type": "Link",
+   "doctype": "Sidebar Item"
   },
   {
    "child": 1,
@@ -309,7 +334,8 @@
    "link_to": "Poultry Batch Analysis",
    "link_type": "Report",
    "show_arrow": 0,
-   "type": "Link"
+   "type": "Link",
+   "doctype": "Sidebar Item"
   },
   {
    "child": 1,
@@ -321,7 +347,8 @@
    "link_to": "Poultry Growing Charges",
    "link_type": "Report",
    "show_arrow": 0,
-   "type": "Link"
+   "type": "Link",
+   "doctype": "Sidebar Item"
   },
   {
    "child": 1,
@@ -333,7 +360,8 @@
    "link_to": "Poultry Empty Sheds",
    "link_type": "Report",
    "show_arrow": 0,
-   "type": "Link"
+   "type": "Link",
+   "doctype": "Sidebar Item"
   },
   {
    "child": 1,
@@ -345,7 +373,8 @@
    "link_to": "Poultry Batch Performance Review",
    "link_type": "Report",
    "show_arrow": 0,
-   "type": "Link"
+   "type": "Link",
+   "doctype": "Sidebar Item"
   },
   {
    "child": 1,
@@ -357,7 +386,8 @@
    "link_to": "Poultry Bird Count Trend",
    "link_type": "Report",
    "show_arrow": 0,
-   "type": "Link"
+   "type": "Link",
+   "doctype": "Sidebar Item"
   },
   {
    "child": 1,
@@ -369,7 +399,8 @@
    "link_to": "Poultry Egg Production Report",
    "link_type": "Report",
    "show_arrow": 0,
-   "type": "Link"
+   "type": "Link",
+   "doctype": "Sidebar Item"
   },
   {
    "child": 1,
@@ -381,7 +412,8 @@
    "link_to": "Poultry Feed Consumption Report",
    "link_type": "Report",
    "show_arrow": 0,
-   "type": "Link"
+   "type": "Link",
+   "doctype": "Sidebar Item"
   },
   {
    "child": 1,
@@ -393,7 +425,8 @@
    "link_to": "Poultry Bodyweight Report",
    "link_type": "Report",
    "show_arrow": 0,
-   "type": "Link"
+   "type": "Link",
+   "doctype": "Sidebar Item"
   },
   {
    "child": 1,
@@ -405,7 +438,8 @@
    "link_to": "Poultry Chick Summary",
    "link_type": "Report",
    "show_arrow": 0,
-   "type": "Link"
+   "type": "Link",
+   "doctype": "Sidebar Item"
   },
   {
    "child": 1,
@@ -417,7 +451,8 @@
    "link_to": "Poultry Chick Stock",
    "link_type": "Report",
    "show_arrow": 0,
-   "type": "Link"
+   "type": "Link",
+   "doctype": "Sidebar Item"
   },
   {
    "child": 1,
@@ -429,7 +464,8 @@
    "link_to": "Poultry Feed Production Summary",
    "link_type": "Report",
    "show_arrow": 0,
-   "type": "Link"
+   "type": "Link",
+   "doctype": "Sidebar Item"
   },
   {
    "child": 1,
@@ -441,7 +477,8 @@
    "link_to": "Poultry Compare Formula",
    "link_type": "Report",
    "show_arrow": 0,
-   "type": "Link"
+   "type": "Link",
+   "doctype": "Sidebar Item"
   },
   {
    "child": 1,
@@ -453,7 +490,8 @@
    "link_to": "Poultry Egg Production Cost",
    "link_type": "Report",
    "show_arrow": 0,
-   "type": "Link"
+   "type": "Link",
+   "doctype": "Sidebar Item"
   },
   {
    "child": 1,
@@ -465,7 +503,8 @@
    "link_to": "Poultry Net Egg Stock",
    "link_type": "Report",
    "show_arrow": 0,
-   "type": "Link"
+   "type": "Link",
+   "doctype": "Sidebar Item"
   }
  ],
  "module": "Poultry",

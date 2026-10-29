@@ -11,7 +11,13 @@ def execute(filters=None):
 
 def get_columns():
 	return [
-		{"label": _("Batch"), "fieldname": "batch", "fieldtype": "Link", "options": "Poultry Batch", "width": 140},
+		{
+			"label": _("Batch"),
+			"fieldname": "batch",
+			"fieldtype": "Link",
+			"options": "Poultry Batch",
+			"width": 140,
+		},
 		{"label": _("Grade"), "fieldname": "grade", "fieldtype": "Data", "width": 110},
 		{"label": _("Produced"), "fieldname": "produced", "fieldtype": "Int", "width": 100},
 		{"label": _("Sold"), "fieldname": "sold", "fieldtype": "Int", "width": 100},

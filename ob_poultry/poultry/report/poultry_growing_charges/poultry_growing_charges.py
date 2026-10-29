@@ -11,17 +11,46 @@ def execute(filters=None):
 
 def get_columns():
 	return [
-		{"label": _("Batch"), "fieldname": "name", "fieldtype": "Link", "options": "Poultry Batch", "width": 130},
-		{"label": _("Farmer"), "fieldname": "farmer", "fieldtype": "Link", "options": "Poultry Farmer", "width": 140},
-		{"label": _("Scheme"), "fieldname": "growing_charge_scheme", "fieldtype": "Link", "options": "Poultry Growing Charge Scheme", "width": 160},
-		{"label": _("Shed"), "fieldname": "shed", "fieldtype": "Link", "options": "Poultry Shed", "width": 120},
+		{
+			"label": _("Batch"),
+			"fieldname": "name",
+			"fieldtype": "Link",
+			"options": "Poultry Batch",
+			"width": 130,
+		},
+		{
+			"label": _("Farmer"),
+			"fieldname": "farmer",
+			"fieldtype": "Link",
+			"options": "Poultry Farmer",
+			"width": 140,
+		},
+		{
+			"label": _("Scheme"),
+			"fieldname": "growing_charge_scheme",
+			"fieldtype": "Link",
+			"options": "Poultry Growing Charge Scheme",
+			"width": 160,
+		},
+		{
+			"label": _("Shed"),
+			"fieldname": "shed",
+			"fieldtype": "Link",
+			"options": "Poultry Shed",
+			"width": 120,
+		},
 		{"label": _("Start Date"), "fieldname": "start_date", "fieldtype": "Date", "width": 100},
 		{"label": _("Initial Birds"), "fieldname": "initial_bird_count", "fieldtype": "Int", "width": 100},
 		{"label": _("Current Birds"), "fieldname": "current_bird_count", "fieldtype": "Int", "width": 100},
 		{"label": _("Mortality"), "fieldname": "total_mortality", "fieldtype": "Int", "width": 90},
 		{"label": _("FCR"), "fieldname": "fcr", "fieldtype": "Float", "precision": 3, "width": 90},
 		{"label": _("CFCR"), "fieldname": "cfcr", "fieldtype": "Float", "precision": 3, "width": 90},
-		{"label": _("Growing Charge Amount"), "fieldname": "growing_charge_amount", "fieldtype": "Currency", "width": 160},
+		{
+			"label": _("Growing Charge Amount"),
+			"fieldname": "growing_charge_amount",
+			"fieldtype": "Currency",
+			"width": 160,
+		},
 	]
 
 

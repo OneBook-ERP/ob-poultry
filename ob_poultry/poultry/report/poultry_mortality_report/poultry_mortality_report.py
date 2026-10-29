@@ -12,9 +12,27 @@ def execute(filters=None):
 def get_columns():
 	return [
 		{"label": _("Date"), "fieldname": "log_date", "fieldtype": "Date", "width": 100},
-		{"label": _("Batch"), "fieldname": "batch", "fieldtype": "Link", "options": "Poultry Batch", "width": 130},
-		{"label": _("Shed"), "fieldname": "shed", "fieldtype": "Link", "options": "Poultry Shed", "width": 120},
-		{"label": _("Breed"), "fieldname": "breed", "fieldtype": "Link", "options": "Poultry Breed", "width": 120},
+		{
+			"label": _("Batch"),
+			"fieldname": "batch",
+			"fieldtype": "Link",
+			"options": "Poultry Batch",
+			"width": 130,
+		},
+		{
+			"label": _("Shed"),
+			"fieldname": "shed",
+			"fieldtype": "Link",
+			"options": "Poultry Shed",
+			"width": 120,
+		},
+		{
+			"label": _("Breed"),
+			"fieldname": "breed",
+			"fieldtype": "Link",
+			"options": "Poultry Breed",
+			"width": 120,
+		},
 		{"label": _("Cause"), "fieldname": "cause", "fieldtype": "Data", "width": 140},
 		{"label": _("Sex"), "fieldname": "sex", "fieldtype": "Data", "width": 90},
 		{"label": _("Count"), "fieldname": "count", "fieldtype": "Int", "width": 80},

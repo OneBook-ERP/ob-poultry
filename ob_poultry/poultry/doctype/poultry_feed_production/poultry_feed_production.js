@@ -8,7 +8,10 @@ frappe.ui.form.on("Poultry Feed Production", {
 					freeze: true,
 					callback: (r) => {
 						if (r.message) {
-							frappe.show_alert({ message: __("Work Order {0} created", [r.message]), indicator: "green" });
+							frappe.show_alert({
+								message: __("Work Order {0} created", [r.message]),
+								indicator: "green",
+							});
 						}
 						frm.reload_doc();
 					},

@@ -3,7 +3,10 @@ frappe.ui.form.on("Poultry Batch", {
 		if (!frm.is_new() && frm.doc.status === "Active") {
 			frm.add_custom_button(__("Close Batch"), () => {
 				frappe.confirm(
-					__("Close batch {0}? No further Daily Logs can be created against it afterward.", [frm.doc.name]),
+					__(
+						"Close batch {0}? No further Daily Logs can be created against it afterward.",
+						[frm.doc.name]
+					),
 					() => {
 						frm.call({
 							doc: frm.doc,
@@ -16,7 +19,11 @@ frappe.ui.form.on("Poultry Batch", {
 			});
 		}
 
-		if (!frm.is_new() && frm.doc.flock_source === "Contract" && frm.doc.growing_charge_scheme) {
+		if (
+			!frm.is_new() &&
+			frm.doc.flock_source === "Contract" &&
+			frm.doc.growing_charge_scheme
+		) {
 			frm.add_custom_button(__("Calculate Growing Charge"), () => {
 				frm.call({
 					doc: frm.doc,

@@ -8,7 +8,10 @@ frappe.ui.form.on("Poultry Feed Formula", {
 					freeze: true,
 					callback: (r) => {
 						if (r.message) {
-							frappe.show_alert({ message: __("BOM {0} ready", [r.message]), indicator: "green" });
+							frappe.show_alert({
+								message: __("BOM {0} ready", [r.message]),
+								indicator: "green",
+							});
 						}
 						frm.reload_doc();
 					},

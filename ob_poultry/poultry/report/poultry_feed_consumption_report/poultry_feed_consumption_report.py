@@ -12,17 +12,48 @@ def execute(filters=None):
 def get_columns():
 	return [
 		{"label": _("Date"), "fieldname": "log_date", "fieldtype": "Date", "width": 100},
-		{"label": _("Batch"), "fieldname": "batch", "fieldtype": "Link", "options": "Poultry Batch", "width": 140},
-		{"label": _("Feed Item"), "fieldname": "feed_item", "fieldtype": "Link", "options": "Item", "width": 160},
-		{"label": _("Feed Consumed (kg)"), "fieldname": "feed_consumed_kg", "fieldtype": "Float", "width": 140},
-		{"label": _("Cumulative in Range (kg)"), "fieldname": "cumulative_feed_kg", "fieldtype": "Float", "width": 170},
+		{
+			"label": _("Batch"),
+			"fieldname": "batch",
+			"fieldtype": "Link",
+			"options": "Poultry Batch",
+			"width": 140,
+		},
+		{
+			"label": _("Feed Item"),
+			"fieldname": "feed_item",
+			"fieldtype": "Link",
+			"options": "Item",
+			"width": 160,
+		},
+		{
+			"label": _("Feed Consumed (kg)"),
+			"fieldname": "feed_consumed_kg",
+			"fieldtype": "Float",
+			"width": 140,
+		},
+		{
+			"label": _("Cumulative in Range (kg)"),
+			"fieldname": "cumulative_feed_kg",
+			"fieldtype": "Float",
+			"width": 170,
+		},
 		{"label": _("Feed Cost"), "fieldname": "feed_cost", "fieldtype": "Currency", "width": 120},
-		{"label": _("Cumulative Cost in Range"), "fieldname": "cumulative_feed_cost", "fieldtype": "Currency", "width": 180},
+		{
+			"label": _("Cumulative Cost in Range"),
+			"fieldname": "cumulative_feed_cost",
+			"fieldtype": "Currency",
+			"width": 180,
+		},
 	]
 
 
 def get_data(filters):
-	conditions = ["d.docstatus = 1", "d.feed_consumed_kg > 0", "d.log_date between %(from_date)s and %(to_date)s"]
+	conditions = [
+		"d.docstatus = 1",
+		"d.feed_consumed_kg > 0",
+		"d.log_date between %(from_date)s and %(to_date)s",
+	]
 	if filters.get("batch"):
 		conditions.append("d.batch = %(batch)s")
 

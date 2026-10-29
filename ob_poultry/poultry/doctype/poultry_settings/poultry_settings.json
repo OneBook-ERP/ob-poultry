@@ -1,28 +1,68 @@
 {
-    "doctype": "DocType",
-    "name": "Poultry Settings",
-    "module": "Poultry",
-    "engine": "InnoDB",
-    "issingle": 1,
-    "fields": [
-        {
-            "fieldname": "eggs_per_tray",
-            "fieldtype": "Int",
-            "label": "Eggs Per Tray",
-            "default": "30",
-            "reqd": 1
-        }
-    ],
-    "permissions": [
-        {
-            "role": "System Manager",
-            "read": 1,
-            "write": 1
-        },
-        {
-            "role": "Poultry Manager",
-            "read": 1,
-            "write": 1
-        }
-    ]
+ "doctype": "DocType",
+ "name": "Poultry Settings",
+ "module": "Poultry",
+ "engine": "InnoDB",
+ "issingle": 1,
+ "fields": [
+  {
+   "default": "30",
+   "fieldname": "eggs_per_tray",
+   "fieldtype": "Int",
+   "label": "Eggs Per Tray",
+   "reqd": 1
+  },
+  {
+   "fieldname": "section_break_mkisan",
+   "fieldtype": "Section Break",
+   "label": "MKisan Daily Egg Rate Sync"
+  },
+  {
+   "default": "1",
+   "fieldname": "enable_mkisan_sync",
+   "fieldtype": "Check",
+   "label": "Enable Daily Egg Rate Sync"
+  },
+  {
+   "default": "Namakkal",
+   "fieldname": "default_egg_market",
+   "fieldtype": "Select",
+   "label": "Default Egg Market",
+   "options": "Ahmedabad\nAjmer\nAllahabad\nBarwala\nBengaluru\nBhopal\nBrahmapur\nChennai\nChittoor\nDelhi\nE.Godavari\nHospet\nHyderabad\nIndore\nJabalpur\nKanpur\nKolkata\nLudhiana\nLucknow\nMuzaffarpur\nMysuru\nNagpur\nNamakkal\nPatna\nPune\nRaipur\nRanchi\nSurat\nVaranasi\nVijayawada\nVizag\nW.Godavari\nWarangal"
+  },
+  {
+   "fieldname": "column_break_mkisan",
+   "fieldtype": "Column Break"
+  },
+  {
+   "description": "AES-256 encrypted API key from mkisan.net/api-store (optional for free tier)",
+   "fieldname": "mkisan_api_key",
+   "fieldtype": "Password",
+   "label": "MKisan API Key"
+  },
+  {
+   "fieldname": "last_egg_rate_sync",
+   "fieldtype": "Datetime",
+   "label": "Last Egg Rate Sync",
+   "read_only": 1
+  },
+  {
+   "fieldname": "sync_status",
+   "fieldtype": "Data",
+   "label": "Sync Status",
+   "read_only": 1
+  }
+ ],
+ "permissions": [
+  {
+   "role": "System Manager",
+   "read": 1,
+   "write": 1
+  },
+  {
+   "role": "Poultry Manager",
+   "read": 1,
+   "write": 1
+  }
+ ]
 }

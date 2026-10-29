@@ -11,12 +11,34 @@ def execute(filters=None):
 
 def get_columns():
 	return [
-		{"label": _("Hatchery"), "fieldname": "hatchery", "fieldtype": "Link", "options": "Poultry Hatchery", "width": 160},
+		{
+			"label": _("Hatchery"),
+			"fieldname": "hatchery",
+			"fieldtype": "Link",
+			"options": "Poultry Hatchery",
+			"width": 160,
+		},
 		{"label": _("Hatches"), "fieldname": "hatch_count", "fieldtype": "Int", "width": 90},
 		{"label": _("Total Eggs Set"), "fieldname": "total_eggs_set", "fieldtype": "Int", "width": 120},
-		{"label": _("Total Estimated Chicks"), "fieldname": "total_estimated_chicks", "fieldtype": "Int", "width": 150},
-		{"label": _("Total Actual Chicks"), "fieldname": "total_actual_chicks", "fieldtype": "Int", "width": 140},
-		{"label": _("Hatchability %"), "fieldname": "hatchability_pct", "fieldtype": "Percent", "precision": 2, "width": 120},
+		{
+			"label": _("Total Estimated Chicks"),
+			"fieldname": "total_estimated_chicks",
+			"fieldtype": "Int",
+			"width": 150,
+		},
+		{
+			"label": _("Total Actual Chicks"),
+			"fieldname": "total_actual_chicks",
+			"fieldtype": "Int",
+			"width": 140,
+		},
+		{
+			"label": _("Hatchability %"),
+			"fieldname": "hatchability_pct",
+			"fieldtype": "Percent",
+			"precision": 2,
+			"width": 120,
+		},
 	]
 
 

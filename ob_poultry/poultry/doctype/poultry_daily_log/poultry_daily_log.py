@@ -27,7 +27,9 @@ class PoultryDailyLog(Document):
 
 	def compute_daily_mortality_pct(self):
 		current_bird_count = self.batch_doc.current_bird_count
-		self.daily_mortality_pct = (flt(self.mortality_count) / current_bird_count * 100) if current_bird_count else 0
+		self.daily_mortality_pct = (
+			(flt(self.mortality_count) / current_bird_count * 100) if current_bird_count else 0
+		)
 
 	def apply_feed_uom_conversion(self):
 		if not (self.feed_uom and self.feed_qty):
@@ -36,16 +38,22 @@ class PoultryDailyLog(Document):
 			frappe.throw(_("Set a Feed Item before entering Feed Qty in an alternate unit"))
 		conversion_factor = flt(get_conversion_factor(self.feed_item, self.feed_uom).get("conversion_factor"))
 		if not conversion_factor:
-			frappe.throw(_("No UOM Conversion Factor found for {0} in {1}").format(self.feed_item, self.feed_uom))
+			frappe.throw(
+				_("No UOM Conversion Factor found for {0} in {1}").format(self.feed_item, self.feed_uom)
+			)
 		self.feed_consumed_kg = flt(self.feed_qty) * conversion_factor
 
 	def compute_damage_pct(self):
-		damaged = sum(flt(row.production_count) for row in self.egg_entries if row.grade in DAMAGED_EGG_GRADES)
+		damaged = sum(
+			flt(row.production_count) for row in self.egg_entries if row.grade in DAMAGED_EGG_GRADES
+		)
 		self.damage_pct = (damaged / self.total_eggs_produced * 100) if self.total_eggs_produced else 0
 
 	def compute_feed_per_bird_g(self):
 		current_bird_count = self.batch_doc.current_bird_count
-		self.feed_per_bird_g = (flt(self.feed_consumed_kg) * 1000 / current_bird_count) if current_bird_count else 0
+		self.feed_per_bird_g = (
+			(flt(self.feed_consumed_kg) * 1000 / current_bird_count) if current_bird_count else 0
+		)
 
 	def compute_expenses_total(self):
 		self.total_expenses = sum(flt(row.amount) for row in self.expenses) if self.expenses else 0
@@ -56,26 +64,35 @@ class PoultryDailyLog(Document):
 			{"batch": self.batch, "log_date": self.log_date, "name": ["!=", self.name or ""]},
 		)
 		if existing:
-			frappe.throw(_("A log for batch {0} on {1} already exists: {2}").format(self.batch, self.log_date, existing))
+			frappe.throw(
+				_("A log for batch {0} on {1} already exists: {2}").format(
+					self.batch, self.log_date, existing
+				)
+			)
 
 	def validate_batch_not_closed(self):
 		if self.batch_doc.status == "Closed":
 			frappe.throw(_("Batch {0} is closed and cannot receive new daily logs").format(self.batch))
 
 	def compute_mortality_rollup(self):
-		self.mortality_count = sum(flt(row.count) for row in self.mortality_details) if self.mortality_details else 0
+		self.mortality_count = (
+			sum(flt(row.count) for row in self.mortality_details) if self.mortality_details else 0
+		)
 
 	def validate_bird_count(self):
 		batch = self.batch_doc
-		removed_elsewhere = frappe.db.sql(
-			"""
+		removed_elsewhere = (
+			frappe.db.sql(
+				"""
 			select sum(mortality_count) + sum(cull_count) as removed
 			from `tabPoultry Daily Log`
 			where batch = %s and docstatus = 1 and name != %s
 			""",
-			(self.batch, self.name or ""),
-			as_dict=True,
-		)[0].removed or 0
+				(self.batch, self.name or ""),
+				as_dict=True,
+			)[0].removed
+			or 0
+		)
 		total_removed = removed_elsewhere + (self.mortality_count or 0) + (self.cull_count or 0)
 		if total_removed > batch.initial_bird_count:
 			frappe.throw(
@@ -152,7 +169,9 @@ class PoultryDailyLog(Document):
 		batch = self.batch_doc
 		if not batch.feed_warehouse:
 			frappe.throw(
-				_("Set a Feed Warehouse on Poultry Batch {0} before logging feed consumption").format(batch.name)
+				_("Set a Feed Warehouse on Poultry Batch {0} before logging feed consumption").format(
+					batch.name
+				)
 			)
 		stock_entry = frappe.get_doc(
 			{

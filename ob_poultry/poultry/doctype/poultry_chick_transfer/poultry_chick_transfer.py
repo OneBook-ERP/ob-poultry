@@ -15,14 +15,17 @@ class PoultryChickTransfer(Document):
 		hatch = self.hatch_doc
 		if not hatch.actual_chicks:
 			return
-		already_transferred = frappe.db.sql(
-			"""
+		already_transferred = (
+			frappe.db.sql(
+				"""
 			select sum(quantity)
 			from `tabPoultry Chick Transfer`
 			where hatch = %s and docstatus = 1 and name != %s
 			""",
-			(self.hatch, self.name or ""),
-		)[0][0] or 0
+				(self.hatch, self.name or ""),
+			)[0][0]
+			or 0
+		)
 		total_transferred = already_transferred + (self.quantity or 0)
 		if total_transferred > hatch.actual_chicks:
 			frappe.throw(
