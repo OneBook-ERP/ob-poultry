@@ -1,50 +1,140 @@
 {
-    "doctype": "DocType",
-    "name": "Poultry Daily Log Egg Entry",
-    "module": "Poultry",
-    "engine": "InnoDB",
-    "istable": 1,
-    "fields": [
-        {
-            "fieldname": "grade",
-            "fieldtype": "Select",
-            "label": "Grade",
-            "options": "Hatching Egg\nTable Egg\nJumbo Egg\nCracked Egg\nWaste Egg\nDouble Yolk\nDirty Egg",
-            "reqd": 1,
-            "in_list_view": 1
-        },
-        {
-            "fieldname": "opening_count",
-            "fieldtype": "Int",
-            "label": "Opening Count",
-            "read_only": 1,
-            "in_list_view": 1
-        },
-        {
-            "fieldname": "production_count",
-            "fieldtype": "Int",
-            "label": "Production Count",
-            "reqd": 1,
-            "in_list_view": 1
-        },
-        {
-            "fieldname": "closing_count",
-            "fieldtype": "Int",
-            "label": "Closing Count",
-            "read_only": 1,
-            "in_list_view": 1
-        },
-        {
-            "fieldname": "avg_weight_g",
-            "fieldtype": "Float",
-            "label": "Avg Weight (g)"
-        },
-        {
-            "fieldname": "trays",
-            "fieldtype": "Float",
-            "label": "Trays",
-            "read_only": 1,
-            "in_list_view": 1
-        }
-    ]
+ "actions": [],
+ "creation": "2026-10-31 03:40:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "shed",
+  "batch",
+  "week_day",
+  "in_stock",
+  "good_eggs",
+  "double_yolk_eggs",
+  "broken_eggs",
+  "waste_eggs",
+  "total_eggs",
+  "egg_production_pct",
+  "broken_egg_pct",
+  "tray_summary",
+  "trays",
+  "eggs_left"
+ ],
+ "fields": [
+  {
+   "fieldname": "shed",
+   "fieldtype": "Link",
+   "label": "Shed",
+   "options": "Poultry Shed",
+   "in_list_view": 0
+  },
+  {
+   "fieldname": "batch",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Batch",
+   "options": "Poultry Batch",
+   "reqd": 1
+  },
+  {
+   "fieldname": "week_day",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Week / Day",
+   "read_only": 1
+  },
+  {
+   "default": "0",
+   "fieldname": "in_stock",
+   "fieldtype": "Int",
+   "in_list_view": 1,
+   "label": "InStock",
+   "read_only": 1
+  },
+  {
+   "default": "0",
+   "fieldname": "good_eggs",
+   "fieldtype": "Int",
+   "in_list_view": 1,
+   "label": "Good"
+  },
+  {
+   "default": "0",
+   "fieldname": "double_yolk_eggs",
+   "fieldtype": "Int",
+   "in_list_view": 1,
+   "label": "Double Yolk"
+  },
+  {
+   "default": "0",
+   "fieldname": "broken_eggs",
+   "fieldtype": "Int",
+   "in_list_view": 1,
+   "label": "Broken"
+  },
+  {
+   "default": "0",
+   "fieldname": "waste_eggs",
+   "fieldtype": "Int",
+   "in_list_view": 1,
+   "label": "Waste"
+  },
+  {
+   "default": "0",
+   "fieldname": "total_eggs",
+   "fieldtype": "Int",
+   "in_list_view": 1,
+   "label": "Total",
+   "read_only": 1
+  },
+  {
+   "default": "0",
+   "fieldname": "egg_production_pct",
+   "fieldtype": "Percent",
+   "in_list_view": 1,
+   "label": "Production %",
+   "read_only": 1
+  },
+  {
+   "default": "0",
+   "fieldname": "broken_egg_pct",
+   "fieldtype": "Percent",
+   "in_list_view": 1,
+   "label": "Broken %",
+   "read_only": 1
+  },
+  {
+   "fieldname": "tray_summary",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Trays & Left",
+   "read_only": 1
+  },
+  {
+   "default": "0",
+   "fieldname": "trays",
+   "fieldtype": "Int",
+   "hidden": 1,
+   "label": "Trays"
+  },
+  {
+   "default": "0",
+   "fieldname": "eggs_left",
+   "fieldtype": "Int",
+   "hidden": 1,
+   "label": "Eggs Left"
+  }
+ ],
+ "istable": 1,
+ "links": [],
+ "modified": "2026-10-31 03:40:00.000000",
+ "modified_by": "Administrator",
+ "module": "Poultry",
+ "name": "Poultry Daily Log Egg Entry",
+ "owner": "Administrator",
+ "permissions": [],
+ "row_format": "Dynamic",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "editable_grid": 1
 }

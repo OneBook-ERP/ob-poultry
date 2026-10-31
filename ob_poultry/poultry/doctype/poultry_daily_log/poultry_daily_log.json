@@ -1,239 +1,344 @@
 {
-    "doctype": "DocType",
-    "name": "Poultry Daily Log",
-    "module": "Poultry",
-    "engine": "InnoDB",
-    "autoname": "format:PDL-{YYYY}-{#####}",
-    "naming_rule": "Expression (old style)",
-    "is_submittable": 1,
-    "track_changes": 1,
-    "fields": [
-        {
-            "fieldname": "batch",
-            "fieldtype": "Link",
-            "label": "Batch",
-            "options": "Poultry Batch",
-            "reqd": 1,
-            "in_list_view": 1
-        },
-        {
-            "fieldname": "log_date",
-            "fieldtype": "Date",
-            "label": "Log Date",
-            "default": "Today",
-            "reqd": 1,
-            "in_list_view": 1
-        },
-        {
-            "fieldname": "column_break_log_1",
-            "fieldtype": "Column Break"
-        },
-        {
-            "fieldname": "average_body_weight_g",
-            "fieldtype": "Float",
-            "label": "Average Body Weight (g)"
-        },
-        {
-            "fieldname": "std_body_weight_g",
-            "fieldtype": "Float",
-            "label": "Standard Body Weight (g)",
-            "read_only": 1
-        },
-        {
-            "fieldname": "section_break_log_birds",
-            "fieldtype": "Section Break",
-            "label": "Birds"
-        },
-        {
-            "fieldname": "mortality_details",
-            "fieldtype": "Table",
-            "label": "Mortality Detail",
-            "options": "Poultry Daily Log Mortality Entry"
-        },
-        {
-            "fieldname": "mortality_count",
-            "fieldtype": "Int",
-            "label": "Mortality Count",
-            "default": "0",
-            "read_only": 1,
-            "in_list_view": 1
-        },
-        {
-            "fieldname": "column_break_log_2",
-            "fieldtype": "Column Break"
-        },
-        {
-            "fieldname": "cull_count",
-            "fieldtype": "Int",
-            "label": "Cull Count",
-            "default": "0"
-        },
-        {
-            "fieldname": "std_mortality_pct",
-            "fieldtype": "Percent",
-            "label": "Standard Mortality %",
-            "read_only": 1
-        },
-        {
-            "fieldname": "daily_mortality_pct",
-            "fieldtype": "Percent",
-            "label": "Daily Mortality %",
-            "read_only": 1,
-            "description": "Today's mortality ÷ current bird count. Distinct from the batch's cumulative mortality %."
-        },
-        {
-            "fieldname": "section_break_log_feed",
-            "fieldtype": "Section Break",
-            "label": "Feed & Water"
-        },
-        {
-            "fieldname": "feed_item",
-            "fieldtype": "Link",
-            "label": "Feed Item",
-            "options": "Item"
-        },
-        {
-            "fieldname": "feed_uom",
-            "fieldtype": "Link",
-            "label": "Feed UOM",
-            "options": "UOM",
-            "description": "Optional. If set with Feed Qty, Feed Consumed (kg) is computed via the Feed Item's UOM conversion factor."
-        },
-        {
-            "fieldname": "feed_qty",
-            "fieldtype": "Float",
-            "label": "Feed Qty (in Feed UOM)"
-        },
-        {
-            "fieldname": "feed_consumed_kg",
-            "fieldtype": "Float",
-            "label": "Feed Consumed (kg)",
-            "in_list_view": 1
-        },
-        {
-            "fieldname": "stock_entry",
-            "fieldtype": "Link",
-            "label": "Stock Entry",
-            "options": "Stock Entry",
-            "read_only": 1
-        },
-        {
-            "fieldname": "std_feed_per_bird_g",
-            "fieldtype": "Float",
-            "label": "Standard Feed / Bird (g)",
-            "read_only": 1
-        },
-        {
-            "fieldname": "feed_per_bird_g",
-            "fieldtype": "Float",
-            "label": "Feed / Bird (g)",
-            "read_only": 1
-        },
-        {
-            "fieldname": "column_break_log_3",
-            "fieldtype": "Column Break"
-        },
-        {
-            "fieldname": "water_consumed_liters",
-            "fieldtype": "Float",
-            "label": "Water Consumed (liters)"
-        },
-        {
-            "fieldname": "section_break_log_production",
-            "fieldtype": "Section Break",
-            "label": "Egg Production"
-        },
-        {
-            "fieldname": "egg_entries",
-            "fieldtype": "Table",
-            "label": "Egg Entries",
-            "options": "Poultry Daily Log Egg Entry"
-        },
-        {
-            "fieldname": "total_eggs_produced",
-            "fieldtype": "Int",
-            "label": "Total Eggs Produced",
-            "read_only": 1,
-            "in_list_view": 1
-        },
-        {
-            "fieldname": "column_break_log_4",
-            "fieldtype": "Column Break"
-        },
-        {
-            "fieldname": "hdep_percent",
-            "fieldtype": "Percent",
-            "label": "HDEP %",
-            "read_only": 1
-        },
-        {
-            "fieldname": "damage_pct",
-            "fieldtype": "Percent",
-            "label": "Damage %",
-            "read_only": 1,
-            "description": "Cracked + Waste + Dirty Egg count ÷ total eggs produced."
-        },
-        {
-            "fieldname": "egg_count",
-            "fieldtype": "Int",
-            "label": "Eggs Collected (Deprecated)",
-            "read_only": 1,
-            "description": "Superseded by Egg Entries above; kept read-only for historical rows."
-        },
-        {
-            "fieldname": "section_break_log_expenses",
-            "fieldtype": "Section Break",
-            "label": "Expenses"
-        },
-        {
-            "fieldname": "expenses",
-            "fieldtype": "Table",
-            "label": "Expenses",
-            "options": "Poultry Daily Log Expense"
-        },
-        {
-            "fieldname": "total_expenses",
-            "fieldtype": "Currency",
-            "label": "Total Expenses",
-            "read_only": 1
-        },
-        {
-            "fieldname": "section_break_log_notes",
-            "fieldtype": "Section Break"
-        },
-        {
-            "fieldname": "notes",
-            "fieldtype": "Small Text",
-            "label": "Notes"
-        }
-    ],
-    "sort_field": "log_date",
-    "sort_order": "DESC",
-    "permissions": [
-        {
-            "role": "System Manager",
-            "read": 1,
-            "write": 1,
-            "create": 1,
-            "delete": 1,
-            "submit": 1,
-            "cancel": 1
-        },
-        {
-            "role": "Poultry Manager",
-            "read": 1,
-            "write": 1,
-            "create": 1,
-            "delete": 1,
-            "submit": 1,
-            "cancel": 1
-        },
-        {
-            "role": "Poultry Attendant",
-            "read": 1,
-            "write": 1,
-            "create": 1,
-            "submit": 1
-        }
-    ]
+ "actions": [],
+ "autoname": "format:PDL-{log_date}",
+ "creation": "2026-10-30 15:28:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "log_date",
+  "day_of_week",
+  "column_break_hdr_1",
+  "selected_shed",
+  "section_break_sheds",
+  "shed_entries",
+  "section_break_shed_info",
+  "column_break_shed_left",
+  "shed_name",
+  "breed",
+  "sex",
+  "column_break_shed_right",
+  "record_weight",
+  "average_body_weight_g",
+  "section_break_eggs",
+  "egg_entries",
+  "total_eggs_produced",
+  "section_break_feeds",
+  "feed_entries",
+  "total_feed_consumed_kg",
+  "total_feed_cost",
+  "section_break_flock",
+  "flock_entries",
+  "total_mortality",
+  "total_culled",
+  "section_break_sales",
+  "sales_entries",
+  "total_sales_amount",
+  "section_break_notes",
+  "notes",
+  "batch",
+  "mortality_details",
+  "expenses",
+  "feed_item",
+  "feed_consumed_kg",
+  "mortality_count",
+  "cull_count",
+  "stock_entry"
+ ],
+ "fields": [
+  {
+   "default": "Today",
+   "fieldname": "log_date",
+   "fieldtype": "Date",
+   "in_list_view": 1,
+   "label": "Log Date",
+   "reqd": 1,
+   "unique": 1
+  },
+  {
+   "fieldname": "day_of_week",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Day",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_hdr_1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "allow_on_submit": 1,
+   "fieldname": "selected_shed",
+   "fieldtype": "Link",
+   "hidden": 1,
+   "label": "Selected Shed",
+   "options": "Poultry Shed"
+  },
+  {
+   "fieldname": "section_break_sheds",
+   "fieldtype": "Section Break",
+   "label": "Shed List"
+  },
+  {
+   "allow_on_submit": 1,
+   "fieldname": "shed_entries",
+   "fieldtype": "Table",
+   "label": "Sheds",
+   "options": "Poultry Daily Log Shed Entry"
+  },
+  {
+   "fieldname": "section_break_shed_info",
+   "fieldtype": "Section Break",
+   "label": ""
+  },
+  {
+   "fieldname": "column_break_shed_left",
+   "fieldtype": "Column Break"
+  },
+  {
+   "allow_on_submit": 1,
+   "fieldname": "shed_name",
+   "fieldtype": "Data",
+   "label": "Shed Name",
+   "read_only": 1
+  },
+  {
+   "allow_on_submit": 1,
+   "fieldname": "breed",
+   "fieldtype": "Link",
+   "label": "Breed",
+   "options": "Poultry Breed",
+   "read_only": 1
+  },
+  {
+   "allow_on_submit": 1,
+   "fieldname": "sex",
+   "fieldtype": "Data",
+   "label": "Sex",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_shed_right",
+   "fieldtype": "Column Break"
+  },
+  {
+   "allow_on_submit": 1,
+   "default": "0",
+   "fieldname": "record_weight",
+   "fieldtype": "Check",
+   "label": "Record Bird Weight Today"
+  },
+  {
+   "allow_on_submit": 1,
+   "depends_on": "eval:doc.record_weight==1",
+   "fieldname": "average_body_weight_g",
+   "fieldtype": "Float",
+   "label": "Average Body Weight (g)"
+  },
+  {
+   "fieldname": "section_break_eggs",
+   "fieldtype": "Section Break",
+   "label": "Eggs Production"
+  },
+  {
+   "allow_on_submit": 1,
+   "fieldname": "egg_entries",
+   "fieldtype": "Table",
+   "label": "Egg Entries",
+   "options": "Poultry Daily Log Egg Entry"
+  },
+  {
+   "allow_on_submit": 1,
+   "default": "0",
+   "fieldname": "total_eggs_produced",
+   "fieldtype": "Int",
+   "label": "Total Eggs Produced",
+   "read_only": 1
+  },
+  {
+   "fieldname": "section_break_feeds",
+   "fieldtype": "Section Break",
+   "label": "Feed Consumption"
+  },
+  {
+   "allow_on_submit": 1,
+   "fieldname": "feed_entries",
+   "fieldtype": "Table",
+   "label": "Feed Entries",
+   "options": "Poultry Daily Log Feed Entry"
+  },
+  {
+   "allow_on_submit": 1,
+   "default": "0",
+   "fieldname": "total_feed_consumed_kg",
+   "fieldtype": "Float",
+   "label": "Total Feed Consumed (Kg)",
+   "read_only": 1
+  },
+  {
+   "allow_on_submit": 1,
+   "default": "0",
+   "fieldname": "total_feed_cost",
+   "fieldtype": "Currency",
+   "label": "Total Feed Cost",
+   "read_only": 1
+  },
+  {
+   "fieldname": "section_break_flock",
+   "fieldtype": "Section Break",
+   "label": "Chickens (Flock Count & Mortality)"
+  },
+  {
+   "allow_on_submit": 1,
+   "fieldname": "flock_entries",
+   "fieldtype": "Table",
+   "label": "Flock Entries",
+   "options": "Poultry Daily Log Flock Entry"
+  },
+  {
+   "allow_on_submit": 1,
+   "default": "0",
+   "fieldname": "total_mortality",
+   "fieldtype": "Int",
+   "label": "Total Mortality",
+   "read_only": 1
+  },
+  {
+   "allow_on_submit": 1,
+   "default": "0",
+   "fieldname": "total_culled",
+   "fieldtype": "Int",
+   "label": "Total Culled",
+   "read_only": 1
+  },
+  {
+   "fieldname": "section_break_sales",
+   "fieldtype": "Section Break",
+   "label": "Egg Sales"
+  },
+  {
+   "allow_on_submit": 1,
+   "fieldname": "sales_entries",
+   "fieldtype": "Table",
+   "label": "Sales Entries",
+   "options": "Poultry Daily Log Sales Entry"
+  },
+  {
+   "allow_on_submit": 1,
+   "default": "0",
+   "fieldname": "total_sales_amount",
+   "fieldtype": "Currency",
+   "label": "Total Sales Revenue",
+   "read_only": 1
+  },
+  {
+   "fieldname": "section_break_notes",
+   "fieldtype": "Section Break",
+   "label": "Notes"
+  },
+  {
+   "allow_on_submit": 1,
+   "fieldname": "notes",
+   "fieldtype": "Small Text",
+   "label": "Notes"
+  },
+  {
+   "fieldname": "batch",
+   "fieldtype": "Link",
+   "hidden": 1,
+   "label": "Batch (Legacy)",
+   "options": "Poultry Batch"
+  },
+  {
+   "fieldname": "mortality_details",
+   "fieldtype": "Table",
+   "hidden": 1,
+   "label": "Mortality Details (Legacy)",
+   "options": "Poultry Daily Log Mortality Entry"
+  },
+  {
+   "fieldname": "expenses",
+   "fieldtype": "Table",
+   "hidden": 1,
+   "label": "Expenses (Legacy)",
+   "options": "Poultry Daily Log Expense"
+  },
+  {
+   "fieldname": "feed_item",
+   "fieldtype": "Link",
+   "hidden": 1,
+   "label": "Feed Item (Legacy)",
+   "options": "Item"
+  },
+  {
+   "fieldname": "feed_consumed_kg",
+   "fieldtype": "Float",
+   "hidden": 1,
+   "label": "Feed Consumed Kg (Legacy)"
+  },
+  {
+   "fieldname": "mortality_count",
+   "fieldtype": "Int",
+   "hidden": 1,
+   "label": "Mortality Count (Legacy)"
+  },
+  {
+   "fieldname": "cull_count",
+   "fieldtype": "Int",
+   "hidden": 1,
+   "label": "Cull Count (Legacy)"
+  },
+  {
+   "fieldname": "stock_entry",
+   "fieldtype": "Link",
+   "hidden": 1,
+   "label": "Stock Entry",
+   "options": "Stock Entry"
+  }
+ ],
+ "is_submittable": 0,
+ "links": [],
+ "modified": "2026-10-31 04:26:00.000000",
+ "modified_by": "Administrator",
+ "module": "Poultry",
+ "name": "Poultry Daily Log",
+ "naming_rule": "Expression (old style)",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "role": "Poultry Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "email": 1,
+   "print": 1,
+   "read": 1,
+   "role": "Poultry Attendant",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "row_format": "Dynamic",
+ "sort_field": "log_date",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
 }

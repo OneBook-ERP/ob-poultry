@@ -1,0 +1,82 @@
+{
+ "actions": [],
+ "creation": "2026-10-31 03:40:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "shed",
+  "batch",
+  "week_day",
+  "opening_birds",
+  "dead",
+  "culled",
+  "closing_birds"
+ ],
+ "fields": [
+  {
+   "fieldname": "shed",
+   "fieldtype": "Link",
+   "label": "Shed",
+   "options": "Poultry Shed",
+   "in_list_view": 0
+  },
+  {
+   "fieldname": "batch",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Batch",
+   "options": "Poultry Batch",
+   "reqd": 1
+  },
+  {
+   "fieldname": "week_day",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Week / Day",
+   "read_only": 1
+  },
+  {
+   "default": "0",
+   "fieldname": "opening_birds",
+   "fieldtype": "Int",
+   "in_list_view": 1,
+   "label": "Opening Birds",
+   "read_only": 1
+  },
+  {
+   "default": "0",
+   "fieldname": "dead",
+   "fieldtype": "Int",
+   "in_list_view": 1,
+   "label": "Dead"
+  },
+  {
+   "default": "0",
+   "fieldname": "culled",
+   "fieldtype": "Int",
+   "in_list_view": 1,
+   "label": "Culled"
+  },
+  {
+   "default": "0",
+   "fieldname": "closing_birds",
+   "fieldtype": "Int",
+   "in_list_view": 1,
+   "label": "Closing Birds",
+   "read_only": 1
+  }
+ ],
+ "istable": 1,
+ "links": [],
+ "modified": "2026-10-31 03:40:00.000000",
+ "modified_by": "Administrator",
+ "module": "Poultry",
+ "name": "Poultry Daily Log Flock Entry",
+ "owner": "Administrator",
+ "permissions": [],
+ "row_format": "Dynamic",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "editable_grid": 1
+}
