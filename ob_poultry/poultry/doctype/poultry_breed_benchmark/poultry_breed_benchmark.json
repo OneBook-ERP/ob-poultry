@@ -1,0 +1,70 @@
+{
+    "doctype": "DocType",
+    "name": "Poultry Breed Benchmark",
+    "module": "Poultry",
+    "engine": "InnoDB",
+    "istable": 1,
+    "editable_grid": 1,
+    "fields": [
+        {
+            "fieldname": "from_day",
+            "fieldtype": "Int",
+            "label": "From Day",
+            "in_list_view": 1,
+            "columns": 1
+        },
+        {
+            "fieldname": "to_day",
+            "fieldtype": "Int",
+            "label": "To Day",
+            "in_list_view": 1,
+            "columns": 1
+        },
+        {
+            "fieldname": "standard_mortality_pct",
+            "fieldtype": "Percent",
+            "label": "Standard Mortality %",
+            "in_list_view": 1,
+            "columns": 2
+        },
+        {
+            "fieldname": "standard_feed_per_bird_g",
+            "fieldtype": "Float",
+            "label": "Standard Feed / Bird (g)",
+            "in_list_view": 1,
+            "columns": 2
+        },
+        {
+            "fieldname": "standard_body_weight_g",
+            "fieldtype": "Float",
+            "label": "Standard Body Weight (g)",
+            "in_list_view": 1,
+            "columns": 2
+        },
+        {
+            "fieldname": "standard_fcr",
+            "fieldtype": "Float",
+            "label": "Standard FCR",
+            "in_list_view": 1,
+            "columns": 2
+        },
+        {
+            "fieldname": "age_in_days",
+            "fieldtype": "Data",
+            "label": "Age (Days)",
+            "hidden": 1
+        },
+        {
+            "fieldname": "day_start",
+            "fieldtype": "Int",
+            "label": "Day Start",
+            "hidden": 1
+        },
+        {
+            "fieldname": "day_end",
+            "fieldtype": "Int",
+            "label": "Day End",
+            "hidden": 1
+        }
+    ]
+}

@@ -16,6 +16,14 @@
             "in_list_view": 1
         },
         {
+            "fieldname": "initial_shed",
+            "fieldtype": "Link",
+            "label": "Initial Shed",
+            "options": "Poultry Shed",
+            "read_only": 1,
+            "hidden": 1
+        },
+        {
             "fieldname": "breed",
             "fieldtype": "Link",
             "label": "Breed",
@@ -42,6 +50,14 @@
             "default": "Today",
             "reqd": 1,
             "in_list_view": 1
+        },
+        {
+            "fieldname": "batch_week",
+            "fieldtype": "Int",
+            "label": "Batch Week",
+            "read_only": 1,
+            "in_list_view": 1,
+            "description": "Current age of the flock in completed weeks"
         },
         {
             "fieldname": "status",
@@ -136,11 +152,13 @@
         {
             "fieldname": "male_bird_count",
             "fieldtype": "Int",
-            "label": "Male Bird Count"
+            "label": "Male Bird Count",
+            "depends_on": "eval:doc.breed_type != 'Layer'"
         },
         {
             "fieldname": "column_break_batch_4",
-            "fieldtype": "Column Break"
+            "fieldtype": "Column Break",
+            "depends_on": "eval:doc.breed_type != 'Layer'"
         },
         {
             "fieldname": "female_bird_count",
@@ -199,6 +217,19 @@
             "fieldname": "notes",
             "fieldtype": "Small Text",
             "label": "Notes"
+        },
+        {
+            "fieldname": "section_break_shed_transfers",
+            "fieldtype": "Section Break",
+            "label": "Shed Transfer History",
+            "collapsible": 1
+        },
+        {
+            "fieldname": "shed_transfers",
+            "fieldtype": "Table",
+            "label": "Shed Transfers",
+            "options": "Poultry Batch Shed Transfer",
+            "read_only": 1
         }
     ],
     "sort_field": "creation",

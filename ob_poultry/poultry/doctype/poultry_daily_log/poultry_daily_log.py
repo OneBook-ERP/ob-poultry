@@ -93,7 +93,25 @@ class PoultryDailyLog(Document):
 			)[0].removed
 			or 0
 		)
-		total_removed = removed_elsewhere + (self.mortality_count or 0) + (self.cull_count or 0)
+		transfer_reduction = 0
+		if frappe.db.table_exists("Poultry Batch Shed Transfer"):
+			transfer_reduction = (
+				frappe.db.sql(
+					"""
+				select sum(reduction)
+				from `tabPoultry Batch Shed Transfer`
+				where parent = %s
+				""",
+					self.batch,
+				)[0][0]
+				or 0
+			)
+		total_removed = (
+			removed_elsewhere
+			+ transfer_reduction
+			+ (self.mortality_count or 0)
+			+ (self.cull_count or 0)
+		)
 		if total_removed > batch.initial_bird_count:
 			frappe.throw(
 				_("Total removed birds ({0}) would exceed the initial bird count ({1}) for batch {2}").format(
@@ -130,25 +148,71 @@ class PoultryDailyLog(Document):
 	def apply_benchmarks(self):
 		batch = self.batch_doc
 		age_in_days = date_diff(self.log_date, batch.start_date)
-		benchmark = frappe.db.sql(
-			"""
-			select standard_mortality_pct, standard_feed_per_bird_g, standard_body_weight_g
-			from `tabPoultry Benchmark`
-			where breed = %s and age_in_days <= %s
-			order by age_in_days desc
-			limit 1
-			""",
-			(batch.breed, age_in_days),
-			as_dict=True,
-		)
+		benchmark = None
+
+		if frappe.db.table_exists("Poultry Breed Benchmark"):
+			all_rows = frappe.db.sql(
+				"""
+				select standard_mortality_pct, standard_feed_per_bird_g, standard_body_weight_g, standard_fcr,
+				       day_start, day_end, age_in_days, from_day, to_day
+				from `tabPoultry Breed Benchmark`
+				where parent = %s and parenttype = 'Poultry Breed'
+				order by idx asc, coalesce(day_start, from_day) asc
+				""",
+				(batch.breed,),
+				as_dict=True,
+			)
+			for r in all_rows:
+				if r.day_start is None and r.get("from_day") is not None:
+					r.day_start = r.get("from_day")
+				if r.day_end is None and r.get("to_day") is not None:
+					r.day_end = r.get("to_day")
+			rows = [
+				r for r in all_rows
+				if any(
+					(r.get(f) or 0) > 0
+					for f in ("standard_mortality_pct", "standard_feed_per_bird_g", "standard_body_weight_g", "standard_fcr")
+				)
+			]
+			if rows:
+				exact = [
+					r for r in rows
+					if (r.day_start is not None and r.day_end is not None and r.day_start <= age_in_days <= r.day_end)
+				]
+				if exact:
+					benchmark = exact[-1]
+				else:
+					earlier = [
+						r for r in rows
+						if (r.day_start is not None and r.day_start <= age_in_days)
+						or (r.day_end is not None and r.day_end <= age_in_days)
+					]
+					if earlier:
+						benchmark = earlier[-1]
+
+		if not benchmark and frappe.db.table_exists("Poultry Benchmark"):
+			legacy = frappe.db.sql(
+				"""
+				select standard_mortality_pct, standard_feed_per_bird_g, standard_body_weight_g
+				from `tabPoultry Benchmark`
+				where breed = %s and age_in_days <= %s
+				order by age_in_days desc
+				limit 1
+				""",
+				(batch.breed, age_in_days),
+				as_dict=True,
+			)
+			if legacy:
+				benchmark = legacy[0]
+
 		if not benchmark:
 			self.std_mortality_pct = None
 			self.std_feed_per_bird_g = None
 			self.std_body_weight_g = None
 			return
-		self.std_mortality_pct = benchmark[0].standard_mortality_pct
-		self.std_feed_per_bird_g = benchmark[0].standard_feed_per_bird_g
-		self.std_body_weight_g = benchmark[0].standard_body_weight_g
+		self.std_mortality_pct = benchmark.get("standard_mortality_pct")
+		self.std_feed_per_bird_g = benchmark.get("standard_feed_per_bird_g")
+		self.std_body_weight_g = benchmark.get("standard_body_weight_g")
 
 	def on_submit(self):
 		self.create_feed_stock_entry()

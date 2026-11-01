@@ -69,6 +69,18 @@ class TestPoultryModule(IntegrationTestCase):
 					}
 				).insert(ignore_permissions=True)
 
+		diff_account = frappe.db.get_value(
+			"Account",
+			{"company": "Test Poultry Co", "account_type": "Stock Adjustment"},
+			"name",
+		) or frappe.db.get_value(
+			"Account",
+			{"company": "Test Poultry Co", "is_group": 0},
+			"name",
+		)
+		if diff_account:
+			frappe.db.set_value("Company", "Test Poultry Co", "stock_adjustment_account", diff_account)
+
 		receipt = frappe.get_doc(
 			{
 				"doctype": "Stock Entry",
@@ -81,6 +93,7 @@ class TestPoultryModule(IntegrationTestCase):
 						"t_warehouse": cls.warehouse_name,
 						"basic_rate": 1,
 						"set_basic_rate_manually": 1,
+						"expense_account": diff_account,
 					}
 				],
 			}
@@ -409,6 +422,133 @@ class TestPoultryModule(IntegrationTestCase):
 			{"doctype": "Poultry Daily Log", "batch": bmk_batch3.name, "log_date": nowdate()}
 		).insert(ignore_permissions=True)
 		self.assertFalse(none_log.std_body_weight_g)  # TC-BMK-04
+
+	def test_breed_child_table_benchmarks(self):
+		# TC-BMK-CHILD-01: Auto-populate Broiler default rows (7 weeks / 49 days) with default values
+		broiler_breed = frappe.get_doc(
+			{
+				"doctype": "Poultry Breed",
+				"breed_name": "Test Child Table Broiler",
+				"breed_type": "Broiler",
+			}
+		)
+		broiler_breed.populate_default_benchmarks()
+		broiler_breed.insert(ignore_permissions=True)
+
+		self.assertEqual(len(broiler_breed.benchmarks), 7)
+		self.assertEqual(broiler_breed.benchmarks[0].age_in_days, "0-7")
+		self.assertEqual(broiler_breed.benchmarks[0].day_start, 0)
+		self.assertEqual(broiler_breed.benchmarks[0].day_end, 7)
+		self.assertEqual(broiler_breed.benchmarks[-1].age_in_days, "42-49")
+		self.assertEqual(broiler_breed.benchmarks[-1].day_start, 42)
+		self.assertEqual(broiler_breed.benchmarks[-1].day_end, 49)
+		# Verify default values are loaded
+		self.assertEqual(broiler_breed.benchmarks[0].standard_body_weight_g, 190.0)
+		self.assertEqual(broiler_breed.benchmarks[0].standard_feed_per_bird_g, 25.0)
+		self.assertEqual(broiler_breed.benchmarks[0].standard_mortality_pct, 0.8)
+		self.assertEqual(broiler_breed.benchmarks[0].standard_fcr, 0.92)
+
+		# TC-BMK-CHILD-02: Layer breed has 81 weeks (0-7 to 560-567)
+		layer_breed = frappe.get_doc(
+			{
+				"doctype": "Poultry Breed",
+				"breed_name": "Test Child Table Layer",
+				"breed_type": "Layer",
+			}
+		)
+		layer_breed.populate_default_benchmarks()
+		layer_breed.insert(ignore_permissions=True)
+		self.assertEqual(len(layer_breed.benchmarks), 81)
+		self.assertEqual(layer_breed.benchmarks[0].age_in_days, "0-7")
+		self.assertEqual(layer_breed.benchmarks[-1].age_in_days, "560-567")
+		self.assertTrue(layer_breed.benchmarks[0].standard_body_weight_g > 0)
+
+		# TC-BMK-CHILD-03: Breeder breed has 65 weeks (0-7 to 448-455)
+		breeder_breed = frappe.get_doc(
+			{
+				"doctype": "Poultry Breed",
+				"breed_name": "Test Child Table Breeder",
+				"breed_type": "Breeder",
+			}
+		)
+		breeder_breed.populate_default_benchmarks()
+		breeder_breed.insert(ignore_permissions=True)
+		self.assertEqual(len(breeder_breed.benchmarks), 65)
+		self.assertEqual(breeder_breed.benchmarks[0].age_in_days, "0-7")
+		self.assertEqual(breeder_breed.benchmarks[-1].age_in_days, "448-455")
+		self.assertTrue(breeder_breed.benchmarks[0].standard_body_weight_g > 0)
+
+		# TC-BMK-CHILD-04: Dual Purpose breed has 22 weeks (0-7 to 147-154)
+		dual_breed = frappe.get_doc(
+			{
+				"doctype": "Poultry Breed",
+				"breed_name": "Test Child Table Dual Purpose",
+				"breed_type": "Dual Purpose",
+			}
+		)
+		dual_breed.populate_default_benchmarks()
+		dual_breed.insert(ignore_permissions=True)
+		self.assertEqual(len(dual_breed.benchmarks), 22)
+		self.assertEqual(dual_breed.benchmarks[0].age_in_days, "0-7")
+		self.assertEqual(dual_breed.benchmarks[-1].age_in_days, "147-154")
+		self.assertTrue(dual_breed.benchmarks[0].standard_body_weight_g > 0)
+
+		# TC-BMK-CHILD-05: Exact interval match (age 10 days falls in "7-14")
+		child_batch = frappe.get_doc(
+			{
+				"doctype": "Poultry Batch",
+				"shed": self.shed.name,
+				"breed": broiler_breed.name,
+				"start_date": add_days(nowdate(), -10),
+				"initial_bird_count": 500,
+			}
+		).insert(ignore_permissions=True)
+
+		exact_log = frappe.get_doc(
+			{
+				"doctype": "Poultry Daily Log",
+				"batch": child_batch.name,
+				"log_date": nowdate(),
+			}
+		).insert(ignore_permissions=True)
+		# "7-14" broiler default is body weight 460.0, feed 50.0, mortality 0.4
+		self.assertEqual(exact_log.std_body_weight_g, 460.0)
+		self.assertEqual(exact_log.std_feed_per_bird_g, 50.0)
+		self.assertEqual(exact_log.std_mortality_pct, 0.4)
+
+		# TC-BMK-CHILD-06: Days lineup with empty metrics, manual editing & extending rows
+		manual_breed = frappe.get_doc(
+			{
+				"doctype": "Poultry Breed",
+				"breed_name": "Test Manual Lineup Breed",
+				"breed_type": "Broiler",
+			}
+		)
+		manual_breed.populate_days_lineup()
+		self.assertEqual(len(manual_breed.benchmarks), 7)
+		self.assertEqual(manual_breed.benchmarks[0].from_day, 0)
+		self.assertEqual(manual_breed.benchmarks[0].to_day, 7)
+		self.assertIsNone(manual_breed.benchmarks[0].standard_body_weight_g)
+
+		# Extend rows by adding row at the bottom (week 8: 49-56 days)
+		manual_breed.append(
+			"benchmarks",
+			{
+				"from_day": 49,
+				"to_day": 56,
+				"standard_body_weight_g": 3800.0,
+				"standard_feed_per_bird_g": 205.0,
+				"standard_mortality_pct": 0.5,
+				"standard_fcr": 1.95,
+			},
+		)
+		manual_breed.insert(ignore_permissions=True)
+		self.assertEqual(len(manual_breed.benchmarks), 8)
+		self.assertEqual(manual_breed.benchmarks[-1].from_day, 49)
+		self.assertEqual(manual_breed.benchmarks[-1].to_day, 56)
+		self.assertEqual(manual_breed.benchmarks[-1].age_in_days, "49-56")
+		self.assertEqual(manual_breed.benchmarks[-1].day_start, 49)
+		self.assertEqual(manual_breed.benchmarks[-1].day_end, 56)
 
 	def test_epic4_fcr_cfcr(self):
 		fresh_batch = frappe.get_doc(
@@ -1119,3 +1259,188 @@ class TestPoultryModule(IntegrationTestCase):
 		).insert(ignore_permissions=True)
 		self.assertEqual(log.feed_per_bird_g, 120)  # TC-DASH-01, 12kg*1000/100 birds
 		self.assertEqual(log.damage_pct, 20)  # TC-DASH-02, 20 dirty / 100 total * 100
+
+	def test_transfer_to_layer_house(self):
+		grower_shed = frappe.get_doc(
+			{
+				"doctype": "Poultry Shed",
+				"shed_name": "Test Grower Shed 18W",
+				"capacity": 2000,
+			}
+		).insert(ignore_permissions=True)
+
+		layer_shed = frappe.get_doc(
+			{
+				"doctype": "Poultry Shed",
+				"shed_name": "Test Layer House 18W",
+				"capacity": 1500,
+				"default_feed_warehouse": self.warehouse_name,
+			}
+		).insert(ignore_permissions=True)
+
+		# 18-week layer flock (126 days old)
+		batch = frappe.get_doc(
+			{
+				"doctype": "Poultry Batch",
+				"shed": grower_shed.name,
+				"breed": self.breed.name,
+				"start_date": add_days(nowdate(), -126),
+				"initial_bird_count": 1000,
+			}
+		).insert(ignore_permissions=True)
+
+		# Test: cannot transfer to same shed
+		with self.assertRaises(frappe.ValidationError):
+			batch.transfer_shed(grower_shed.name)
+
+		# Test: birds_to_transfer greater than current bird count
+		with self.assertRaises(frappe.ValidationError):
+			batch.transfer_shed(layer_shed.name, birds_to_transfer=1500)
+
+		# Test: birds_to_transfer <= 0
+		with self.assertRaises(frappe.ValidationError):
+			batch.transfer_shed(layer_shed.name, birds_to_transfer=0)
+
+		# Test: transit mortality cannot exceed birds to transfer
+		with self.assertRaises(frappe.ValidationError):
+			batch.transfer_shed(layer_shed.name, birds_to_transfer=500, transit_mortality=550)
+
+		# Test: capacity check for destination shed
+		small_shed = frappe.get_doc(
+			{
+				"doctype": "Poultry Shed",
+				"shed_name": "Test Small Layer Shed",
+				"capacity": 500,
+			}
+		).insert(ignore_permissions=True)
+		with self.assertRaises(frappe.ValidationError):
+			batch.transfer_shed(small_shed.name, birds_to_transfer=800, transit_mortality=10)
+
+		# Multi-Shed Transfer: Partial transfer of 600 birds to Layer Shed (10 transit mortality -> 590 placed)
+		batch.transfer_shed(
+			new_shed=layer_shed.name,
+			transfer_date=nowdate(),
+			birds_to_transfer=600,
+			transit_mortality=10,
+			notes="Transferred partial flock to Layer Shed 1",
+		)
+		batch.reload()
+
+		self.assertEqual(batch.shed, layer_shed.name)
+		self.assertEqual(batch.feed_warehouse, self.warehouse_name)
+		# 590 placed in Layer Shed + 400 remaining in Grower Shed = 990 total
+		self.assertEqual(batch.current_bird_count, 990)
+		self.assertEqual(batch.total_mortality, 10)
+
+		# Verify Shed Transfer History row and remaining birds
+		self.assertEqual(len(batch.shed_transfers), 1)
+		self.assertEqual(batch.shed_transfers[0].from_shed, grower_shed.name)
+		self.assertEqual(batch.shed_transfers[0].to_shed, layer_shed.name)
+		self.assertEqual(batch.shed_transfers[0].birds_to_transfer, 600)
+		self.assertEqual(batch.shed_transfers[0].transit_mortality, 10)
+		self.assertEqual(batch.shed_transfers[0].birds_moved, 590)
+		self.assertEqual(batch.shed_transfers[0].remaining_birds, 400)
+		self.assertEqual(batch.get_source_shed_remaining(grower_shed.name), 400)
+
+		# Create a 2nd Layer House to receive remaining birds
+		layer_shed_2 = frappe.get_doc(
+			{
+				"doctype": "Poultry Shed",
+				"shed_name": "Test Layer House 2 18W",
+				"capacity": 1000,
+			}
+		).insert(ignore_permissions=True)
+
+		# Test: cannot transfer more than remaining 400 birds from grower shed
+		with self.assertRaises(frappe.ValidationError):
+			batch.transfer_shed(
+				from_shed=grower_shed.name,
+				new_shed=layer_shed_2.name,
+				birds_to_transfer=450,
+			)
+
+		# Transfer the remaining 400 birds by using the remaining_birds from the transfer history row
+		remaining_to_transfer = batch.shed_transfers[0].remaining_birds
+		batch.transfer_shed(
+			from_shed=grower_shed.name,
+			new_shed=layer_shed_2.name,
+			transfer_date=nowdate(),
+			birds_to_transfer=remaining_to_transfer,
+			transit_mortality=5,
+			notes="Transferred remaining birds to Layer Shed 2",
+		)
+		batch.reload()
+
+		# Verify transfer history and remaining birds updated to 0
+		self.assertEqual(len(batch.shed_transfers), 2)
+		self.assertEqual(batch.shed_transfers[0].remaining_birds, 0)
+		self.assertEqual(batch.shed_transfers[1].remaining_birds, 0)
+		self.assertEqual(batch.get_source_shed_remaining(grower_shed.name), 0)
+
+		# Test: cannot transfer from grower shed now that 0 birds remain
+		with self.assertRaises(frappe.ValidationError):
+			batch.transfer_shed(
+				from_shed=grower_shed.name,
+				new_shed=layer_shed.name,
+				birds_to_transfer=10,
+			)
+
+		# Total current birds: 590 (layer 1) + 395 (layer 2) = 985
+		self.assertEqual(batch.current_bird_count, 985)
+		self.assertEqual(batch.total_mortality, 15)  # 10 + 5 transit mortality
+
+		# Subsequent daily log respects total transit mortality in performance calculation
+		log = frappe.get_doc(
+			{
+				"doctype": "Poultry Daily Log",
+				"batch": batch.name,
+				"log_date": nowdate(),
+				"mortality_details": [{"cause": "Injury", "count": 5}],
+				"cull_count": 2,
+			}
+		).insert(ignore_permissions=True)
+		log.submit()
+
+		batch.reload()
+		# 1000 initial - 15 (transit) - 5 (mortality) - 2 (cull) = 978
+		self.assertEqual(batch.current_bird_count, 978)
+		self.assertEqual(batch.total_mortality, 20)  # 15 transit + 5 log mortality
+
+	def test_batch_week_and_layer_sexed_counts(self):
+		layer_breed = frappe.get_doc(
+			{
+				"doctype": "Poultry Breed",
+				"breed_name": "Test Layer Hy-Line White",
+				"breed_type": "Layer",
+			}
+		).insert(ignore_permissions=True)
+
+		# 18-week old layer batch (126 days)
+		batch = frappe.get_doc(
+			{
+				"doctype": "Poultry Batch",
+				"shed": self.shed.name,
+				"breed": layer_breed.name,
+				"start_date": add_days(nowdate(), -126),
+				"initial_bird_count": 5000,
+			}
+		).insert(ignore_permissions=True)
+
+		# Verify batch_week is 18
+		self.assertEqual(batch.batch_week, 18)
+
+		# Verify Layer sexed count: male is 0, female is 5000
+		self.assertEqual(batch.male_bird_count, 0)
+		self.assertEqual(batch.female_bird_count, 5000)
+
+		# Hatchery with breed_type
+		hatchery = frappe.get_doc(
+			{
+				"doctype": "Poultry Hatchery",
+				"hatchery_name": "Test Layer Hatchery",
+				"breed_type": "Layer",
+				"capacity_eggs": 30000,
+			}
+		).insert(ignore_permissions=True)
+		self.assertEqual(hatchery.breed_type, "Layer")
+

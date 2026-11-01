@@ -70,19 +70,7 @@
    "type": "Link",
    "doctype": "Sidebar Item"
   },
-  {
-   "child": 0,
-   "collapsible": 1,
-   "icon": "target",
-   "indent": 0,
-   "keep_closed": 0,
-   "label": "Benchmark",
-   "link_to": "Poultry Benchmark",
-   "link_type": "DocType",
-   "show_arrow": 0,
-   "type": "Link",
-   "doctype": "Sidebar Item"
-  },
+
   {
    "child": 0,
    "collapsible": 1,
