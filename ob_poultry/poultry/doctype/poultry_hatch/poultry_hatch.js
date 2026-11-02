@@ -2,10 +2,31 @@
 // For license information, please see license.txt
 
 frappe.ui.form.on("Poultry Hatch", {
+	onload(frm) {
+		hide_record_navigation(frm);
+	},
+
 	refresh(frm) {
+		hide_record_navigation(frm);
 		setup_hatch_actions(frm);
 	},
 });
+
+function hide_record_navigation(frm) {
+	if (frm.page && frm.page.wrapper) {
+		frm.page.wrapper.find(".prev-doc, .next-doc").hide();
+	}
+
+	if (!frm.hatch_nav_style_applied) {
+		frappe.dom.set_style(`
+			[data-page-route*="Poultry Hatch"] .prev-doc,
+			[data-page-route*="Poultry Hatch"] .next-doc {
+				display: none !important;
+			}
+		`);
+		frm.hatch_nav_style_applied = true;
+	}
+}
 
 function setup_hatch_actions(frm) {
 	if (frm.is_new()) return;
