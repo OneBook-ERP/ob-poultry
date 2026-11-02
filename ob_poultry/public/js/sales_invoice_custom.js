@@ -4,14 +4,17 @@
 frappe.ui.form.on("Sales Invoice", {
 	setup(frm) {
 		setup_customer_query(frm);
+		hide_unwanted_fields(frm);
 	},
 
 	onload(frm) {
 		setup_customer_query(frm);
+		hide_unwanted_fields(frm);
 	},
 
 	refresh(frm) {
 		setup_customer_query(frm);
+		hide_unwanted_fields(frm);
 		setup_egg_rate_actions(frm);
 		fetch_and_display_egg_rates(frm);
 	},
@@ -41,6 +44,14 @@ function setup_customer_query(frm) {
 		delete df.filters;
 		delete df.filter_description;
 	}
+}
+
+function hide_unwanted_fields(frm) {
+	const fields = ["is_pos", "is_debit_note", "apply_tds"];
+	fields.forEach((field) => {
+		frm.toggle_display(field, false);
+		frm.set_df_property(field, "hidden", 1);
+	});
 }
 
 function fetch_and_display_egg_rates(frm) {
