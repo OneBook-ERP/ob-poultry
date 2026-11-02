@@ -1,11 +1,19 @@
 import frappe
 from frappe import _
 from frappe.model.document import Document
-from frappe.utils import date_diff, flt, nowdate
+from frappe.utils import cint, date_diff, flt, nowdate
 
 
 class PoultryBatch(Document):
 	def validate(self):
+		if not self.is_new():
+			db_doc = self.get_doc_before_save()
+			if db_doc:
+				if self.breed != db_doc.breed:
+					frappe.throw(_("Breed cannot be changed once the batch is created."))
+				if cint(self.initial_bird_count) != cint(db_doc.initial_bird_count):
+					frappe.throw(_("Initial Bird Count cannot be changed once the batch is created."))
+
 		if not self.initial_shed and self.shed:
 			self.initial_shed = self.shed
 		self.update_batch_week()
@@ -357,3 +365,149 @@ class PoultryBatch(Document):
 			},
 			update_modified=False,
 		)
+
+
+@frappe.whitelist()
+def get_batch_daily_logs_and_sales(batch_name: str) -> list[dict]:
+	"""Returns all daily log records, flock metrics, feed, egg production, and sales for this batch."""
+	if not batch_name:
+		return []
+
+	flock_rows = frappe.get_all(
+		"Poultry Daily Log Flock Entry",
+		filters={"batch": batch_name},
+		fields=["parent", "shed", "week_day", "opening_birds", "dead", "culled", "closing_birds"],
+	)
+	feed_rows = frappe.get_all(
+		"Poultry Daily Log Feed Entry",
+		filters={"batch": batch_name},
+		fields=["parent", "shed", "feed_item", "feed_spent_kg", "feed_spent_g_per_bird", "total_feed_cost"],
+	)
+	egg_rows = frappe.get_all(
+		"Poultry Daily Log Egg Entry",
+		filters={"batch": batch_name},
+		fields=[
+			"parent",
+			"shed",
+			"in_stock",
+			"good_eggs",
+			"double_yolk_eggs",
+			"broken_eggs",
+			"waste_eggs",
+			"total_eggs",
+			"egg_production_pct",
+			"tray_summary",
+		],
+	)
+	sales_rows = frappe.get_all(
+		"Poultry Daily Log Sales Entry",
+		filters={"batch": batch_name},
+		fields=[
+			"parent",
+			"shed",
+			"customer",
+			"good_eggs",
+			"table_egg_rate",
+			"table_egg_amount",
+			"broken_eggs",
+			"broken_egg_rate",
+			"broken_egg_amount",
+			"double_yolk_eggs",
+			"rate",
+			"total_amount",
+		],
+	)
+
+	parent_names = list(
+		{r.parent for r in flock_rows}
+		| {r.parent for r in feed_rows}
+		| {r.parent for r in egg_rows}
+		| {r.parent for r in sales_rows}
+	)
+	if not parent_names:
+		return []
+
+	pdl_docs = frappe.get_all(
+		"Poultry Daily Log",
+		filters={"name": ["in", parent_names]},
+		fields=["name", "log_date", "day_of_week", "docstatus"],
+		order_by="log_date desc",
+	)
+
+	flock_by_pdl = {}
+	for r in flock_rows:
+		flock_by_pdl.setdefault(r.parent, []).append(r)
+
+	feed_by_pdl = {}
+	for r in feed_rows:
+		feed_by_pdl.setdefault(r.parent, []).append(r)
+
+	egg_by_pdl = {}
+	for r in egg_rows:
+		egg_by_pdl.setdefault(r.parent, []).append(r)
+
+	sales_by_pdl = {}
+	for r in sales_rows:
+		sales_by_pdl.setdefault(r.parent, []).append(r)
+
+	result = []
+	for pdl in pdl_docs:
+		pdl_id = pdl.name
+		flocks = flock_by_pdl.get(pdl_id, [])
+		feeds = feed_by_pdl.get(pdl_id, [])
+		eggs = egg_by_pdl.get(pdl_id, [])
+		sales = sales_by_pdl.get(pdl_id, [])
+
+		shed_names = sorted(list({r.shed for r in (flocks + feeds + eggs + sales) if r.get("shed")}))
+		shed_display = ", ".join(shed_names) if shed_names else ""
+		week_days = sorted(list({r.week_day for r in (flocks + feeds + eggs + sales) if r.get("week_day")}))
+		week_day_display = ", ".join(week_days) if week_days else ""
+
+		total_dead = sum(cint(r.get("dead")) for r in flocks)
+		total_culled = sum(cint(r.get("culled")) for r in flocks)
+		opening_birds = flocks[0].opening_birds if flocks else 0
+		closing_birds = flocks[0].closing_birds if flocks else 0
+
+		total_feed_kg = sum(flt(r.get("feed_spent_kg")) for r in feeds)
+		total_feed_cost = sum(flt(r.get("total_feed_cost")) for r in feeds)
+		feed_items = ", ".join(sorted(list({r.feed_item for r in feeds if r.get("feed_item")})))
+
+		total_eggs_count = sum(cint(r.get("total_eggs")) for r in eggs)
+		total_good_eggs = sum(cint(r.get("good_eggs")) for r in eggs)
+		total_broken_eggs = sum(cint(r.get("broken_eggs")) for r in eggs)
+		total_double_yolk = sum(cint(r.get("double_yolk_eggs")) for r in eggs)
+		tray_summary = eggs[0].tray_summary if eggs else ""
+		egg_production_pct = eggs[0].egg_production_pct if eggs else 0.0
+
+		total_sales_amt = sum(flt(r.get("total_amount")) for r in sales)
+
+		result.append(
+			{
+				"log_name": pdl_id,
+				"log_date": str(pdl.log_date),
+				"day_of_week": pdl.get("day_of_week") or "",
+				"docstatus": pdl.docstatus,
+				"shed": shed_display,
+				"week_day": week_day_display,
+				"opening_birds": opening_birds,
+				"mortality": total_dead,
+				"culled": total_culled,
+				"closing_birds": closing_birds,
+				"flock_details": flocks,
+				"feed_item": feed_items,
+				"feed_consumed_kg": total_feed_kg,
+				"feed_cost": total_feed_cost,
+				"feed_details": feeds,
+				"total_eggs": total_eggs_count,
+				"good_eggs": total_good_eggs,
+				"broken_eggs": total_broken_eggs,
+				"double_yolk_eggs": total_double_yolk,
+				"tray_summary": tray_summary,
+				"egg_production_pct": egg_production_pct,
+				"egg_details": eggs,
+				"sales": sales,
+				"total_sales_amount": total_sales_amt,
+			}
+		)
+
+	return result

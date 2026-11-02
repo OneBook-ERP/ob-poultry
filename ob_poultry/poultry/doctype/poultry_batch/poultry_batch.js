@@ -1,8 +1,14 @@
 frappe.ui.form.on("Poultry Batch", {
 	refresh(frm) {
 		setup_transfer_history_grid(frm);
+		setup_daily_logs_history_grid(frm);
 		update_batch_week_ui(frm);
 		handle_layer_sexed_counts_ui(frm);
+
+		if (!frm.is_new()) {
+			frm.set_df_property("breed", "read_only", 1);
+			frm.set_df_property("initial_bird_count", "read_only", 1);
+		}
 
 		if (!frm.is_new() && frm.doc.status === "Active") {
 			frm.add_custom_button(__("Close Batch"), () => {
@@ -118,7 +124,11 @@ frappe.ui.form.on("Poultry Batch", {
 		}
 	},
 	female_bird_count(frm) {
-		if (frm.doc.breed_type === "Layer" && frm.doc.female_bird_count && !frm.doc.initial_bird_count) {
+		if (
+			frm.doc.breed_type === "Layer" &&
+			frm.doc.female_bird_count &&
+			!frm.doc.initial_bird_count
+		) {
 			frm.set_value("initial_bird_count", frm.doc.female_bird_count);
 		}
 	},
@@ -217,9 +227,7 @@ function setup_transfer_history_grid(frm) {
 
 function handle_row_transfer_click(frm, from_shed, remaining) {
 	if (remaining <= 0) {
-		frappe.msgprint(
-			__("All birds from shed {0} have already been transferred.", [from_shed])
-		);
+		frappe.msgprint(__("All birds from shed {0} have already been transferred.", [from_shed]));
 		return;
 	}
 
@@ -313,7 +321,9 @@ function show_transfer_dialog(
 					locked_source || sheds_with_birds.length <= 1
 						? "Poultry Shed"
 						: sheds_with_birds.map((s) => ({
-								label: `${s} (${(shed_counts[s] || 0).toLocaleString()} birds remaining)`,
+								label: `${s} (${(
+									shed_counts[s] || 0
+								).toLocaleString()} birds remaining)`,
 								value: s,
 						  })),
 				default: from_shed,
@@ -421,10 +431,10 @@ function show_transfer_dialog(
 
 			if (transit > birds_to_transfer) {
 				frappe.msgprint(
-					__(
-						"Transit mortality ({0}) cannot exceed birds to transfer ({1}).",
-						[transit, birds_to_transfer.toLocaleString()]
-					)
+					__("Transit mortality ({0}) cannot exceed birds to transfer ({1}).", [
+						transit,
+						birds_to_transfer.toLocaleString(),
+					])
 				);
 				return;
 			}
@@ -523,4 +533,327 @@ function handle_layer_sexed_counts_ui(frm) {
 			)
 		);
 	}
+}
+
+function setup_daily_logs_history_grid(frm) {
+	if (!frm.fields_dict.daily_logs_history_html) return;
+
+	if (frm.is_new()) {
+		frm.fields_dict.daily_logs_history_html.$wrapper.html(`
+			<div class="text-muted" style="padding: 16px; font-size: 13px; font-style: italic;">
+				${__("Save the batch to view daily logs and sales history.")}
+			</div>
+		`);
+		return;
+	}
+
+	frm.call({
+		method: "ob_poultry.poultry.doctype.poultry_batch.poultry_batch.get_batch_daily_logs_and_sales",
+		args: {
+			batch_name: frm.doc.name,
+		},
+		callback(r) {
+			const logs = r.message || [];
+			render_daily_logs_history_table(frm, logs);
+		},
+	});
+}
+
+function render_daily_logs_history_table(frm, logs) {
+	const $wrapper = frm.fields_dict.daily_logs_history_html.$wrapper;
+	$wrapper.empty();
+
+	if (!logs || logs.length === 0) {
+		$wrapper.html(`
+			<div class="text-center text-muted" style="padding: 24px 16px; border: 1px dashed var(--border-color); border-radius: 8px; margin: 8px 0;">
+				<div style="font-size: 13px; font-weight: 500;">${__(
+					"No Daily Logs or Sales recorded for this batch yet."
+				)}</div>
+				<div style="font-size: 11px; margin-top: 4px;">${__(
+					"Daily logs created for this batch will automatically appear here."
+				)}</div>
+			</div>
+		`);
+		return;
+	}
+
+	let rows_html = "";
+	logs.forEach((row, index) => {
+		const formatted_date = frappe.datetime.str_to_user(row.log_date);
+		const day = row.day_of_week || "";
+		const shed = row.shed || "-";
+		const week_day = row.week_day || "-";
+		const mortality = cint(row.mortality);
+		const feed_kg = flt(row.feed_consumed_kg);
+		const total_eggs = cint(row.total_eggs);
+		const sales_amt = flt(row.total_sales_amount);
+
+		const mortality_style =
+			mortality > 0
+				? "color: var(--red-500, #e02424); font-weight: 600;"
+				: "color: var(--text-muted);";
+		const sales_style =
+			sales_amt > 0
+				? "color: var(--green-600, #057a55); font-weight: 600;"
+				: "color: var(--text-muted);";
+
+		rows_html += `
+			<div class="daily-log-row-item" data-index="${index}" style="display: flex; align-items: center; padding: 10px 14px; border-bottom: 1px solid var(--border-color); cursor: pointer; font-size: 13px; transition: background-color 0.12s ease;">
+				<div style="flex: 1.3; font-weight: 500; color: var(--text-color);">
+					${formatted_date}
+					<span style="font-size: 11px; color: var(--text-muted); margin-left: 4px;">(${day})</span>
+				</div>
+				<div style="flex: 1.2; color: var(--text-color);">${frappe.utils.escape_html(shed)}</div>
+				<div style="flex: 1;"><span class="badge badge-light" style="font-size: 11px; font-weight: 500;">${frappe.utils.escape_html(
+					week_day
+				)}</span></div>
+				<div style="flex: 1; text-align: right; ${mortality_style}">
+					${mortality > 0 ? mortality.toLocaleString() : "0"}
+				</div>
+				<div style="flex: 1.2; text-align: right; color: var(--text-color);">
+					${feed_kg > 0 ? feed_kg.toFixed(1) : "0.0"}
+				</div>
+				<div style="flex: 1.2; text-align: right; color: var(--text-color);">
+					${total_eggs > 0 ? total_eggs.toLocaleString() : "0"}
+				</div>
+				<div style="flex: 1.3; text-align: right; ${sales_style}">
+					${sales_amt > 0 ? format_currency(sales_amt) : "₹0.00"}
+				</div>
+				<div style="width: 80px; text-align: center;">
+					<button type="button" class="btn btn-xs btn-default btn-view-log-row" style="font-size: 11px; padding: 2px 10px;">
+						${__("View 👁")}
+					</button>
+				</div>
+			</div>
+		`;
+	});
+
+	const table_html = `
+		<div class="frappe-control" style="margin: 8px 0;">
+			<div class="form-grid" style="border: 1px solid var(--border-color); border-radius: 6px; overflow: hidden; background: var(--card-bg, #fff);">
+				<div class="grid-heading-row" style="background-color: var(--table-header-bg, #f4f5f6); display: flex; font-weight: 600; font-size: 12px; color: var(--text-muted); border-bottom: 1px solid var(--border-color); padding: 8px 14px;">
+					<div style="flex: 1.3;">${__("Date")}</div>
+					<div style="flex: 1.2;">${__("Shed")}</div>
+					<div style="flex: 1;">${__("Age")}</div>
+					<div style="flex: 1; text-align: right;">${__("Mortality")}</div>
+					<div style="flex: 1.2; text-align: right;">${__("Feed (kg)")}</div>
+					<div style="flex: 1.2; text-align: right;">${__("Eggs")}</div>
+					<div style="flex: 1.3; text-align: right;">${__("Sales (₹)")}</div>
+					<div style="width: 80px; text-align: center;">${__("Action")}</div>
+				</div>
+				<div class="grid-body-rows">
+					${rows_html}
+				</div>
+			</div>
+		</div>
+	`;
+
+	$wrapper.html(table_html);
+
+	$wrapper.find(".daily-log-row-item").hover(
+		function () {
+			$(this).css("background-color", "var(--bg-light-gray, #f9fafb)");
+		},
+		function () {
+			$(this).css("background-color", "transparent");
+		}
+	);
+
+	$wrapper.find(".daily-log-row-item").on("click", function (e) {
+		e.preventDefault();
+		const idx = parseInt($(this).attr("data-index"), 10);
+		const row_data = logs[idx];
+		if (row_data) {
+			show_log_details_dialog(frm, row_data);
+		}
+	});
+}
+
+function show_log_details_dialog(frm, row) {
+	const formatted_date = frappe.datetime.str_to_user(row.log_date);
+	const title = __("Daily Log Details: {0} ({1})", [formatted_date, row.log_name]);
+
+	let sales_html = "";
+	if (row.sales && row.sales.length > 0) {
+		let sales_rows = "";
+		row.sales.forEach((s) => {
+			sales_rows += `
+				<tr style="border-bottom: 1px solid var(--border-color);">
+					<td style="padding: 6px 10px;">${frappe.utils.escape_html(s.customer || "Walk-in Customer")}</td>
+					<td style="padding: 6px 10px; text-align: right;">${cint(s.good_eggs).toLocaleString()} @ ₹${flt(
+				s.table_egg_rate
+			).toFixed(2)}</td>
+					<td style="padding: 6px 10px; text-align: right;">${cint(s.broken_eggs).toLocaleString()} @ ₹${flt(
+				s.broken_egg_rate
+			).toFixed(2)}</td>
+					<td style="padding: 6px 10px; text-align: right; font-weight: 600; color: var(--green-600, #057a55);">${format_currency(
+						s.total_amount
+					)}</td>
+				</tr>
+			`;
+		});
+
+		sales_html = `
+			<table class="table table-bordered table-sm" style="width: 100%; margin-top: 6px; font-size: 12px; background: var(--card-bg, #fff);">
+				<thead>
+					<tr style="background-color: var(--table-header-bg, #f4f5f6); color: var(--text-muted);">
+						<th style="padding: 6px 10px;">${__("Customer")}</th>
+						<th style="padding: 6px 10px; text-align: right;">${__("Table Eggs")}</th>
+						<th style="padding: 6px 10px; text-align: right;">${__("Broken Eggs")}</th>
+						<th style="padding: 6px 10px; text-align: right;">${__("Total Amount")}</th>
+					</tr>
+				</thead>
+				<tbody>
+					${sales_rows}
+				</tbody>
+				<tfoot>
+					<tr style="font-weight: 600; background: var(--table-header-bg, #f4f5f6);">
+						<td colspan="3" style="padding: 6px 10px; text-align: right;">${__("Total Sales Amount:")}</td>
+						<td style="padding: 6px 10px; text-align: right; color: var(--green-600, #057a55);">${format_currency(
+							row.total_sales_amount
+						)}</td>
+					</tr>
+				</tfoot>
+			</table>
+		`;
+	} else {
+		sales_html = `
+			<div class="text-muted" style="padding: 10px 0; font-size: 12px; font-style: italic;">
+				${__("No egg sales recorded on this daily log for this batch.")}
+			</div>
+		`;
+	}
+
+	const content_html = `
+		<div class="log-details-modal" style="font-size: 13px; line-height: 1.5;">
+			<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; padding-bottom: 10px; border-bottom: 1px solid var(--border-color);">
+				<div>
+					<strong>${__("Shed")}:</strong> ${frappe.utils.escape_html(row.shed || "-")} &bull;
+					<strong>${__("Age")}:</strong> ${frappe.utils.escape_html(row.week_day || "-")}
+				</div>
+				<button type="button" class="btn btn-xs btn-default btn-open-full-log" style="font-size: 11px;">
+					${__("Open Full Daily Log ↗")}
+				</button>
+			</div>
+
+			<!-- Row 1: Flock & Feed Cards -->
+			<div class="row" style="margin-bottom: 12px;">
+				<div class="col-sm-6">
+					<div style="padding: 10px 14px; border: 1px solid var(--border-color); border-radius: 6px; background: var(--fg-color, #fdfdfd); height: 100%;">
+						<div style="font-weight: 600; margin-bottom: 6px; color: var(--text-color);">🐔 ${__(
+							"Flock Metrics"
+						)}</div>
+						<div style="display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 3px;">
+							<span class="text-muted">${__("Opening Birds")}:</span>
+							<strong>${cint(row.opening_birds).toLocaleString()}</strong>
+						</div>
+						<div style="display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 3px;">
+							<span class="text-muted">${__("Mortality")}:</span>
+							<strong style="${row.mortality > 0 ? "color: var(--red-500, #e02424);" : ""}">${cint(
+		row.mortality
+	).toLocaleString()}</strong>
+						</div>
+						<div style="display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 3px;">
+							<span class="text-muted">${__("Culled")}:</span>
+							<strong>${cint(row.culled).toLocaleString()}</strong>
+						</div>
+						<div style="display: flex; justify-content: space-between; font-size: 12px; padding-top: 4px; border-top: 1px dashed var(--border-color);">
+							<span class="text-muted">${__("Closing Birds")}:</span>
+							<strong style="color: var(--primary);">${cint(row.closing_birds).toLocaleString()}</strong>
+						</div>
+					</div>
+				</div>
+
+				<div class="col-sm-6">
+					<div style="padding: 10px 14px; border: 1px solid var(--border-color); border-radius: 6px; background: var(--fg-color, #fdfdfd); height: 100%;">
+						<div style="font-weight: 600; margin-bottom: 6px; color: var(--text-color);">🌾 ${__(
+							"Feed Consumption"
+						)}</div>
+						<div style="display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 3px;">
+							<span class="text-muted">${__("Feed Item")}:</span>
+							<strong>${frappe.utils.escape_html(row.feed_item || "N/A")}</strong>
+						</div>
+						<div style="display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 3px;">
+							<span class="text-muted">${__("Feed Spent")}:</span>
+							<strong>${flt(row.feed_consumed_kg).toFixed(1)} kg</strong>
+						</div>
+						<div style="display: flex; justify-content: space-between; font-size: 12px; padding-top: 4px; border-top: 1px dashed var(--border-color);">
+							<span class="text-muted">${__("Total Feed Cost")}:</span>
+							<strong>${format_currency(row.feed_cost)}</strong>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<!-- Row 2: Egg Production Card -->
+			<div style="margin-bottom: 12px; padding: 10px 14px; border: 1px solid var(--border-color); border-radius: 6px; background: var(--fg-color, #fdfdfd);">
+				<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+					<span style="font-weight: 600; color: var(--text-color);">🥚 ${__("Egg Production")}</span>
+					<span style="font-size: 12px; color: var(--text-muted);">${frappe.utils.escape_html(
+						row.tray_summary || ""
+					)}</span>
+				</div>
+				<div class="row" style="font-size: 12px;">
+					<div class="col-xs-3">
+						<span class="text-muted">${__("Total")}:</span> <strong>${cint(
+		row.total_eggs
+	).toLocaleString()}</strong>
+					</div>
+					<div class="col-xs-3">
+						<span class="text-muted">${__("Table")}:</span> <strong>${cint(
+		row.good_eggs
+	).toLocaleString()}</strong>
+					</div>
+					<div class="col-xs-3">
+						<span class="text-muted">${__("Broken")}:</span> <strong>${cint(
+		row.broken_eggs
+	).toLocaleString()}</strong>
+					</div>
+					<div class="col-xs-3">
+						<span class="text-muted">${__("Laying %")}:</span> <strong>${flt(row.egg_production_pct).toFixed(
+		1
+	)}%</strong>
+					</div>
+				</div>
+			</div>
+
+			<!-- Row 3: Sales Card -->
+			<div style="padding: 10px 14px; border: 1px solid var(--border-color); border-radius: 6px; background: var(--fg-color, #fdfdfd);">
+				<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+					<span style="font-weight: 600; color: var(--text-color);">💰 ${__("Sales Recorded")}</span>
+					<span style="font-weight: 600; color: var(--green-600, #057a55);">${format_currency(
+						row.total_sales_amount
+					)}</span>
+				</div>
+				${sales_html}
+			</div>
+		</div>
+	`;
+
+	const dialog = new frappe.ui.Dialog({
+		title: title,
+		fields: [
+			{
+				fieldtype: "HTML",
+				fieldname: "details_html",
+			},
+		],
+		primary_action_label: __("Close"),
+		primary_action() {
+			dialog.hide();
+		},
+	});
+
+	dialog.show();
+	dialog.fields_dict.details_html.$wrapper.html(content_html);
+
+	const $primary_btn = dialog.get_primary_btn();
+	if ($primary_btn) {
+		$primary_btn.removeClass("btn-primary").addClass("btn-default");
+	}
+
+	dialog.$wrapper.find(".btn-open-full-log").on("click", function () {
+		dialog.hide();
+		frappe.set_route("Form", "Poultry Daily Log", row.log_name);
+	});
 }

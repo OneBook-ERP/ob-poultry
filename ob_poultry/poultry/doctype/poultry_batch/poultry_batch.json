@@ -29,6 +29,7 @@
             "label": "Breed",
             "options": "Poultry Breed",
             "reqd": 1,
+            "set_only_once": 1,
             "in_list_view": 1
         },
         {
@@ -84,6 +85,7 @@
             "fieldtype": "Int",
             "label": "Initial Bird Count",
             "reqd": 1,
+            "set_only_once": 1,
             "in_list_view": 1
         },
         {
@@ -230,6 +232,17 @@
             "label": "Shed Transfers",
             "options": "Poultry Batch Shed Transfer",
             "read_only": 1
+        },
+        {
+            "fieldname": "section_break_daily_logs_history",
+            "fieldtype": "Section Break",
+            "label": "Daily Logs & Sales History",
+            "collapsible": 1
+        },
+        {
+            "fieldname": "daily_logs_history_html",
+            "fieldtype": "HTML",
+            "label": "Daily Logs & Sales"
         }
     ],
     "sort_field": "creation",

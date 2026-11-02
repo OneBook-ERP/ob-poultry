@@ -1490,3 +1490,51 @@ class TestPoultryModule(IntegrationTestCase):
 		transfer = frappe.get_doc("Poultry Chick Transfer", res["transfer"])
 		self.assertEqual(transfer.docstatus, 1)
 		self.assertEqual(transfer.quantity, 4200)
+
+	def test_batch_breed_and_initial_count_immutable(self):
+		batch = frappe.get_doc(
+			{
+				"doctype": "Poultry Batch",
+				"shed": self.shed.name,
+				"breed": self.breed.name,
+				"start_date": nowdate(),
+				"initial_bird_count": 500,
+			}
+		).insert(ignore_permissions=True)
+
+		# Try to change initial bird count
+		batch.initial_bird_count = 600
+		with self.assertRaises(frappe.ValidationError):
+			batch.save()
+
+		batch.reload()
+		# Try to change breed
+		other_breed = frappe.get_doc(
+			{
+				"doctype": "Poultry Breed",
+				"breed_name": "Test Immutable Other Breed",
+				"breed_type": "Layer",
+			}
+		).insert(ignore_permissions=True)
+
+		batch.breed = other_breed.name
+		with self.assertRaises(frappe.ValidationError):
+			batch.save()
+
+	def test_get_batch_daily_logs_and_sales_api(self):
+		from ob_poultry.poultry.doctype.poultry_batch.poultry_batch import (
+			get_batch_daily_logs_and_sales,
+		)
+
+		batch = frappe.get_doc(
+			{
+				"doctype": "Poultry Batch",
+				"shed": self.shed.name,
+				"breed": self.breed.name,
+				"start_date": nowdate(),
+				"initial_bird_count": 1000,
+			}
+		).insert(ignore_permissions=True)
+
+		res = get_batch_daily_logs_and_sales(batch.name)
+		self.assertIsInstance(res, list)
