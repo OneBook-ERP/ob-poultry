@@ -1444,3 +1444,49 @@ class TestPoultryModule(IntegrationTestCase):
 		).insert(ignore_permissions=True)
 		self.assertEqual(hatchery.breed_type, "Layer")
 
+	def test_hatch_chick_transfer_flow(self):
+		from ob_poultry.poultry.doctype.poultry_hatch.poultry_hatch import transfer_chicks
+
+		hatchery = frappe.get_doc(
+			{
+				"doctype": "Poultry Hatchery",
+				"hatchery_name": "Hatchery Transfer Flow",
+				"breed_type": "Layer",
+				"capacity_eggs": 20000,
+			}
+		).insert(ignore_permissions=True)
+
+		hatch = frappe.get_doc(
+			{
+				"doctype": "Poultry Hatch",
+				"hatchery": hatchery.name,
+				"schedule_date": nowdate(),
+				"initial_egg_count": 5000,
+				"initial_bird_count": 4200,
+			}
+		).insert(ignore_permissions=True)
+
+		self.assertEqual(hatch.eggs_set, 5000)
+		self.assertEqual(hatch.actual_chicks, 4200)
+
+		res = transfer_chicks(
+			hatch_name=hatch.name,
+			shed=self.shed.name,
+			bird_count=4200,
+		)
+		self.assertTrue(res.get("batch"))
+		self.assertTrue(res.get("transfer"))
+
+		hatch.reload()
+		self.assertEqual(hatch.status, "Closed")
+		self.assertEqual(hatch.transferred_batch, res["batch"])
+		self.assertEqual(hatch.transferred_chicks, 4200)
+
+		batch = frappe.get_doc("Poultry Batch", res["batch"])
+		self.assertEqual(batch.shed, self.shed.name)
+		self.assertEqual(batch.initial_bird_count, 4200)
+		self.assertEqual(batch.current_bird_count, 4200)
+
+		transfer = frappe.get_doc("Poultry Chick Transfer", res["transfer"])
+		self.assertEqual(transfer.docstatus, 1)
+		self.assertEqual(transfer.quantity, 4200)

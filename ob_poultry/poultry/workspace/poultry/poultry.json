@@ -178,17 +178,6 @@
    "dependencies": ""
   },
   {
-   "type": "Link",
-   "label": "Chick Transfer",
-   "link_to": "Poultry Chick Transfer",
-   "link_type": "DocType",
-   "hidden": 0,
-   "is_query_report": 0,
-   "link_count": 0,
-   "onboard": 0,
-   "dependencies": ""
-  },
-  {
    "type": "Card Break",
    "label": "Contract Farming",
    "hidden": 0,

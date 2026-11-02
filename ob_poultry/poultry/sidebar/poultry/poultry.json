@@ -212,19 +212,6 @@
    "doctype": "Sidebar Item"
   },
   {
-   "child": 1,
-   "collapsible": 1,
-   "icon": "",
-   "indent": 0,
-   "keep_closed": 0,
-   "label": "Chick Transfer",
-   "link_to": "Poultry Chick Transfer",
-   "link_type": "DocType",
-   "show_arrow": 0,
-   "type": "Link",
-   "doctype": "Sidebar Item"
-  },
-  {
    "child": 0,
    "collapsible": 1,
    "icon": "users",

@@ -57,6 +57,19 @@
             "label": "Setting Date"
         },
         {
+            "fieldname": "initial_egg_count",
+            "fieldtype": "Int",
+            "label": "Initial Egg Count",
+            "reqd": 1,
+            "in_list_view": 1
+        },
+        {
+            "fieldname": "initial_bird_count",
+            "fieldtype": "Int",
+            "label": "Initial Bird Count",
+            "in_list_view": 1
+        },
+        {
             "fieldname": "section_break_hatch_dates",
             "fieldtype": "Section Break",
             "label": "Incubation"
@@ -81,42 +94,48 @@
             "label": "Hatch Date"
         },
         {
-            "fieldname": "section_break_hatch_yield",
+            "fieldname": "section_break_transfer",
             "fieldtype": "Section Break",
-            "label": "Eggs & Chicks"
+            "label": "Chick Transfer Details",
+            "depends_on": "eval:doc.transferred_batch"
         },
         {
-            "fieldname": "eggs_set",
-            "fieldtype": "Int",
-            "label": "Eggs Set",
-            "reqd": 1,
-            "in_list_view": 1
-        },
-        {
-            "fieldname": "standard_hatchability_pct",
-            "fieldtype": "Percent",
-            "label": "Standard Hatchability %"
-        },
-        {
-            "fieldname": "column_break_hatch_3",
-            "fieldtype": "Column Break"
-        },
-        {
-            "fieldname": "estimated_chicks",
-            "fieldtype": "Int",
-            "label": "Estimated Chicks",
+            "fieldname": "transferred_batch",
+            "fieldtype": "Link",
+            "label": "Transferred Batch",
+            "options": "Poultry Batch",
             "read_only": 1
         },
         {
-            "fieldname": "actual_chicks",
+            "fieldname": "column_break_transfer_1",
+            "fieldtype": "Column Break"
+        },
+        {
+            "fieldname": "transferred_chicks",
             "fieldtype": "Int",
-            "label": "Actual Chicks",
-            "in_list_view": 1
+            "label": "Transferred Chicks",
+            "read_only": 1
+        },
+        {
+            "fieldname": "section_break_notes",
+            "fieldtype": "Section Break"
         },
         {
             "fieldname": "notes",
             "fieldtype": "Small Text",
             "label": "Notes"
+        },
+        {
+            "fieldname": "eggs_set",
+            "fieldtype": "Int",
+            "label": "Eggs Set",
+            "hidden": 1
+        },
+        {
+            "fieldname": "actual_chicks",
+            "fieldtype": "Int",
+            "label": "Actual Chicks",
+            "hidden": 1
         }
     ],
     "sort_field": "schedule_date",
