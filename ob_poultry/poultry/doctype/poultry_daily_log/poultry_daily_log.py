@@ -129,6 +129,10 @@ class PoultryDailyLog(Document):
 		self.mortality_count = self.total_mortality
 		self.cull_count = self.total_culled
 
+		if self.get("batch"):
+			self.validate_bird_count()
+			self.apply_benchmarks()
+
 	def on_update(self):
 		self.update_batch_flocks()
 		self.issue_feed_stock()
@@ -187,6 +191,53 @@ class PoultryDailyLog(Document):
 
 		self.total_mortality = total_dead
 		self.total_culled = total_culls
+
+	@property
+	def batch_doc(self):
+		if not hasattr(self, "_batch_doc"):
+			self._batch_doc = frappe.get_doc("Poultry Batch", self.batch) if self.get("batch") else None
+		return self._batch_doc
+
+	def validate_bird_count(self):
+		if not self.get("batch"):
+			return
+		batch = self.batch_doc
+		if not batch:
+			return
+		removed_elsewhere = (
+			frappe.db.sql(
+				"""
+			select sum(mortality_count) + sum(cull_count) as removed
+			from `tabPoultry Daily Log`
+			where batch = %s and docstatus = 1 and name != %s
+			""",
+				(self.batch, self.name or ""),
+				as_dict=True,
+			)[0].removed
+			or 0
+		)
+		transfer_reduction = 0
+		if frappe.db.table_exists("Poultry Batch Shed Transfer"):
+			transfer_reduction = (
+				frappe.db.sql(
+					"""
+				select sum(reduction)
+				from `tabPoultry Batch Shed Transfer`
+				where parent = %s
+				""",
+					self.batch,
+				)[0][0]
+				or 0
+			)
+		total_removed = (
+			removed_elsewhere + transfer_reduction + (self.mortality_count or 0) + (self.cull_count or 0)
+		)
+		if total_removed > batch.initial_bird_count:
+			frappe.throw(
+				_("Total removed birds ({0}) would exceed the initial bird count ({1}) for batch {2}").format(
+					total_removed, batch.initial_bird_count, batch.name
+				)
+			)
 
 	def compute_egg_rollups(self):
 		# Map opening birds by batch from flock_entries for accurate production %
@@ -267,10 +318,138 @@ class PoultryDailyLog(Document):
 
 		self.total_sales_amount = total_sales
 
+	def apply_benchmarks(self):
+		if not self.get("batch"):
+			return
+		batch = self.batch_doc
+		if not batch or not getattr(batch, "breed", None):
+			return
+		age_in_days = date_diff(self.log_date, batch.start_date)
+		benchmark = None
+
+		if frappe.db.table_exists("Poultry Breed Benchmark"):
+			all_rows = frappe.db.sql(
+				"""
+				select standard_mortality_pct, standard_feed_per_bird_g, standard_body_weight_g, standard_fcr,
+				       day_start, day_end, age_in_days, from_day, to_day
+				from `tabPoultry Breed Benchmark`
+				where parent = %s and parenttype = 'Poultry Breed'
+				order by idx asc, coalesce(day_start, from_day) asc
+				""",
+				(batch.breed,),
+				as_dict=True,
+			)
+			for r in all_rows:
+				if r.day_start is None and r.get("from_day") is not None:
+					r.day_start = r.get("from_day")
+				if r.day_end is None and r.get("to_day") is not None:
+					r.day_end = r.get("to_day")
+			rows = [
+				r
+				for r in all_rows
+				if any(
+					(r.get(f) or 0) > 0
+					for f in (
+						"standard_mortality_pct",
+						"standard_feed_per_bird_g",
+						"standard_body_weight_g",
+						"standard_fcr",
+					)
+				)
+			]
+			if rows:
+				exact = [
+					r
+					for r in rows
+					if (
+						r.day_start is not None
+						and r.day_end is not None
+						and r.day_start <= age_in_days <= r.day_end
+					)
+				]
+				if exact:
+					benchmark = exact[-1]
+				else:
+					earlier = [
+						r
+						for r in rows
+						if (r.day_start is not None and r.day_start <= age_in_days)
+						or (r.day_end is not None and r.day_end <= age_in_days)
+					]
+					if earlier:
+						benchmark = earlier[-1]
+
+		if not benchmark and frappe.db.table_exists("Poultry Benchmark"):
+			legacy = frappe.db.sql(
+				"""
+				select standard_mortality_pct, standard_feed_per_bird_g, standard_body_weight_g
+				from `tabPoultry Benchmark`
+				where breed = %s and age_in_days <= %s
+				order by age_in_days desc
+				limit 1
+				""",
+				(batch.breed, age_in_days),
+				as_dict=True,
+			)
+			if legacy:
+				benchmark = legacy[0]
+
+		if not benchmark:
+			self.std_mortality_pct = None
+			self.std_feed_per_bird_g = None
+			self.std_body_weight_g = None
+			return
+		self.std_mortality_pct = benchmark.get("standard_mortality_pct")
+		self.std_feed_per_bird_g = benchmark.get("standard_feed_per_bird_g")
+		self.std_body_weight_g = benchmark.get("standard_body_weight_g")
+
 	def on_submit(self):
 		self.update_batch_flocks()
 		self.issue_feed_stock()
 		self.update_bin_stock()
+		if self.get("batch"):
+			self.create_feed_stock_entry()
+			if self.batch_doc and hasattr(self.batch_doc, "recalculate_performance"):
+				self.batch_doc.recalculate_performance()
+
+	def on_cancel(self):
+		if self.get("stock_entry"):
+			stock_entry = frappe.get_doc("Stock Entry", self.stock_entry)
+			if stock_entry.docstatus == 1:
+				stock_entry.cancel()
+		if self.get("batch") and self.batch_doc and hasattr(self.batch_doc, "recalculate_performance"):
+			self.batch_doc.recalculate_performance()
+
+	def create_feed_stock_entry(self):
+		if not self.get("feed_consumed_kg"):
+			return
+		if not self.get("feed_item"):
+			frappe.throw(_("Set a Feed Item to log feed consumption"))
+		batch = self.batch_doc
+		if not batch or not getattr(batch, "feed_warehouse", None):
+			frappe.throw(
+				_("Set a Feed Warehouse on Poultry Batch {0} before logging feed consumption").format(
+					batch.name if batch else ""
+				)
+			)
+		stock_entry = frappe.get_doc(
+			{
+				"doctype": "Stock Entry",
+				"stock_entry_type": "Material Issue",
+				"company": frappe.db.get_value("Warehouse", batch.feed_warehouse, "company"),
+				"items": [
+					{
+						"item_code": self.feed_item,
+						"s_warehouse": batch.feed_warehouse,
+						"qty": self.feed_consumed_kg,
+						"uom": frappe.db.get_value("Item", self.feed_item, "stock_uom"),
+					}
+				],
+			}
+		)
+		stock_entry.insert(ignore_permissions=True)
+		stock_entry.submit()
+		self.stock_entry = stock_entry.name
 
 	def update_batch_flocks(self):
 		for row in self.flock_entries:

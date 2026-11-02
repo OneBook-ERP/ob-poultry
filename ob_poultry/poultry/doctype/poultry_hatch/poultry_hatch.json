@@ -16,6 +16,22 @@
             "in_list_view": 1
         },
         {
+            "fieldname": "breed_type",
+            "fieldtype": "Select",
+            "label": "Breed Type",
+            "options": "\nBroiler\nLayer\nBreeder\nDual Purpose",
+            "fetch_from": "hatchery.breed_type",
+            "in_list_view": 1,
+            "in_standard_filter": 1
+        },
+        {
+            "fieldname": "breed",
+            "fieldtype": "Link",
+            "label": "Breed",
+            "options": "Poultry Breed",
+            "in_list_view": 1
+        },
+        {
             "fieldname": "status",
             "fieldtype": "Select",
             "label": "Status",
