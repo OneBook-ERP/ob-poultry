@@ -94,40 +94,19 @@ frappe.ui.form.on("Poultry Daily Log", {
 				display: none !important;
 			}
 
-			/* Vertical and horizontal dividing lines on settings column */
-			.form-grid .grid-row > .row .col:last-child,
-			.form-grid .grid-heading-row .col:last-child {
-				border-left: 1px solid var(--border-color, var(--table-border-color, #d1d8dd)) !important;
-				border-bottom: 1px solid var(--border-color, var(--table-border-color, #d1d8dd)) !important;
-				border-right: none !important;
-				max-width: 30px !important;
-				min-width: 30px !important;
-				width: 30px !important;
-				position: sticky !important;
-				right: 0 !important;
-				z-index: 2 !important;
-			}
-			.form-grid .grid-heading-row .col:last-child {
-				background-color: var(--subtle-fg, #fafbfc) !important;
-				border-bottom: 1px solid var(--border-color, var(--table-border-color, #d1d8dd)) !important;
-			}
-			.form-grid .grid-row:not(.grid-totals-row) > .row .col:last-child {
-				background-color: var(--card-bg, #ffffff) !important;
-				border-bottom: 1px solid var(--border-color, var(--table-border-color, #d1d8dd)) !important;
-			}
-			.form-grid .grid-totals-row .col:last-child {
-				border-left: 1px solid var(--border-color, var(--table-border-color, #d1d8dd)) !important;
-				border-top: 2px solid var(--border-color, #cbd5e1) !important;
-				border-bottom: 2px solid var(--border-color, #cbd5e1) !important;
-				border-right: none !important;
-				background-color: var(--subtle-accent-background, #f8fafc) !important;
-			}
-
-			/* Remove pen / edit symbol and footer in Sales Entries */
-			[data-fieldname="sales_entries"] .grid-body .btn-open-row,
+			/* Remove pen / edit symbol in the 4 child tables */
+			[data-fieldname="egg_entries"] .btn-open-row,
+			[data-fieldname="feed_entries"] .btn-open-row,
+			[data-fieldname="flock_entries"] .btn-open-row,
+			[data-fieldname="sales_entries"] .btn-open-row,
+			[data-fieldname="egg_entries"] .grid-body .grid-row .col:last-child a,
+			[data-fieldname="feed_entries"] .grid-body .grid-row .col:last-child a,
+			[data-fieldname="flock_entries"] .grid-body .grid-row .col:last-child a,
 			[data-fieldname="sales_entries"] .grid-body .grid-row .col:last-child a,
-			[data-fieldname="sales_entries"] .grid-body .grid-row .col:last-child svg,
-			[data-fieldname="sales_entries"] .grid-body .grid-row .col:last-child .btn-open-row {
+			[data-fieldname="egg_entries"] .grid-body .grid-row .col:last-child svg,
+			[data-fieldname="feed_entries"] .grid-body .grid-row .col:last-child svg,
+			[data-fieldname="flock_entries"] .grid-body .grid-row .col:last-child svg,
+			[data-fieldname="sales_entries"] .grid-body .grid-row .col:last-child svg {
 				display: none !important;
 				visibility: hidden !important;
 				pointer-events: none !important;
@@ -469,6 +448,10 @@ frappe.ui.form.on("Poultry Daily Log", {
 				if (!grid.grid_rows) return;
 				grid.grid_rows.forEach(function (row) {
 					row.open_form_button && row.open_form_button.hide();
+					row.wrapper &&
+						row.wrapper
+							.find(".btn-open-row, .col:last-child a, .col:last-child svg")
+							.hide();
 					row.toggle_view = function () {
 						return false;
 					};

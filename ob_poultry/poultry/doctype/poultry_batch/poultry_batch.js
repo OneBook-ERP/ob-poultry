@@ -1,4 +1,15 @@
 frappe.ui.form.on("Poultry Batch", {
+	setup(frm) {
+		frappe.dom.set_style(`
+			[data-fieldname="daily_logs"] .btn-open-row,
+			[data-fieldname="daily_logs"] .grid-body .grid-row .col:last-child a,
+			[data-fieldname="daily_logs"] .grid-body .grid-row .col:last-child svg {
+				display: none !important;
+				visibility: hidden !important;
+				pointer-events: none !important;
+			}
+		`);
+	},
 	refresh(frm) {
 		setup_transfer_history_grid(frm);
 		setup_daily_logs_grid(frm);
@@ -590,9 +601,19 @@ function setup_daily_logs_grid(frm) {
 	grid.wrapper.find(".grid-remove-rows").hide();
 	grid.wrapper.find(".grid-remove-all-rows").hide();
 
-	if (grid.grid_pagination) {
-		grid.grid_pagination.page_length = 10;
-	}
+	// Hide row edit pens and prevent row open button display
+	grid.wrapper.find(".grid-body .btn-open-row").hide();
+	grid.wrapper.off("grid-row-render.pdl_no_pen").on("grid-row-render.pdl_no_pen", function () {
+		grid.wrapper.find(".grid-body .btn-open-row").hide();
+		if (grid.grid_rows) {
+			grid.grid_rows.forEach(function (row) {
+				if (row.open_form_button) row.open_form_button.hide();
+			});
+		}
+	});
+
+	// Always active pagination controls matching Frappe UI
+	setup_daily_logs_pagination(grid);
 
 	const mort_field = grid.get_field("mortality");
 	if (mort_field) {
@@ -646,7 +667,7 @@ function setup_daily_logs_grid(frm) {
 	grid.wrapper
 		.off("click", ".grid-row .data-row")
 		.on("click", ".grid-row .data-row", function (e) {
-			if ($(e.target).closest("a, input, button, .grid-row-check, .btn-open-row").length) {
+			if ($(e.target).closest("a, input, button, .grid-row-check").length) {
 				return;
 			}
 			const row_name = $(this).closest(".grid-row").attr("data-name");
@@ -667,11 +688,107 @@ function setup_daily_logs_grid(frm) {
 					frm.doc.daily_logs = r.message;
 					frm.refresh_field("daily_logs");
 					if (grid.grid_pagination) {
-						grid.grid_pagination.page_length = 10;
-						grid.grid_pagination.update_page_numbers();
+						grid.grid_pagination.render_pagination();
 					}
 				}
 			},
 		});
 	}
+}
+
+function setup_daily_logs_pagination(grid) {
+	if (!grid.grid_pagination) return;
+
+	grid.grid_pagination.page_length = 10;
+
+	// Override render_pagination so it ALWAYS displays pagination controls even for 1 page
+	grid.grid_pagination.render_pagination = function () {
+		const total_rows = (grid.data || []).length;
+		const page_length = this.page_length || 10;
+		const total_pages = Math.max(1, Math.ceil(total_rows / page_length));
+		const current_page = Math.min(Math.max(1, this.page_index || 1), total_pages);
+		this.page_index = current_page;
+		this.total_pages = total_pages;
+
+		const $footer = this.wrapper.find(".grid-footer");
+		$footer.removeClass("hidden").show();
+
+		const start_idx = total_rows === 0 ? 0 : (current_page - 1) * page_length + 1;
+		const end_idx = Math.min(current_page * page_length, total_rows);
+
+		let $count_info = $footer.find(".daily-logs-count-info");
+		if (!$count_info.length) {
+			$count_info = $(
+				'<div class="daily-logs-count-info text-muted" style="font-size: 12px; display: flex; align-items: center;"></div>'
+			);
+			$footer.find(".grid-buttons").empty().append($count_info);
+		}
+		$count_info.text(
+			total_rows === 0
+				? __("No logs recorded")
+				: __("Showing {0} - {1} of {2} records", [start_idx, end_idx, total_rows])
+		);
+
+		const has_prev = current_page > 1;
+		const has_next = current_page < total_pages;
+
+		const pagination_html = `
+			<button type="button" class="btn btn-secondary btn-xs first-page" ${
+				has_prev ? "" : "disabled"
+			} style="padding: 2px 8px; font-size: 11px;">
+				${__("First")}
+			</button>
+			<button type="button" class="btn btn-secondary btn-xs prev-page" ${
+				has_prev ? "" : "disabled"
+			} style="padding: 2px 6px;">
+				<svg class="icon icon-xs" style="width: 11px; height: 11px;"><use href="#icon-chevron-left"></use></svg>
+			</button>
+			<div class="page-text" style="display: inline-flex; align-items: center; gap: 4px; font-size: 12px; margin: 0 4px;">
+				<span>${__("Page")}</span>
+				<span class="current-page-number page-number" style="font-weight: 600;">${current_page}</span>
+				<span>${__("of")}</span>
+				<span class="total-page-number page-number">${total_pages}</span>
+			</div>
+			<button type="button" class="btn btn-secondary btn-xs next-page" ${
+				has_next ? "" : "disabled"
+			} style="padding: 2px 6px;">
+				<svg class="icon icon-xs" style="width: 11px; height: 11px;"><use href="#icon-chevron-right"></use></svg>
+			</button>
+			<button type="button" class="btn btn-secondary btn-xs last-page" ${
+				has_next ? "" : "disabled"
+			} style="padding: 2px 8px; font-size: 11px;">
+				${__("Last")}
+			</button>
+		`;
+
+		const $pg = this.wrapper.find(".grid-pagination");
+		$pg.html(pagination_html);
+
+		$pg.find(".first-page")
+			.off("click")
+			.on("click", (e) => {
+				e.stopPropagation();
+				if (has_prev) this.go_to_page(1);
+			});
+		$pg.find(".prev-page")
+			.off("click")
+			.on("click", (e) => {
+				e.stopPropagation();
+				if (has_prev) this.go_to_page(current_page - 1);
+			});
+		$pg.find(".next-page")
+			.off("click")
+			.on("click", (e) => {
+				e.stopPropagation();
+				if (has_next) this.go_to_page(current_page + 1);
+			});
+		$pg.find(".last-page")
+			.off("click")
+			.on("click", (e) => {
+				e.stopPropagation();
+				if (has_next) this.go_to_page(total_pages);
+			});
+	};
+
+	grid.grid_pagination.render_pagination();
 }
