@@ -1538,3 +1538,8 @@ class TestPoultryModule(IntegrationTestCase):
 
 		res = get_batch_daily_logs_and_sales(batch.name)
 		self.assertIsInstance(res, list)
+
+		# Test child table loading
+		entries = batch.load_daily_logs_history()
+		self.assertIsInstance(entries, list)
+		self.assertIsInstance(batch.get("daily_logs"), list)

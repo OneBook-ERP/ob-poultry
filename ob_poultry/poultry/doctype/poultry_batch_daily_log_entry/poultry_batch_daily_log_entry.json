@@ -1,0 +1,168 @@
+{
+    "doctype": "DocType",
+    "name": "Poultry Batch Daily Log Entry",
+    "module": "Poultry",
+    "engine": "InnoDB",
+    "istable": 1,
+    "editable_grid": 0,
+    "fields": [
+        {
+            "fieldname": "log_date",
+            "fieldtype": "Date",
+            "label": "Date",
+            "in_list_view": 1,
+            "columns": 2,
+            "read_only": 1
+        },
+        {
+            "fieldname": "shed",
+            "fieldtype": "Data",
+            "label": "Shed",
+            "in_list_view": 1,
+            "columns": 2,
+            "read_only": 1
+        },
+        {
+            "fieldname": "week_day",
+            "fieldtype": "Data",
+            "label": "Age",
+            "in_list_view": 1,
+            "columns": 1,
+            "read_only": 1
+        },
+        {
+            "fieldname": "mortality",
+            "fieldtype": "Int",
+            "label": "Mortality",
+            "in_list_view": 1,
+            "columns": 1,
+            "read_only": 1
+        },
+        {
+            "fieldname": "feed_consumed_kg",
+            "fieldtype": "Float",
+            "label": "Feed (kg)",
+            "in_list_view": 1,
+            "columns": 1,
+            "read_only": 1
+        },
+        {
+            "fieldname": "total_eggs",
+            "fieldtype": "Int",
+            "label": "Eggs",
+            "in_list_view": 1,
+            "columns": 1,
+            "read_only": 1
+        },
+        {
+            "fieldname": "total_sales_amount",
+            "fieldtype": "Currency",
+            "label": "Sales (₹)",
+            "in_list_view": 1,
+            "columns": 2,
+            "read_only": 1
+        },
+        {
+            "fieldname": "daily_log",
+            "fieldtype": "Link",
+            "label": "Daily Log",
+            "options": "Poultry Daily Log",
+            "read_only": 1
+        },
+        {
+            "fieldname": "section_break_detail",
+            "fieldtype": "Section Break",
+            "label": "Flock & Feed"
+        },
+        {
+            "fieldname": "day_of_week",
+            "fieldtype": "Data",
+            "label": "Day of Week",
+            "read_only": 1
+        },
+        {
+            "fieldname": "opening_birds",
+            "fieldtype": "Int",
+            "label": "Opening Birds",
+            "read_only": 1
+        },
+        {
+            "fieldname": "culled",
+            "fieldtype": "Int",
+            "label": "Culled",
+            "read_only": 1
+        },
+        {
+            "fieldname": "closing_birds",
+            "fieldtype": "Int",
+            "label": "Closing Birds",
+            "read_only": 1
+        },
+        {
+            "fieldname": "column_break_detail",
+            "fieldtype": "Column Break"
+        },
+        {
+            "fieldname": "feed_item",
+            "fieldtype": "Data",
+            "label": "Feed Item",
+            "read_only": 1
+        },
+        {
+            "fieldname": "feed_cost",
+            "fieldtype": "Currency",
+            "label": "Feed Cost",
+            "read_only": 1
+        },
+        {
+            "fieldname": "section_break_eggs",
+            "fieldtype": "Section Break",
+            "label": "Egg Production"
+        },
+        {
+            "fieldname": "good_eggs",
+            "fieldtype": "Int",
+            "label": "Table Eggs",
+            "read_only": 1
+        },
+        {
+            "fieldname": "broken_eggs",
+            "fieldtype": "Int",
+            "label": "Broken Eggs",
+            "read_only": 1
+        },
+        {
+            "fieldname": "double_yolk_eggs",
+            "fieldtype": "Int",
+            "label": "Double Yolk Eggs",
+            "read_only": 1
+        },
+        {
+            "fieldname": "column_break_eggs",
+            "fieldtype": "Column Break"
+        },
+        {
+            "fieldname": "egg_production_pct",
+            "fieldtype": "Float",
+            "label": "Laying %",
+            "read_only": 1
+        },
+        {
+            "fieldname": "tray_summary",
+            "fieldtype": "Data",
+            "label": "Tray Summary",
+            "read_only": 1
+        },
+        {
+            "fieldname": "section_break_sales",
+            "fieldtype": "Section Break",
+            "label": "Sales Details"
+        },
+        {
+            "fieldname": "sales_details_html",
+            "fieldtype": "HTML",
+            "label": "Sales Entries"
+        }
+    ],
+    "permissions": []
+}

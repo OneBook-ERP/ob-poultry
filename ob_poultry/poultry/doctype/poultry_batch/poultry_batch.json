@@ -240,9 +240,12 @@
             "collapsible": 1
         },
         {
-            "fieldname": "daily_logs_history_html",
-            "fieldtype": "HTML",
-            "label": "Daily Logs & Sales"
+            "fieldname": "daily_logs",
+            "fieldtype": "Table",
+            "label": "Daily Logs & Sales",
+            "options": "Poultry Batch Daily Log Entry",
+            "cannot_add_rows": 1,
+            "read_only": 1
         }
     ],
     "sort_field": "creation",

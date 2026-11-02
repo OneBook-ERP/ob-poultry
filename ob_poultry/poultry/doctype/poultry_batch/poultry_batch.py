@@ -5,6 +5,9 @@ from frappe.utils import cint, date_diff, flt, nowdate
 
 
 class PoultryBatch(Document):
+	def onload(self):
+		self.load_daily_logs_history()
+
 	def validate(self):
 		if not self.is_new():
 			db_doc = self.get_doc_before_save()
@@ -166,6 +169,80 @@ class PoultryBatch(Document):
 			"current_shed": self.shed,
 			"shed_counts": self.get_shed_bird_counts(),
 		}
+
+	@frappe.whitelist()
+	def load_daily_logs_history(self):
+		if not self.name or self.is_new():
+			return []
+		logs = get_batch_daily_logs_and_sales(self.name)
+		self.set("daily_logs", [])
+		for log in logs:
+			sales_rows = ""
+			for s in log.get("sales", []):
+				customer = frappe.utils.escape_html(s.get("customer") or _("Walk-in Customer"))
+				good_eggs = cint(s.get("good_eggs"))
+				table_egg_rate = flt(s.get("table_egg_rate"))
+				broken_eggs = cint(s.get("broken_eggs"))
+				broken_egg_rate = flt(s.get("broken_egg_rate"))
+				total_amt = frappe.format_value(s.get("total_amount"), {"fieldtype": "Currency"})
+				sales_rows += f"""<tr style="border-bottom: 1px solid var(--border-color);">
+					<td style="padding: 6px 10px;">{customer}</td>
+					<td style="padding: 6px 10px; text-align: right;">{good_eggs:,} @ ₹{table_egg_rate:.2f}</td>
+					<td style="padding: 6px 10px; text-align: right;">{broken_eggs:,} @ ₹{broken_egg_rate:.2f}</td>
+					<td style="padding: 6px 10px; text-align: right; font-weight: 600; color: var(--green-600, #057a55);">{total_amt}</td>
+				</tr>"""
+
+			if sales_rows:
+				total_sales_display = frappe.format_value(
+					log.get("total_sales_amount"), {"fieldtype": "Currency"}
+				)
+				sales_html = f"""<table class="table table-bordered table-sm" style="width: 100%; margin-top: 6px; font-size: 12px; background: var(--card-bg, #fff);">
+					<thead>
+						<tr style="background-color: var(--table-header-bg, #f4f5f6); color: var(--text-muted);">
+							<th style="padding: 6px 10px;">{_("Customer")}</th>
+							<th style="padding: 6px 10px; text-align: right;">{_("Table Eggs")}</th>
+							<th style="padding: 6px 10px; text-align: right;">{_("Broken Eggs")}</th>
+							<th style="padding: 6px 10px; text-align: right;">{_("Total Amount")}</th>
+						</tr>
+					</thead>
+					<tbody>{sales_rows}</tbody>
+					<tfoot>
+						<tr style="font-weight: 600; background: var(--table-header-bg, #f4f5f6);">
+							<td colspan="3" style="padding: 6px 10px; text-align: right;">{_("Total Sales Amount:")}</td>
+							<td style="padding: 6px 10px; text-align: right; color: var(--green-600, #057a55);">{total_sales_display}</td>
+						</tr>
+					</tfoot>
+				</table>"""
+			else:
+				sales_html = f'<div class="text-muted" style="padding: 10px 0; font-size: 12px; font-style: italic;">{_("No egg sales recorded on this daily log for this batch.")}</div>'
+
+			self.append(
+				"daily_logs",
+				{
+					"doctype": "Poultry Batch Daily Log Entry",
+					"daily_log": log.get("log_name"),
+					"log_date": log.get("log_date"),
+					"shed": log.get("shed"),
+					"week_day": log.get("week_day"),
+					"mortality": log.get("mortality"),
+					"feed_consumed_kg": log.get("feed_consumed_kg"),
+					"total_eggs": log.get("total_eggs"),
+					"total_sales_amount": log.get("total_sales_amount"),
+					"day_of_week": log.get("day_of_week"),
+					"opening_birds": log.get("opening_birds"),
+					"culled": log.get("culled"),
+					"closing_birds": log.get("closing_birds"),
+					"feed_item": log.get("feed_item"),
+					"feed_cost": log.get("feed_cost"),
+					"good_eggs": log.get("good_eggs"),
+					"broken_eggs": log.get("broken_eggs"),
+					"double_yolk_eggs": log.get("double_yolk_eggs"),
+					"egg_production_pct": log.get("egg_production_pct"),
+					"tray_summary": log.get("tray_summary"),
+					"sales_details_html": sales_html,
+				},
+			)
+		return self.daily_logs
 
 	@frappe.whitelist()
 	def transfer_shed(
