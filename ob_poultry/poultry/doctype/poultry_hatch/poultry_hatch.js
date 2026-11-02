@@ -11,9 +11,30 @@ function setup_hatch_actions(frm) {
 	if (frm.is_new()) return;
 
 	if (frm.doc.status !== "Closed" && !frm.doc.transferred_batch) {
-		frm.add_custom_button(__("Chick Transfer"), () => {
+		let $btn = frm.add_custom_button(__("Chick Transfer"), () => {
 			open_chick_transfer_dialog(frm);
-		}).addClass("btn-primary");
+		});
+		$btn.removeClass("btn-primary")
+			.addClass("btn-chick-transfer")
+			.css({
+				"background-color": "#1b64da",
+				"border-color": "#1b64da",
+				color: "#ffffff",
+			})
+			.on("mouseenter", function () {
+				$(this).css({
+					"background-color": "#1553b7",
+					"border-color": "#1553b7",
+					color: "#ffffff",
+				});
+			})
+			.on("mouseleave", function () {
+				$(this).css({
+					"background-color": "#1b64da",
+					"border-color": "#1b64da",
+					color: "#ffffff",
+				});
+			});
 	}
 
 	if (frm.doc.transferred_batch) {
@@ -82,17 +103,20 @@ function open_chick_transfer_dialog(frm) {
 				fieldname: "bird_count",
 				label: __("Current Bird Count"),
 				default: default_count,
-				reqd: 1,
+				read_only: 1,
 				description: __("Chicks from this hatch to transfer into the new batch"),
 			},
 		],
 		primary_action_label: __("Transfer"),
 		primary_action(values) {
+			let bird_count =
+				cint(values.bird_count) || cint(dialog.get_value("bird_count")) || default_count;
+
 			if (!values.shed) {
 				frappe.msgprint(__("Please select a destination Shed."));
 				return;
 			}
-			if (cint(values.bird_count) <= 0) {
+			if (bird_count <= 0) {
 				frappe.msgprint(__("Bird count must be greater than 0."));
 				return;
 			}
@@ -103,7 +127,7 @@ function open_chick_transfer_dialog(frm) {
 					hatch_name: frm.doc.name,
 					shed: values.shed,
 					feed_warehouse: values.feed_warehouse,
-					bird_count: values.bird_count,
+					bird_count: bird_count,
 				},
 				freeze: true,
 				freeze_message: __("Transferring chicks and creating Batch..."),
@@ -137,4 +161,31 @@ function open_chick_transfer_dialog(frm) {
 	});
 
 	dialog.show();
+
+	// Style dialog primary action button with primary blue instead of black
+	let $primary_btn = dialog.get_primary_btn();
+	if ($primary_btn) {
+		$primary_btn
+			.removeClass("btn-primary")
+			.addClass("btn-chick-transfer")
+			.css({
+				"background-color": "#1b64da",
+				"border-color": "#1b64da",
+				color: "#ffffff",
+			})
+			.on("mouseenter", function () {
+				$(this).css({
+					"background-color": "#1553b7",
+					"border-color": "#1553b7",
+					color: "#ffffff",
+				});
+			})
+			.on("mouseleave", function () {
+				$(this).css({
+					"background-color": "#1b64da",
+					"border-color": "#1b64da",
+					color: "#ffffff",
+				});
+			});
+	}
 }
