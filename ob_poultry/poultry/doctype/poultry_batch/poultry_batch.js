@@ -577,8 +577,31 @@ function render_daily_logs_history_table(frm, logs) {
 		return;
 	}
 
+	frm.__daily_logs_state = {
+		logs: logs,
+		page: 1,
+		page_size: 10,
+	};
+
+	render_paged_daily_logs(frm);
+}
+
+function render_paged_daily_logs(frm) {
+	const $wrapper = frm.fields_dict.daily_logs_history_html.$wrapper;
+	const state = frm.__daily_logs_state;
+	const logs = state.logs;
+	const page_size = state.page_size || 10;
+	const total_pages = Math.max(1, Math.ceil(logs.length / page_size));
+	const current_page = Math.min(Math.max(1, state.page), total_pages);
+	state.page = current_page;
+
+	const start_idx = (current_page - 1) * page_size;
+	const end_idx = Math.min(start_idx + page_size, logs.length);
+	const paged_logs = logs.slice(start_idx, end_idx);
+
 	let rows_html = "";
-	logs.forEach((row, index) => {
+	paged_logs.forEach((row, idx) => {
+		const row_num = start_idx + idx + 1;
 		const formatted_date = frappe.datetime.str_to_user(row.log_date);
 		const day = row.day_of_week || "";
 		const shed = row.shed || "-";
@@ -598,73 +621,172 @@ function render_daily_logs_history_table(frm, logs) {
 				: "color: var(--text-muted);";
 
 		rows_html += `
-			<div class="daily-log-row-item" data-index="${index}" style="display: flex; align-items: center; padding: 10px 14px; border-bottom: 1px solid var(--border-color); cursor: pointer; font-size: 13px; transition: background-color 0.12s ease;">
-				<div style="flex: 1.3; font-weight: 500; color: var(--text-color);">
-					${formatted_date}
-					<span style="font-size: 11px; color: var(--text-muted); margin-left: 4px;">(${day})</span>
-				</div>
-				<div style="flex: 1.2; color: var(--text-color);">${frappe.utils.escape_html(shed)}</div>
-				<div style="flex: 1;"><span class="badge badge-light" style="font-size: 11px; font-weight: 500;">${frappe.utils.escape_html(
-					week_day
-				)}</span></div>
-				<div style="flex: 1; text-align: right; ${mortality_style}">
-					${mortality > 0 ? mortality.toLocaleString() : "0"}
-				</div>
-				<div style="flex: 1.2; text-align: right; color: var(--text-color);">
-					${feed_kg > 0 ? feed_kg.toFixed(1) : "0.0"}
-				</div>
-				<div style="flex: 1.2; text-align: right; color: var(--text-color);">
-					${total_eggs > 0 ? total_eggs.toLocaleString() : "0"}
-				</div>
-				<div style="flex: 1.3; text-align: right; ${sales_style}">
-					${sales_amt > 0 ? format_currency(sales_amt) : "₹0.00"}
-				</div>
-				<div style="width: 80px; text-align: center;">
-					<button type="button" class="btn btn-xs btn-default btn-view-log-row" style="font-size: 11px; padding: 2px 10px;">
-						${__("View 👁")}
-					</button>
+			<div class="grid-row" data-index="${
+				start_idx + idx
+			}" style="border-bottom: 1px solid var(--table-border-color); cursor: pointer; transition: background-color 0.12s ease;">
+				<div class="data-row row m-0" style="display: flex; align-items: center; min-height: 40px; padding: 6px 0;">
+					<div class="row-index text-center" style="width: 44px; min-width: 44px; color: var(--text-muted); font-size: 12px;">
+						<span>${row_num}</span>
+					</div>
+					<div class="col" style="flex: 1.3; font-weight: 500; color: var(--text-color); font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+						${formatted_date}
+						<span class="text-muted" style="font-size: 11px; margin-left: 3px;">(${day})</span>
+					</div>
+					<div class="col" style="flex: 1.2; font-size: 13px; color: var(--text-color); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+						${frappe.utils.escape_html(shed)}
+					</div>
+					<div class="col" style="flex: 0.9; font-size: 12px;">
+						<span class="badge badge-light" style="font-weight: 500; font-size: 11px;">${frappe.utils.escape_html(
+							week_day
+						)}</span>
+					</div>
+					<div class="col" style="flex: 1; text-align: right; font-size: 13px; ${mortality_style}">
+						${mortality > 0 ? mortality.toLocaleString() : "0"}
+					</div>
+					<div class="col" style="flex: 1.1; text-align: right; font-size: 13px; color: var(--text-color);">
+						${feed_kg > 0 ? feed_kg.toFixed(1) : "0.0"}
+					</div>
+					<div class="col" style="flex: 1.1; text-align: right; font-size: 13px; color: var(--text-color);">
+						${total_eggs > 0 ? total_eggs.toLocaleString() : "0"}
+					</div>
+					<div class="col" style="flex: 1.3; text-align: right; font-size: 13px; ${sales_style}">
+						${sales_amt > 0 ? format_currency(sales_amt) : "₹0.00"}
+					</div>
+					<div class="col text-center" style="width: 40px; min-width: 40px;">
+						<span class="btn-open-row text-muted" title="${__(
+							"View Log Details"
+						)}" style="display: inline-block;">
+							<svg class="icon icon-xs" style="width: 12px; height: 12px; stroke: currentColor;"><use href="#icon-chevron-right"></use></svg>
+						</span>
+					</div>
 				</div>
 			</div>
 		`;
 	});
 
+	const has_prev = current_page > 1;
+	const has_next = current_page < total_pages;
+
+	const pagination_html = `
+		<div class="grid-footer" style="padding: 8px 14px; background-color: var(--subtle-fg, #fafbfc); border-top: 1px solid var(--table-border-color); display: flex; justify-content: space-between; align-items: center;">
+			<div class="text-muted" style="font-size: 12px;">
+				${__("Showing {0} - {1} of {2} logs", [start_idx + 1, end_idx, logs.length])}
+			</div>
+			<div class="grid-pagination" style="display: flex; align-items: center; gap: 4px;">
+				<button class="btn btn-secondary btn-xs btn-first-page" type="button" ${
+					has_prev ? "" : "disabled"
+				} style="padding: 2px 8px; font-size: 11px;">
+					${__("First")}
+				</button>
+				<button class="btn btn-secondary btn-xs btn-prev-page" type="button" ${
+					has_prev ? "" : "disabled"
+				} style="padding: 2px 6px;">
+					<svg class="icon icon-xs" style="width: 11px; height: 11px;"><use href="#icon-chevron-left"></use></svg>
+				</button>
+				<div class="page-text" style="display: inline-flex; align-items: center; gap: 4px; font-size: 12px; margin: 0 4px;">
+					<span>${__("Page")}</span>
+					<input class="current-page-number" type="number" min="1" max="${total_pages}" value="${current_page}" style="width: 42px; text-align: center; border: 1px solid var(--border-color); border-radius: 4px; padding: 1px 2px; font-size: 12px; height: 22px;">
+					<span>${__("of {0}", [total_pages])}</span>
+				</div>
+				<button class="btn btn-secondary btn-xs btn-next-page" type="button" ${
+					has_next ? "" : "disabled"
+				} style="padding: 2px 6px;">
+					<svg class="icon icon-xs" style="width: 11px; height: 11px;"><use href="#icon-chevron-right"></use></svg>
+				</button>
+				<button class="btn btn-secondary btn-xs btn-last-page" type="button" ${
+					has_next ? "" : "disabled"
+				} style="padding: 2px 8px; font-size: 11px;">
+					${__("Last")}
+				</button>
+			</div>
+		</div>
+	`;
+
 	const table_html = `
 		<div class="frappe-control" style="margin: 8px 0;">
-			<div class="form-grid" style="border: 1px solid var(--border-color); border-radius: 6px; overflow: hidden; background: var(--card-bg, #fff);">
-				<div class="grid-heading-row" style="background-color: var(--table-header-bg, #f4f5f6); display: flex; font-weight: 600; font-size: 12px; color: var(--text-muted); border-bottom: 1px solid var(--border-color); padding: 8px 14px;">
-					<div style="flex: 1.3;">${__("Date")}</div>
-					<div style="flex: 1.2;">${__("Shed")}</div>
-					<div style="flex: 1;">${__("Age")}</div>
-					<div style="flex: 1; text-align: right;">${__("Mortality")}</div>
-					<div style="flex: 1.2; text-align: right;">${__("Feed (kg)")}</div>
-					<div style="flex: 1.2; text-align: right;">${__("Eggs")}</div>
-					<div style="flex: 1.3; text-align: right;">${__("Sales (₹)")}</div>
-					<div style="width: 80px; text-align: center;">${__("Action")}</div>
+			<div class="form-grid" style="border: 1px solid var(--table-border-color); border-radius: var(--border-radius-md, 8px); overflow: hidden; background: var(--card-bg, #fff);">
+				<div class="grid-heading-row" style="background-color: var(--subtle-fg, #fafbfc); border-bottom: 1px solid var(--table-border-color); color: var(--text-muted); font-size: 12px; font-weight: 600;">
+					<div class="grid-row">
+						<div class="data-row row m-0" style="display: flex; align-items: center; min-height: 34px; padding: 6px 0;">
+							<div class="row-index text-center" style="width: 44px; min-width: 44px;">
+								<span>#</span>
+							</div>
+							<div class="col" style="flex: 1.3;">${__("Date")}</div>
+							<div class="col" style="flex: 1.2;">${__("Shed")}</div>
+							<div class="col" style="flex: 0.9;">${__("Age")}</div>
+							<div class="col" style="flex: 1; text-align: right;">${__("Mortality")}</div>
+							<div class="col" style="flex: 1.1; text-align: right;">${__("Feed (kg)")}</div>
+							<div class="col" style="flex: 1.1; text-align: right;">${__("Eggs")}</div>
+							<div class="col" style="flex: 1.3; text-align: right;">${__("Sales (₹)")}</div>
+							<div class="col text-center" style="width: 40px; min-width: 40px;"></div>
+						</div>
+					</div>
 				</div>
-				<div class="grid-body-rows">
-					${rows_html}
+				<div class="grid-body">
+					<div class="rows">
+						${rows_html}
+					</div>
 				</div>
+				${pagination_html}
 			</div>
 		</div>
 	`;
 
 	$wrapper.html(table_html);
 
-	$wrapper.find(".daily-log-row-item").hover(
+	$wrapper.find(".grid-body .grid-row").hover(
 		function () {
-			$(this).css("background-color", "var(--bg-light-gray, #f9fafb)");
+			$(this).css("background-color", "var(--subtle-fg, #f8f9fa)");
 		},
 		function () {
 			$(this).css("background-color", "transparent");
 		}
 	);
 
-	$wrapper.find(".daily-log-row-item").on("click", function (e) {
+	$wrapper.find(".grid-body .grid-row").on("click", function (e) {
 		e.preventDefault();
 		const idx = parseInt($(this).attr("data-index"), 10);
 		const row_data = logs[idx];
 		if (row_data) {
 			show_log_details_dialog(frm, row_data);
+		}
+	});
+
+	$wrapper.find(".btn-first-page").on("click", function (e) {
+		e.stopPropagation();
+		state.page = 1;
+		render_paged_daily_logs(frm);
+	});
+
+	$wrapper.find(".btn-prev-page").on("click", function (e) {
+		e.stopPropagation();
+		if (state.page > 1) {
+			state.page -= 1;
+			render_paged_daily_logs(frm);
+		}
+	});
+
+	$wrapper.find(".btn-next-page").on("click", function (e) {
+		e.stopPropagation();
+		if (state.page < total_pages) {
+			state.page += 1;
+			render_paged_daily_logs(frm);
+		}
+	});
+
+	$wrapper.find(".btn-last-page").on("click", function (e) {
+		e.stopPropagation();
+		state.page = total_pages;
+		render_paged_daily_logs(frm);
+	});
+
+	$wrapper.find(".current-page-number").on("change keydown", function (e) {
+		if (e.type === "keydown" && e.key !== "Enter") return;
+		e.stopPropagation();
+		const target_page = parseInt($(this).val(), 10);
+		if (!isNaN(target_page) && target_page >= 1 && target_page <= total_pages) {
+			state.page = target_page;
+			render_paged_daily_logs(frm);
 		}
 	});
 }
