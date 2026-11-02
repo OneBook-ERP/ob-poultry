@@ -15,9 +15,9 @@
         },
         {
             "fieldname": "location",
-            "fieldtype": "Link",
+            "fieldtype": "Select",
             "label": "Location",
-            "options": "Location",
+            "options": "\nNorth Wing\nSouth Wing\nEast Wing\nWest Wing\nCentral Wing",
             "in_list_view": 1,
             "in_standard_filter": 1
         },
