@@ -74,8 +74,8 @@ frappe.ui.form.on("Poultry Daily Log", {
 			/* Vertical Column Totals Row Styling */
 			.grid-totals-row {
 				background-color: var(--subtle-accent-background, #f8fafc) !important;
-				border-top: 2px solid var(--border-color, #cbd5e1) !important;
-				border-bottom: 2px solid var(--border-color, #cbd5e1) !important;
+				border-top: 1px solid var(--border-color, #d1d8dd) !important;
+				border-bottom: 1px solid var(--border-color, #d1d8dd) !important;
 				font-weight: 700 !important;
 			}
 			.grid-totals-row .col {
@@ -138,11 +138,6 @@ frappe.ui.form.on("Poultry Daily Log", {
 		frappe.ui.form.close_grid_form();
 		$(".form-in-grid").remove();
 
-		// Hide status indicator badge in form header
-		if (frm.page && frm.page.indicator) frm.page.indicator.hide();
-		if (frm.page && frm.page.set_indicator) frm.page.set_indicator("");
-		$(frm.page.wrapper).find(".indicator-pill").hide();
-
 		// Prevent layout from auto-focusing on table rows (which triggers Editing Row popup)
 		if (frm.layout && !frm.layout.__pdl_focus_patched) {
 			frm.layout.__pdl_focus_patched = true;
@@ -158,11 +153,6 @@ frappe.ui.form.on("Poultry Daily Log", {
 				return orig_set_focus ? orig_set_focus.apply(this, arguments) : false;
 			};
 		}
-
-		// Hide Comments and Activity timeline completely
-		if (frm.footer && frm.footer.wrapper) frm.footer.wrapper.hide();
-		if (frm.timeline && frm.timeline.wrapper) frm.timeline.wrapper.hide();
-		frm.page.wrapper.find(".timeline-wrapper, .form-footer, .comment-box, .timeline").hide();
 
 		// Clean up any legacy back buttons
 		frm.page && frm.page.wrapper.find("button:contains('Back to Sheds')").remove();
@@ -191,6 +181,10 @@ frappe.ui.form.on("Poultry Daily Log", {
 
 		frm.trigger("toggle_weight_field");
 		frm.trigger("calculate_all_totals");
+
+		frm.add_custom_button(__("Benchmark Check"), function () {
+			frm.events.show_benchmark_comparison_dialog(frm);
+		});
 	},
 
 	sync_view_from_url(frm) {
@@ -216,6 +210,13 @@ frappe.ui.form.on("Poultry Daily Log", {
 		$(frm.wrapper).removeClass("pdl-view-entry").addClass("pdl-view-sheds");
 		if (frm.page && frm.page.wrapper) {
 			$(frm.page.wrapper).removeClass("pdl-view-entry").addClass("pdl-view-sheds");
+		}
+
+		if (
+			frm.fields_dict.benchmark_variance_html &&
+			frm.fields_dict.benchmark_variance_html.$wrapper
+		) {
+			frm.fields_dict.benchmark_variance_html.$wrapper.empty();
 		}
 
 		// Direct element toggle for bulletproof separation
@@ -721,11 +722,7 @@ frappe.ui.form.on("Poultry Daily Log", {
 			? `
 			<button type="button" class="btn btn-xs btn-default btn-prev-shed" title="Go to ${frappe.utils.escape_html(
 				prev_shed
-			)}" style="font-weight: 500; display: inline-flex; align-items: center; gap: 4px;">
-				<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-					<line x1="19" y1="12" x2="5" y2="12"></line>
-					<polyline points="12 19 5 12 12 5"></polyline>
-				</svg>
+			)}">
 				Previous Shed
 			</button>
 		`
@@ -735,34 +732,20 @@ frappe.ui.form.on("Poultry Daily Log", {
 			? `
 			<button type="button" class="btn btn-xs btn-default btn-next-shed" title="Go to ${frappe.utils.escape_html(
 				next_shed
-			)}" style="font-weight: 500; display: inline-flex; align-items: center; gap: 4px;">
+			)}">
 				Next Shed
-				<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-					<line x1="5" y1="12" x2="19" y2="12"></line>
-					<polyline points="12 5 19 12 12 19"></polyline>
-				</svg>
 			</button>
 		`
 			: "";
 
 		let nav_html = `
-			<div class="shed-nav-bar col-12 mb-3" style="
-				display: flex;
-				align-items: center;
-				justify-content: space-between;
-				background: var(--fg-color, #ffffff);
-				border: 1px solid var(--border-color, #e2e8f0);
-				border-radius: 8px;
-				padding: 10px 16px;
-				margin-top: 4px;
-				box-shadow: 0 1px 2px rgba(0,0,0,0.03);
-			">
-				<div style="display: flex; align-items: center; gap: 8px;">
-					<span style="font-weight: 600; font-size: 15px; color: var(--text-color, #1e293b);">${frappe.utils.escape_html(
+			<div class="shed-nav-bar col-12 d-flex justify-content-between align-items-center mb-3 p-2 border rounded bg-white">
+				<div class="d-flex align-items-center">
+					<span class="font-weight-bold" style="font-size: 14px;">${frappe.utils.escape_html(
 						shed_name
 					)}</span>
 				</div>
-				<div style="display: flex; gap: 8px;">
+				<div class="d-flex gap-2">
 					${prev_btn}
 					${next_btn}
 				</div>
@@ -896,12 +879,330 @@ frappe.ui.form.on("Poultry Daily Log", {
 					frm.refresh_field("sales_entries");
 				}
 
+				frm.__current_shed_context = ctx;
 				frm.events.filter_tables_by_shed(frm, shed);
 				frm.trigger("calculate_all_totals");
 				frm.events.render_all_table_totals(frm);
 				frm.events.format_batch_cells(frm);
+				frm.events.render_benchmark_variance_card(frm);
 			},
 		});
+	},
+
+	render_benchmark_variance_card(frm) {
+		// Card removed from daily log form per user request; health check is displayed as a popup while saving or via action button.
+		if (
+			frm.fields_dict.benchmark_variance_html &&
+			frm.fields_dict.benchmark_variance_html.$wrapper
+		) {
+			frm.fields_dict.benchmark_variance_html.$wrapper.empty();
+		}
+	},
+
+	show_benchmark_comparison_dialog(frm, on_proceed) {
+		let shed =
+			frm.doc.selected_shed ||
+			(frm.doc.shed_entries && frm.doc.shed_entries.length
+				? frm.doc.shed_entries[0].shed
+				: null);
+		if (!frm.__current_shed_context && shed) {
+			frappe.call({
+				method: "ob_poultry.poultry.doctype.poultry_daily_log.poultry_daily_log.get_shed_context",
+				args: {
+					log_date: frm.doc.log_date || frappe.datetime.nowdate(),
+					shed: shed,
+				},
+				callback: function (r) {
+					frm.__current_shed_context = r.message || {};
+					frm.events.render_benchmark_dialog_content(frm, on_proceed);
+				},
+				error: function () {
+					if (typeof on_proceed === "function") {
+						on_proceed();
+					}
+				},
+			});
+			return;
+		}
+		frm.events.render_benchmark_dialog_content(frm, on_proceed);
+	},
+
+	render_benchmark_dialog_content(frm, on_proceed) {
+		let ctx = frm.__current_shed_context || {};
+		let batches = ctx.batches || [];
+		let primary = batches.length ? batches[0] : {};
+		let bmk = ctx.benchmark || {};
+		if (primary.benchmark && Object.keys(primary.benchmark).length) {
+			bmk = Object.assign({}, bmk, primary.benchmark);
+		}
+
+		let std_wt = flt(bmk.standard_body_weight_g) || 0;
+		let std_hdep = flt(bmk.standard_hdep_pct) || 0;
+		let std_mort = flt(bmk.standard_mortality_pct) || 0;
+		let std_feed = flt(bmk.standard_feed_per_bird_g) || 0;
+
+		let record_wt = cint(frm.doc.record_weight) === 1;
+		let act_wt = record_wt ? flt(frm.doc.average_body_weight_g) : 0;
+		let wt_dev_val = act_wt > 0 && std_wt > 0 ? ((act_wt - std_wt) / std_wt) * 100 : null;
+		let wt_dev_str =
+			wt_dev_val !== null ? (wt_dev_val >= 0 ? "+" : "") + wt_dev_val.toFixed(1) + "%" : "—";
+
+		let cur_shed = frm.doc.selected_shed;
+		let eggs = 0;
+		(frm.doc.egg_entries || []).forEach((r) => {
+			if (
+				!cur_shed ||
+				r.shed === cur_shed ||
+				(!r.shed && batches.some((b) => b.batch === r.batch))
+			) {
+				eggs += flt(r.total_eggs) || 0;
+			}
+		});
+
+		let birds = 0;
+		let dead = 0;
+		(frm.doc.flock_entries || []).forEach((r) => {
+			if (
+				!cur_shed ||
+				r.shed === cur_shed ||
+				(!r.shed && batches.some((b) => b.batch === r.batch))
+			) {
+				birds += flt(r.opening_birds) || 0;
+				dead += flt(r.dead) || 0;
+			}
+		});
+		if (birds === 0 && primary.opening_birds) birds = flt(primary.opening_birds);
+
+		let act_hdep = birds > 0 ? (eggs / birds) * 100 : 0;
+		let hdep_dev_val =
+			std_hdep > 0 && birds > 0 ? ((act_hdep - std_hdep) / std_hdep) * 100 : null;
+		let hdep_dev_str =
+			hdep_dev_val !== null
+				? (hdep_dev_val >= 0 ? "+" : "") + hdep_dev_val.toFixed(1) + "%"
+				: "—";
+
+		let act_mort = birds > 0 ? (dead / birds) * 100 : 0;
+		let mort_dev_val =
+			std_mort > 0 && birds > 0 ? ((act_mort - std_mort) / std_mort) * 100 : null;
+		let mort_dev_str =
+			mort_dev_val !== null
+				? (mort_dev_val >= 0 ? "+" : "") + mort_dev_val.toFixed(1) + "%"
+				: "—";
+
+		let feed_spent = 0;
+		(frm.doc.feed_entries || []).forEach((r) => {
+			if (
+				!cur_shed ||
+				r.shed === cur_shed ||
+				(!r.shed && batches.some((b) => b.batch === r.batch))
+			) {
+				feed_spent += flt(r.feed_spent_kg) || 0;
+			}
+		});
+		let act_feed_g = birds > 0 ? (feed_spent * 1000) / birds : 0;
+		let feed_dev_val =
+			act_feed_g > 0 && std_feed > 0 ? ((act_feed_g - std_feed) / std_feed) * 100 : null;
+		let feed_dev_str =
+			feed_dev_val !== null
+				? (feed_dev_val >= 0 ? "+" : "") + feed_dev_val.toFixed(1) + "%"
+				: "—";
+
+		// Analyze Warnings & build advisory messages for each metric
+		let warnings = [];
+		if (wt_dev_val !== null) {
+			if (wt_dev_val <= -10) {
+				warnings.push({
+					title: __("Weight Warning (Underweight by {0})", [
+						Math.abs(wt_dev_val).toFixed(1) + "%",
+					]),
+					actual: act_wt + " g",
+					standard: std_wt + " g",
+					/* Warning recommendation commented out for now:
+					message: __("Check the nutrient on feed (ensure adequate metabolizable energy and crude protein levels), daily feed intake per bird, feeder space distribution, and clean water availability.")
+					*/
+				});
+			} else if (wt_dev_val >= 10) {
+				warnings.push({
+					title: __("Weight Warning (Overweight by +{0})", [
+						wt_dev_val.toFixed(1) + "%",
+					]),
+					actual: act_wt + " g",
+					standard: std_wt + " g",
+					/* Warning recommendation commented out for now:
+					message: __("Check the nutrient on feed and daily feed intake. Review ration portioning to ensure birds are not over-consuming energy-dense feed.")
+					*/
+				});
+			}
+		}
+
+		if (hdep_dev_val !== null && hdep_dev_val <= -10) {
+			warnings.push({
+				title: __("Egg Production Warning (Low Yield by {0})", [
+					Math.abs(hdep_dev_val).toFixed(1) + "%",
+				]),
+				actual: act_hdep.toFixed(1) + "%",
+				standard: std_hdep.toFixed(1) + "%",
+				/* Warning recommendation commented out for now:
+				message: __("Check the nutrient on feed (calcium, phosphorus, and amino acid balance), daily water intake, lighting program duration/lux intensity, egg collection timing, and monitor flock for subclinical disease or heat stress.")
+				*/
+			});
+		}
+
+		if (mort_dev_val !== null && mort_dev_val >= 10 && dead > 0) {
+			warnings.push({
+				title: __("Mortality Warning (Exceeds Standard by +{0})", [
+					mort_dev_val.toFixed(1) + "%",
+				]),
+				actual: act_mort.toFixed(2) + "% (" + dead + " dead)",
+				standard: std_mort.toFixed(2) + "%",
+				/* Warning recommendation commented out for now:
+				message: __("Check shed ventilation and ammonia levels, temperature/humidity control, water line hygiene and biosecurity, inspect dead birds for pathology, and consult a poultry veterinarian for medication if needed.")
+				*/
+			});
+		}
+
+		let is_on_save = typeof on_proceed === "function";
+
+		let d = new frappe.ui.Dialog({
+			title: __("Benchmark Variance & Health Check{0}", [
+				cur_shed
+					? ": " + cur_shed + (primary.week_day ? " (" + primary.week_day + ")" : "")
+					: "",
+			]),
+			size: "large",
+			fields: [
+				{
+					fieldtype: "HTML",
+					fieldname: "modal_html",
+				},
+			],
+			primary_action_label: is_on_save ? __("Proceed & Save") : __("Close"),
+			primary_action() {
+				d.hide();
+				if (is_on_save) {
+					on_proceed();
+				}
+			},
+		});
+
+		if (is_on_save) {
+			d.set_secondary_action_label(__("Review / Edit Log"));
+			d.set_secondary_action(() => {
+				d.hide();
+			});
+		}
+
+		/* Warning recommendation banner commented out for now per user request:
+		let banner_html = "";
+		if (warnings.length > 0) {
+			banner_html = `
+				<div class="border rounded p-3 mb-3 bg-light">
+					${warnings.map(w => `
+						<div class="mb-2">
+							<div class="d-flex justify-content-between align-items-center">
+								<span class="font-weight-bold">${w.title}</span>
+								<span class="text-muted small">Actual: ${w.actual} | Std: ${w.standard}</span>
+							</div>
+							${w.message ? `
+								<div class="small mt-1 text-muted">
+									<b>${__("Recommendation")}:</b> ${w.message}
+								</div>
+							` : ""}
+						</div>
+					`).join("<hr class='my-2'>")}
+				</div>
+			`;
+		} else {
+			banner_html = `
+				<div class="border rounded p-2 mb-3 text-muted small">
+					${__("All recorded metrics are within normal breed benchmark tolerance (±10%).")}
+				</div>
+			`;
+		}
+		*/
+
+		let modal_content = `
+		<div>
+			<p class="text-muted small mb-3">
+				${__(
+					"Comparison of actual flock performance against the standard breed benchmark for"
+				)} <b>${frappe.utils.escape_html(
+			ctx.breed || primary.breed || "Active Breed"
+		)}</b>.
+			</p>
+			<!-- Warning recommendation commented out for now -->
+			<table class="table table-bordered table-hover table-sm m-0">
+				<thead>
+					<tr>
+						<th>${__("Metric")}</th>
+						<th>${__("Actual Value")}</th>
+						<th>${__("Standard Benchmark")}</th>
+						<th>${__("Deviation %")}</th>
+						<th>${__("Status")}</th>
+					</tr>
+				</thead>
+				<tbody>
+					<tr>
+						<td><b>${__("Average Body Weight")}</b></td>
+						<td>${act_wt > 0 ? act_wt.toLocaleString() + " g" : __("Not Recorded")}</td>
+						<td>${std_wt > 0 ? std_wt.toLocaleString() + " g" : "—"}</td>
+						<td>${wt_dev_str}</td>
+						<td>${
+							wt_dev_val !== null && Math.abs(wt_dev_val) >= 10
+								? '<span class="font-weight-bold">' +
+								  __("Warning (>±10%)") +
+								  "</span>"
+								: '<span class="text-muted">' + __("Normal") + "</span>"
+						}</td>
+					</tr>
+					<tr>
+						<td><b>${__("Egg Production (HDEP %)")}</b></td>
+						<td>${
+							act_hdep > 0
+								? act_hdep.toFixed(2) + "% (" + eggs + " eggs)"
+								: eggs > 0
+								? eggs + " eggs"
+								: "0%"
+						}</td>
+						<td>${std_hdep > 0 ? std_hdep.toFixed(2) + "%" : "—"}</td>
+						<td>${hdep_dev_str}</td>
+						<td>${
+							hdep_dev_val !== null && hdep_dev_val <= -10
+								? '<span class="font-weight-bold">' + __("Low Yield") + "</span>"
+								: '<span class="text-muted">' + __("Normal") + "</span>"
+						}</td>
+					</tr>
+					<tr>
+						<td><b>${__("Daily Mortality %")}</b></td>
+						<td>${act_mort.toFixed(2)}% (${dead} dead)</td>
+						<td>${std_mort > 0 ? std_mort.toFixed(2) + "%" : "—"}</td>
+						<td>${mort_dev_str}</td>
+						<td>${
+							mort_dev_val !== null && mort_dev_val >= 10 && dead > 0
+								? '<span class="font-weight-bold">' +
+								  __("High Mortality") +
+								  "</span>"
+								: '<span class="text-muted">' + __("Normal") + "</span>"
+						}</td>
+					</tr>
+					<tr>
+						<td><b>${__("Feed Consumed / Bird")}</b></td>
+						<td>${act_feed_g > 0 ? act_feed_g.toFixed(1) + " g" : "—"}</td>
+						<td>${std_feed > 0 ? std_feed.toFixed(1) + " g" : "—"}</td>
+						<td>${feed_dev_str}</td>
+						<td><span class="text-muted">${__("Tracked")}</span></td>
+					</tr>
+				</tbody>
+			</table>
+		</div>
+		`;
+
+		d.fields_dict.modal_html.$wrapper.html(modal_content);
+		d.show();
+	},
+
+	check_benchmark_deviations_alert(frm) {
+		// Handled via modal dialog
 	},
 
 	filter_tables_by_shed(frm, current_shed) {
@@ -1137,8 +1438,88 @@ frappe.ui.form.on("Poultry Daily Log", {
 		}
 	},
 
+	validate(frm) {
+		if (frm.__saving_with_benchmark_approved) {
+			frm.__saving_with_benchmark_approved = false;
+			return;
+		}
+
+		if (frm.doc.docstatus === 1) {
+			return;
+		}
+
+		let shed =
+			frm.doc.selected_shed ||
+			(frm.doc.shed_entries && frm.doc.shed_entries.length
+				? frm.doc.shed_entries[0].shed
+				: null);
+		if (!shed) {
+			return;
+		}
+
+		// Halt standard synchronous save to display benchmark comparison popup
+		frappe.validated = false;
+
+		let check_and_show = function () {
+			let ctx = frm.__current_shed_context || {};
+			let bmk = ctx.benchmark || {};
+			let batches = ctx.batches || [];
+			if (batches.length && batches[0].benchmark) {
+				bmk = Object.assign({}, bmk, batches[0].benchmark);
+			}
+
+			let has_benchmarks =
+				flt(bmk.standard_body_weight_g) > 0 ||
+				flt(bmk.standard_hdep_pct) > 0 ||
+				flt(bmk.standard_mortality_pct) > 0;
+
+			if (!has_benchmarks) {
+				// No standard benchmarks found; proceed with saving
+				frm.__saving_with_benchmark_approved = true;
+				frm.save().finally(() => {
+					frm.__saving_with_benchmark_approved = false;
+				});
+				return;
+			}
+
+			frm.events.show_benchmark_comparison_dialog(frm, function () {
+				frm.__saving_with_benchmark_approved = true;
+				frm.save().finally(() => {
+					frm.__saving_with_benchmark_approved = false;
+				});
+			});
+		};
+
+		if (!frm.__current_shed_context && shed) {
+			frappe.call({
+				method: "ob_poultry.poultry.doctype.poultry_daily_log.poultry_daily_log.get_shed_context",
+				args: {
+					log_date: frm.doc.log_date || frappe.datetime.nowdate(),
+					shed: shed,
+				},
+				callback: function (r) {
+					frm.__current_shed_context = r.message || {};
+					check_and_show();
+				},
+				error: function () {
+					frm.__saving_with_benchmark_approved = true;
+					frm.save().finally(() => {
+						frm.__saving_with_benchmark_approved = false;
+					});
+				},
+			});
+		} else {
+			check_and_show();
+		}
+	},
+
+	average_body_weight_g(frm) {
+		frm.events.render_benchmark_variance_card(frm);
+	},
+
 	record_weight(frm) {
 		frm.trigger("toggle_weight_field");
+		frm.events.render_benchmark_variance_card(frm);
 	},
 
 	toggle_weight_field(frm) {
@@ -1190,6 +1571,7 @@ frappe.ui.form.on("Poultry Daily Log", {
 
 		// Update vertical totals on all tables
 		frm.events.render_all_table_totals(frm);
+		frm.events.render_benchmark_variance_card(frm);
 	},
 });
 

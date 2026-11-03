@@ -66,7 +66,7 @@ class PoultryHatch(Document):
 
 		if self.get("standard_hatchability_pct") and self.get("eggs_set"):
 			self.estimated_chicks = round(flt(self.eggs_set) * flt(self.standard_hatchability_pct) / 100)
-		else:
+		elif self.get("estimated_chicks") is not None and not self.get("standard_hatchability_pct"):
 			self.estimated_chicks = None
 
 

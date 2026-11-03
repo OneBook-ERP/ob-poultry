@@ -17,6 +17,7 @@ function populate_days_lineup(frm) {
 					row.standard_feed_per_bird_g = null;
 					row.standard_body_weight_g = null;
 					row.standard_fcr = null;
+					row.standard_hdep_pct = null;
 				}
 				frm.refresh_field("benchmarks");
 			}
@@ -40,6 +41,7 @@ function load_default_values(frm) {
 						row.standard_feed_per_bird_g = data.standard_feed_per_bird_g;
 						row.standard_body_weight_g = data.standard_body_weight_g;
 						row.standard_fcr = data.standard_fcr;
+						row.standard_hdep_pct = data.standard_hdep_pct;
 					}
 				} else {
 					frm.clear_table("benchmarks");
@@ -54,6 +56,7 @@ function load_default_values(frm) {
 						row.standard_feed_per_bird_g = row_data.standard_feed_per_bird_g;
 						row.standard_body_weight_g = row_data.standard_body_weight_g;
 						row.standard_fcr = row_data.standard_fcr;
+						row.standard_hdep_pct = row_data.standard_hdep_pct;
 					}
 				}
 				frm.refresh_field("benchmarks");

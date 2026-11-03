@@ -92,12 +92,18 @@ class PoultryBatch(Document):
 		for row in self.get("shed_transfers", []):
 			rem = counts.get(row.from_shed, 0)
 			row.remaining_birds = rem
+			if not getattr(row, "source_initial_birds", None):
+				row.source_initial_birds = (row.remaining_birds or 0) + (
+					row.birds_to_transfer or row.birds_moved or 0
+				)
 			if getattr(row, "name", None) and not str(row.name).startswith("new-"):
 				frappe.db.set_value(
 					"Poultry Batch Shed Transfer",
 					row.name,
-					"remaining_birds",
-					rem,
+					{
+						"remaining_birds": rem,
+						"source_initial_birds": row.source_initial_birds,
+					},
 					update_modified=False,
 				)
 
@@ -328,6 +334,7 @@ class PoultryBatch(Document):
 				"from_shed": from_shed,
 				"to_shed": new_shed,
 				"transfer_date": transfer_date,
+				"source_initial_birds": available_birds,
 				"birds_to_transfer": birds_to_transfer,
 				"transit_mortality": transit_mortality,
 				"birds_moved": birds_placed,

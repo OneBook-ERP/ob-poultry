@@ -36,6 +36,14 @@
             "read_only": 1
         },
         {
+            "fieldname": "source_initial_birds",
+            "fieldtype": "Int",
+            "label": "Initial in Source",
+            "in_list_view": 1,
+            "columns": 1,
+            "read_only": 1
+        },
+        {
             "fieldname": "birds_to_transfer",
             "fieldtype": "Int",
             "label": "Birds to Transfer",

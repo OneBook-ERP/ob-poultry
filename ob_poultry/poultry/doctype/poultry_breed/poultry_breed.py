@@ -29,13 +29,14 @@ def get_default_days_lineup(breed_type="Broiler"):
 				"standard_feed_per_bird_g": None,
 				"standard_body_weight_g": None,
 				"standard_fcr": None,
+				"standard_hdep_pct": None,
 			}
 		)
 	return rows
 
 
 def get_broiler_defaults():
-	# 7 weeks / 49 days (covers broiler lifecycle 35 to 49 days, Cobb 500 / Ross 308)
+	# 7 weeks / 49 days (covers broiler lifecycle 35 to 49 days, Cobb 500 / Ross 308, meat breed so HDEP=0)
 	return [
 		{
 			"from_day": 0,
@@ -47,6 +48,7 @@ def get_broiler_defaults():
 			"standard_feed_per_bird_g": 25.0,
 			"standard_body_weight_g": 190.0,
 			"standard_fcr": 0.92,
+			"standard_hdep_pct": 0.0,
 		},
 		{
 			"from_day": 7,
@@ -58,6 +60,7 @@ def get_broiler_defaults():
 			"standard_feed_per_bird_g": 50.0,
 			"standard_body_weight_g": 460.0,
 			"standard_fcr": 1.15,
+			"standard_hdep_pct": 0.0,
 		},
 		{
 			"from_day": 14,
@@ -69,6 +72,7 @@ def get_broiler_defaults():
 			"standard_feed_per_bird_g": 80.0,
 			"standard_body_weight_g": 930.0,
 			"standard_fcr": 1.31,
+			"standard_hdep_pct": 0.0,
 		},
 		{
 			"from_day": 21,
@@ -80,6 +84,7 @@ def get_broiler_defaults():
 			"standard_feed_per_bird_g": 120.0,
 			"standard_body_weight_g": 1520.0,
 			"standard_fcr": 1.46,
+			"standard_hdep_pct": 0.0,
 		},
 		{
 			"from_day": 28,
@@ -91,6 +96,7 @@ def get_broiler_defaults():
 			"standard_feed_per_bird_g": 155.0,
 			"standard_body_weight_g": 2180.0,
 			"standard_fcr": 1.60,
+			"standard_hdep_pct": 0.0,
 		},
 		{
 			"from_day": 35,
@@ -102,6 +108,7 @@ def get_broiler_defaults():
 			"standard_feed_per_bird_g": 175.0,
 			"standard_body_weight_g": 2800.0,
 			"standard_fcr": 1.72,
+			"standard_hdep_pct": 0.0,
 		},
 		{
 			"from_day": 42,
@@ -113,6 +120,7 @@ def get_broiler_defaults():
 			"standard_feed_per_bird_g": 190.0,
 			"standard_body_weight_g": 3350.0,
 			"standard_fcr": 1.85,
+			"standard_hdep_pct": 0.0,
 		},
 	]
 
@@ -135,6 +143,16 @@ def get_dual_purpose_defaults():
 			mort = 0.2
 		else:
 			mort = 0.12
+		if w <= 18:
+			hdep = 0.0
+		elif w == 19:
+			hdep = 15.0
+		elif w == 20:
+			hdep = 42.0
+		elif w == 21:
+			hdep = 65.0
+		else:
+			hdep = 75.0
 		rows.append(
 			{
 				"from_day": from_day,
@@ -146,6 +164,7 @@ def get_dual_purpose_defaults():
 				"standard_feed_per_bird_g": round(feed, 1),
 				"standard_body_weight_g": round(wt, 1),
 				"standard_fcr": round(fcr, 2),
+				"standard_hdep_pct": round(hdep, 1),
 			}
 		)
 	return rows
@@ -169,6 +188,22 @@ def get_breeder_defaults():
 			feed = 92 + 70 * min(1.0, t * 3)
 			fcr = 2.20 + 0.60 * t
 			mort = 0.14
+		if w <= 22:
+			hdep = 0.0
+		elif w == 23:
+			hdep = 5.0
+		elif w == 24:
+			hdep = 25.0
+		elif w == 25:
+			hdep = 55.0
+		elif w == 26:
+			hdep = 75.0
+		elif w == 27:
+			hdep = 82.0
+		elif w <= 34:
+			hdep = 86.0
+		else:
+			hdep = max(50.0, 86.0 - (w - 34) * 0.9)
 		rows.append(
 			{
 				"from_day": from_day,
@@ -180,6 +215,7 @@ def get_breeder_defaults():
 				"standard_feed_per_bird_g": round(feed, 1),
 				"standard_body_weight_g": round(wt, 1),
 				"standard_fcr": round(fcr, 2),
+				"standard_hdep_pct": round(hdep, 1),
 			}
 		)
 	return rows
@@ -203,6 +239,22 @@ def get_layer_defaults():
 			feed = 88 + 25 * min(1.0, (w - 18) / 7.0)
 			fcr = 2.05 + 0.12 * t
 			mort = 0.10
+		if w <= 17:
+			hdep = 0.0
+		elif w == 18:
+			hdep = 10.0
+		elif w == 19:
+			hdep = 38.0
+		elif w == 20:
+			hdep = 70.0
+		elif w == 21:
+			hdep = 88.0
+		elif w == 22:
+			hdep = 93.0
+		elif w <= 30:
+			hdep = 96.0
+		else:
+			hdep = max(75.0, 96.0 - (w - 30) * 0.35)
 		rows.append(
 			{
 				"from_day": from_day,
@@ -214,6 +266,7 @@ def get_layer_defaults():
 				"standard_feed_per_bird_g": round(feed, 1),
 				"standard_body_weight_g": round(wt, 1),
 				"standard_fcr": round(fcr, 2),
+				"standard_hdep_pct": round(hdep, 1),
 			}
 		)
 	return rows
@@ -240,6 +293,8 @@ def get_default_benchmark_ranges(breed_type="Broiler"):
 
 class PoultryBreed(Document):
 	def validate(self):
+		if not self.benchmarks:
+			self.populate_default_benchmarks()
 		self.update_benchmark_day_bounds()
 
 	def populate_days_lineup(self):

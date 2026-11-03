@@ -1,76 +1,81 @@
 {
-    "doctype": "DocType",
-    "name": "Poultry Breed",
-    "module": "Poultry",
-    "engine": "InnoDB",
-    "autoname": "field:breed_name",
-    "fields": [
-        {
-            "fieldname": "breed_name",
-            "fieldtype": "Data",
-            "label": "Breed Name",
-            "reqd": 1,
-            "unique": 1,
-            "in_list_view": 1
-        },
-        {
-            "fieldname": "breed_type",
-            "fieldtype": "Select",
-            "label": "Breed Type",
-            "options": "Broiler\nLayer\nBreeder\nDual Purpose",
-            "reqd": 1,
-            "in_list_view": 1
-        },
-        {
-            "fieldname": "column_break_breed",
-            "fieldtype": "Column Break"
-        },
-        {
-            "fieldname": "standard_fcr",
-            "fieldtype": "Float",
-            "label": "Standard FCR"
-        },
-        {
-            "fieldname": "description",
-            "fieldtype": "Small Text",
-            "label": "Description"
-        },
-        {
-            "fieldname": "benchmarks_section",
-            "fieldtype": "Section Break",
-            "label": "Benchmarks"
-        },
-        {
-            "fieldname": "benchmarks",
-            "fieldtype": "Table",
-            "label": "Benchmarks",
-            "options": "Poultry Breed Benchmark"
-        }
-    ],
-    "sort_field": "modified",
-    "sort_order": "DESC",
-    "permissions": [
-        {
-            "role": "System Manager",
-            "read": 1,
-            "write": 1,
-            "create": 1,
-            "delete": 1
-        },
-        {
-            "role": "Poultry Manager",
-            "read": 1,
-            "write": 1,
-            "create": 1,
-            "delete": 1
-        },
-        {
-            "role": "Poultry Attendant",
-            "read": 1
-        },
-        {
-            "role": "Vaccination In-charge",
-            "read": 1
-        }
-    ]
+ "actions": [],
+ "autoname": "field:breed_name",
+ "creation": "2026-10-30 23:25:10.752801",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "breed_name",
+  "column_break_breed",
+  "breed_type",
+  "benchmarks_section",
+  "benchmarks"
+ ],
+ "fields": [
+  {
+   "fieldname": "breed_name",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Breed Name",
+   "reqd": 1,
+   "unique": 1
+  },
+  {
+   "fieldname": "breed_type",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Breed Type",
+   "options": "Broiler\nLayer\nBreeder\nDual Purpose",
+   "reqd": 1
+  },
+  {
+   "fieldname": "column_break_breed",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "benchmarks_section",
+   "fieldtype": "Section Break",
+   "label": "Benchmarks"
+  },
+  {
+   "fieldname": "benchmarks",
+   "fieldtype": "Table",
+   "label": "Benchmarks",
+   "options": "Poultry Breed Benchmark"
+  }
+ ],
+ "links": [],
+ "modified": "2026-11-02 10:02:51.451975",
+ "modified_by": "Administrator",
+ "module": "Poultry",
+ "name": "Poultry Breed",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "read": 1,
+   "role": "System Manager",
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "read": 1,
+   "role": "Poultry Manager",
+   "write": 1
+  },
+  {
+   "read": 1,
+   "role": "Poultry Attendant"
+  },
+  {
+   "read": 1,
+   "role": "Vaccination In-charge"
+  }
+ ],
+ "row_format": "Dynamic",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
 }
