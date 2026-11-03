@@ -8,6 +8,169 @@ frappe.ui.form.on("Poultry Batch", {
 				visibility: hidden !important;
 				pointer-events: none !important;
 			}
+
+			/* shadcn/ui Pagination styling from table1/www/index.html placed ABOVE columns */
+			.grid-top-pagination-bar .shadcn-pagination-bar {
+				display: flex;
+				align-items: center;
+				justify-content: space-between;
+				gap: 12px;
+				padding: 8px 12px;
+				width: 100%;
+				border: 1px solid var(--border-color, #cbd5e1);
+				border-bottom: none;
+				background: var(--card-bg, #ffffff);
+				border-top-left-radius: 8px;
+				border-top-right-radius: 8px;
+			}
+			[data-fieldname="daily_logs"] .form-grid {
+				border-top-left-radius: 0 !important;
+				border-top-right-radius: 0 !important;
+			}
+			.shadcn-pagination-field {
+				display: inline-flex;
+				align-items: center;
+				gap: 8px;
+				flex: none;
+			}
+			.shadcn-select {
+				position: relative;
+				display: inline-block;
+			}
+			.shadcn-select-trigger {
+				display: inline-flex;
+				align-items: center;
+				justify-content: space-between;
+				gap: 6px;
+				height: 30px;
+				padding: 0 8px 0 10px;
+				border-radius: 6px;
+				border: 1px solid var(--border-color, #cbd5e1);
+				background: #ffffff;
+				font-size: 12px;
+				font-weight: 500;
+				font-family: inherit;
+				color: var(--text-color, #0f172a);
+				cursor: pointer;
+				box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+				transition: border-color .15s, box-shadow .15s, background .15s;
+				user-select: none;
+			}
+			.shadcn-select-trigger:hover {
+				background: #f8fafc;
+			}
+			.shadcn-select.open .shadcn-select-trigger {
+				border-color: #0f172a;
+				box-shadow: 0 0 0 1px #0f172a;
+			}
+			.shadcn-select-trigger.select-count-trigger {
+				width: 60px;
+			}
+			.shadcn-select-value {
+				flex: 1;
+				text-align: left;
+			}
+			.shadcn-select-arrow {
+				display: inline-flex;
+				align-items: center;
+				justify-content: center;
+				color: #64748b;
+				transition: transform .15s ease;
+			}
+			.shadcn-select.open .shadcn-select-arrow {
+				transform: rotate(180deg);
+			}
+			.shadcn-select-content {
+				position: absolute;
+				top: calc(100% + 4px);
+				left: 0;
+				background: #ffffff;
+				border: 1px solid var(--border-color, #cbd5e1);
+				border-radius: 6px;
+				box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.14), 0 8px 10px -6px rgba(0, 0, 0, 0.08);
+				padding: 4px;
+				z-index: 1000;
+				min-width: 65px;
+				display: none;
+			}
+			.shadcn-select.open .shadcn-select-content {
+				display: block;
+			}
+			.shadcn-select-item {
+				display: flex;
+				align-items: center;
+				justify-content: space-between;
+				padding: 5px 8px;
+				font-size: 12px;
+				font-weight: 500;
+				color: #0f172a;
+				border-radius: 4px;
+				cursor: pointer;
+				user-select: none;
+			}
+			.shadcn-select-item:hover {
+				background: #f1f5f9;
+			}
+			.shadcn-select-item.selected {
+				font-weight: 600;
+			}
+			.shadcn-select-item .item-check {
+				width: 14px;
+				height: 14px;
+				display: inline-flex;
+				align-items: center;
+				justify-content: center;
+				color: #0f172a;
+				opacity: 0;
+			}
+			.shadcn-select-item.selected .item-check {
+				opacity: 1;
+			}
+			.shadcn-pagination-right {
+				display: flex;
+				align-items: center;
+				gap: 12px;
+				flex: none;
+			}
+			.shadcn-page-info {
+				font-size: 12px;
+				font-weight: 500;
+				color: var(--text-muted, #64748b);
+				white-space: nowrap;
+				font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+			}
+			.shadcn-pagination-content {
+				display: flex;
+				align-items: center;
+				gap: 4px;
+				flex: none;
+			}
+			.shadcn-pagination-item {
+				width: 30px;
+				height: 30px;
+				border: 1px solid var(--border-color, #cbd5e1);
+				background: #ffffff;
+				color: var(--text-color, #0f172a);
+				border-radius: 6px;
+				display: inline-flex;
+				align-items: center;
+				justify-content: center;
+				cursor: pointer;
+				padding: 0;
+				box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+				transition: background .12s, border-color .12s, color .12s;
+			}
+			.shadcn-pagination-item:hover:not(:disabled) {
+				background: #f1f5f9;
+			}
+			.shadcn-pagination-item:disabled {
+				opacity: .35;
+				cursor: not-allowed;
+				pointer-events: none;
+			}
+			.shadcn-pagination-item:not(:disabled):active {
+				background: #e2e8f0;
+			}
 		`);
 	},
 	refresh(frm) {
@@ -523,6 +686,12 @@ function show_transfer_dialog(
 						freeze_message: __("Transferring flock..."),
 						callback: function (r) {
 							if (!r.exc) {
+								if (r.message) {
+									frappe.show_alert({
+										message: r.message,
+										indicator: "green",
+									});
+								}
 								frm.reload_doc();
 							}
 						},
@@ -536,25 +705,24 @@ function show_transfer_dialog(
 
 function update_batch_week_ui(frm) {
 	if (!frm.doc.start_date) {
-		frm.set_value("batch_week", 0);
+		frm.set_value("batch_week", "");
 		return;
 	}
 	const ref_date =
 		frm.doc.status === "Closed" && frm.doc.end_date
 			? frm.doc.end_date
 			: frappe.datetime.get_today();
-	const age_days = frappe.datetime.get_day_diff(ref_date, frm.doc.start_date);
-	const age_weeks = Math.max(0, Math.floor(age_days / 7));
+	const age_days = Math.max(0, frappe.datetime.get_day_diff(ref_date, frm.doc.start_date));
+	const age_weeks = Math.floor(age_days / 7);
+	const week_str = age_weeks === 1 ? __("1 week") : __("{0} weeks", [age_weeks]);
+	const day_str = age_days === 1 ? __("1 day") : __("{0} days", [age_days]);
+	const val = `${week_str} (${day_str})`;
 
-	if (frm.doc.batch_week !== age_weeks) {
-		frm.set_value("batch_week", age_weeks);
+	if (frm.doc.batch_week !== val) {
+		frm.set_value("batch_week", val);
 	}
 	if (frm.fields_dict.batch_week) {
-		frm.set_df_property(
-			"batch_week",
-			"description",
-			__("Flock age: {0} weeks ({1} days)", [age_weeks, age_days])
-		);
+		frm.set_df_property("batch_week", "description", "");
 	}
 }
 
@@ -701,7 +869,7 @@ function setup_daily_logs_pagination(grid) {
 
 	grid.grid_pagination.page_length = 10;
 
-	// Override render_pagination so it ALWAYS displays pagination controls even for 1 page
+	// Override render_pagination so it ALWAYS displays pagination controls matching shadcn/ui style
 	grid.grid_pagination.render_pagination = function () {
 		const total_rows = (grid.data || []).length;
 		const page_length = this.page_length || 10;
@@ -710,84 +878,105 @@ function setup_daily_logs_pagination(grid) {
 		this.page_index = current_page;
 		this.total_pages = total_pages;
 
-		const $footer = this.wrapper.find(".grid-footer");
-		$footer.removeClass("hidden").show();
-
 		const start_idx = total_rows === 0 ? 0 : (current_page - 1) * page_length + 1;
 		const end_idx = Math.min(current_page * page_length, total_rows);
-
-		let $count_info = $footer.find(".daily-logs-count-info");
-		if (!$count_info.length) {
-			$count_info = $(
-				'<div class="daily-logs-count-info text-muted" style="font-size: 12px; display: flex; align-items: center;"></div>'
-			);
-			$footer.find(".grid-buttons").empty().append($count_info);
-		}
-		$count_info.text(
-			total_rows === 0
-				? __("No logs recorded")
-				: __("Showing {0} - {1} of {2} records", [start_idx, end_idx, total_rows])
-		);
 
 		const has_prev = current_page > 1;
 		const has_next = current_page < total_pages;
 
-		const pagination_html = `
-			<button type="button" class="btn btn-secondary btn-xs first-page" ${
-				has_prev ? "" : "disabled"
-			} style="padding: 2px 8px; font-size: 11px;">
-				${__("First")}
-			</button>
-			<button type="button" class="btn btn-secondary btn-xs prev-page" ${
-				has_prev ? "" : "disabled"
-			} style="padding: 2px 6px;">
-				<svg class="icon icon-xs" style="width: 11px; height: 11px;"><use href="#icon-chevron-left"></use></svg>
-			</button>
-			<div class="page-text" style="display: inline-flex; align-items: center; gap: 4px; font-size: 12px; margin: 0 4px;">
-				<span>${__("Page")}</span>
-				<span class="current-page-number page-number" style="font-weight: 600;">${current_page}</span>
-				<span>${__("of")}</span>
-				<span class="total-page-number page-number">${total_pages}</span>
+		const pagination_bar_html = `
+			<div class="shadcn-pagination-bar">
+				<div class="shadcn-pagination-field">
+					<div class="shadcn-select" id="shadcnCountSelect">
+						<button type="button" class="shadcn-select-trigger select-count-trigger" id="shadcnCountTrigger" title="${__(
+							"Items per page"
+						)}">
+							<span class="shadcn-select-value">${page_length}</span>
+							<span class="shadcn-select-arrow">
+								<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+							</span>
+						</button>
+						<div class="shadcn-select-content select-count-menu" id="shadcnCountMenu" role="listbox">
+							<div class="shadcn-select-item ${page_length === 10 ? "selected" : ""}" data-value="10">
+								<span>10</span>
+								<span class="item-check"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>
+							</div>
+							<div class="shadcn-select-item ${page_length === 20 ? "selected" : ""}" data-value="20">
+								<span>20</span>
+								<span class="item-check"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>
+							</div>
+							<div class="shadcn-select-item ${page_length === 50 ? "selected" : ""}" data-value="50">
+								<span>50</span>
+								<span class="item-check"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>
+							</div>
+						</div>
+					</div>
+				</div>
+
+				<div class="shadcn-pagination-right">
+					<div class="shadcn-page-info">${start_idx} - ${end_idx} of ${total_rows}</div>
+					<nav class="shadcn-pagination-content" aria-label="Pagination">
+						<button class="shadcn-pagination-item pagination-prev" ${
+							has_prev ? "" : "disabled"
+						} aria-label="${__("Go to previous page")}" title="${__("Previous page")}">
+							<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+						</button>
+						<button class="shadcn-pagination-item pagination-next" ${
+							has_next ? "" : "disabled"
+						} aria-label="${__("Go to next page")}" title="${__("Next page")}">
+							<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+						</button>
+					</nav>
+				</div>
 			</div>
-			<button type="button" class="btn btn-secondary btn-xs next-page" ${
-				has_next ? "" : "disabled"
-			} style="padding: 2px 6px;">
-				<svg class="icon icon-xs" style="width: 11px; height: 11px;"><use href="#icon-chevron-right"></use></svg>
-			</button>
-			<button type="button" class="btn btn-secondary btn-xs last-page" ${
-				has_next ? "" : "disabled"
-			} style="padding: 2px 8px; font-size: 11px;">
-				${__("Last")}
-			</button>
 		`;
 
-		const $pg = this.wrapper.find(".grid-pagination");
-		$pg.html(pagination_html);
+		const $form_grid = this.wrapper.find(".form-grid");
+		let $top_bar = this.wrapper.find(".grid-top-pagination-bar");
+		if (!$top_bar.length) {
+			$top_bar = $('<div class="grid-top-pagination-bar" style="width: 100%;"></div>');
+			$form_grid.before($top_bar);
+		}
+		$top_bar.html(pagination_bar_html);
 
-		$pg.find(".first-page")
-			.off("click")
-			.on("click", (e) => {
-				e.stopPropagation();
-				if (has_prev) this.go_to_page(1);
+		// Hide bottom footer so pagination sits cleanly ABOVE the columns
+		this.wrapper.find(".grid-footer").hide();
+
+		// Dropdown toggle
+		const $select = $top_bar.find("#shadcnCountSelect");
+		$top_bar.find("#shadcnCountTrigger").on("click", (e) => {
+			e.stopPropagation();
+			$select.toggleClass("open");
+		});
+
+		// Close dropdown on outside click
+		$(document)
+			.off("click.shadcnCount")
+			.on("click.shadcnCount", () => {
+				$select.removeClass("open");
 			});
-		$pg.find(".prev-page")
-			.off("click")
-			.on("click", (e) => {
-				e.stopPropagation();
-				if (has_prev) this.go_to_page(current_page - 1);
-			});
-		$pg.find(".next-page")
-			.off("click")
-			.on("click", (e) => {
-				e.stopPropagation();
-				if (has_next) this.go_to_page(current_page + 1);
-			});
-		$pg.find(".last-page")
-			.off("click")
-			.on("click", (e) => {
-				e.stopPropagation();
-				if (has_next) this.go_to_page(total_pages);
-			});
+
+		// Count selection
+		$top_bar.find(".shadcn-select-item").on("click", (e) => {
+			e.stopPropagation();
+			const new_len = parseInt($(e.currentTarget).attr("data-value"), 10);
+			$select.removeClass("open");
+			if (new_len !== this.page_length) {
+				this.page_length = new_len;
+				this.page_index = 1;
+				this.update_page();
+			}
+		});
+
+		// Navigation buttons
+		$top_bar.find(".pagination-prev").on("click", (e) => {
+			e.stopPropagation();
+			if (has_prev) this.go_to_page(current_page - 1);
+		});
+		$top_bar.find(".pagination-next").on("click", (e) => {
+			e.stopPropagation();
+			if (has_next) this.go_to_page(current_page + 1);
+		});
 	};
 
 	grid.grid_pagination.render_pagination();

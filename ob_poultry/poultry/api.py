@@ -2,7 +2,8 @@
 # For license information, please see license.txt
 
 import frappe
-from frappe.utils import flt, getdate, nowdate
+from frappe.query_builder.functions import Sum
+from frappe.utils import cint, flt, getdate, nowdate
 
 from ob_poultry.poultry.utils.mkisan_api import (
 	fetch_and_store_egg_rates,
@@ -80,3 +81,88 @@ def get_egg_rate_summary() -> dict:
 		],
 	)
 	return {"date": str(target_date), "rates": rates}
+
+
+@frappe.whitelist(methods=["GET", "POST"])
+def get_batch_egg_stock(batch: str) -> dict:
+	"""Return total eggs produced, sold, and available for a given Poultry Batch."""
+	if not batch:
+		return {"eggs_left": 0, "trays": 0, "rem_eggs": 0, "summary": "0 eggs"}
+
+	batch_doc = frappe.db.get_value(
+		"Poultry Batch",
+		batch,
+		["name", "batch_name", "shed", "status"],
+		as_dict=True,
+	)
+	if not batch_doc:
+		return {"eggs_left": 0, "trays": 0, "rem_eggs": 0, "summary": "0 eggs"}
+
+	batch_title = batch_doc.get("batch_name") or batch_doc.get("name")
+
+	# Fetch total produced eggs for this batch from Poultry Daily Log Egg Entry
+	pdl_egg = frappe.qb.DocType("Poultry Daily Log Egg Entry")
+	pdl = frappe.qb.DocType("Poultry Daily Log")
+	prod_query = (
+		frappe.qb.from_(pdl_egg)
+		.join(pdl)
+		.on(pdl.name == pdl_egg.parent)
+		.select(
+			Sum(pdl_egg.total_eggs).as_("total_produced"),
+			Sum(pdl_egg.good_eggs).as_("good_eggs"),
+			Sum(pdl_egg.broken_eggs).as_("broken_eggs"),
+		)
+		.where(pdl_egg.batch == batch)
+		.where(pdl.docstatus < 2)
+	)
+	prod_res = prod_query.run(as_dict=True)
+	total_produced = cint(prod_res[0].total_produced) if prod_res and prod_res[0].total_produced else 0
+
+	# Fetch total eggs sold via Daily Log Sales Entry
+	pdl_sales = frappe.qb.DocType("Poultry Daily Log Sales Entry")
+	sales_query = (
+		frappe.qb.from_(pdl_sales)
+		.join(pdl)
+		.on(pdl.name == pdl_sales.parent)
+		.select(
+			Sum(pdl_sales.good_eggs + pdl_sales.broken_eggs + pdl_sales.double_yolk_eggs).as_("total_sold")
+		)
+		.where(pdl_sales.batch == batch)
+		.where(pdl.docstatus < 2)
+	)
+	sales_res = sales_query.run(as_dict=True)
+	total_sold = cint(sales_res[0].total_sold) if sales_res and sales_res[0].total_sold else 0
+
+	# Fetch total eggs ordered in submitted / open Sales Orders for this batch
+	so_item = frappe.qb.DocType("Sales Order Item")
+	so = frappe.qb.DocType("Sales Order")
+	so_query = (
+		frappe.qb.from_(so_item)
+		.join(so)
+		.on(so.name == so_item.parent)
+		.select(Sum(so_item.qty).as_("so_qty"))
+		.where(so_item.poultry_batch == batch)
+		.where(so.docstatus == 1)
+		.where(so.status.notin(["Completed", "Cancelled", "Closed"]))
+	)
+	so_res = so_query.run(as_dict=True)
+	so_ordered = cint(so_res[0].so_qty) if so_res and so_res[0].so_qty else 0
+
+	eggs_left = max(0, total_produced - total_sold - so_ordered)
+	trays = eggs_left // 30
+	rem_eggs = eggs_left % 30
+
+	summary = (
+		f"{eggs_left:,} eggs ({trays:,} trays, {rem_eggs} eggs)" if eggs_left > 0 else "0 eggs (0 trays)"
+	)
+
+	return {
+		"batch": batch,
+		"batch_name": batch_title,
+		"total_produced": total_produced,
+		"total_sold": total_sold,
+		"eggs_left": eggs_left,
+		"trays": trays,
+		"rem_eggs": rem_eggs,
+		"summary": summary,
+	}

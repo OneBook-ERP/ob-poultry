@@ -14,8 +14,9 @@ def setup_custom_fields():
 				"label": "Poultry Batch",
 				"fieldtype": "Link",
 				"options": "Poultry Batch",
-				"insert_after": "item_name",
+				"insert_after": "fg_item_qty",
 				"in_list_view": 1,
+				"columns": 2,
 			},
 			{
 				"fieldname": "poultry_shed",
@@ -31,8 +32,9 @@ def setup_custom_fields():
 				"label": "Poultry Batch",
 				"fieldtype": "Link",
 				"options": "Poultry Batch",
-				"insert_after": "item_name",
+				"insert_after": "has_item_scanned",
 				"in_list_view": 1,
+				"columns": 2,
 			},
 			{
 				"fieldname": "poultry_shed",
@@ -48,8 +50,9 @@ def setup_custom_fields():
 				"label": "Poultry Batch",
 				"fieldtype": "Link",
 				"options": "Poultry Batch",
-				"insert_after": "item_name",
+				"insert_after": "has_item_scanned",
 				"in_list_view": 1,
+				"columns": 2,
 			},
 			{
 				"fieldname": "poultry_shed",

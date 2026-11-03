@@ -9,6 +9,11 @@ class PoultryBatch(Document):
 		self.load_daily_logs_history()
 
 	def validate(self):
+		if not self.batch_name:
+			num = self.name.split("-")[-1] if self.name and "-" in self.name else (self.name or "")
+			clean_num = str(cint(num)) if num.isdigit() else num
+			self.batch_name = f"Batch {clean_num}" if clean_num else (self.name or "Batch")
+
 		if not self.is_new():
 			db_doc = self.get_doc_before_save()
 			if db_doc:
@@ -31,11 +36,14 @@ class PoultryBatch(Document):
 
 	def update_batch_week(self):
 		if not self.start_date:
-			self.batch_week = 0
+			self.batch_week = ""
 			return
 		ref_date = self.end_date if (self.status == "Closed" and self.end_date) else nowdate()
-		days = date_diff(ref_date, self.start_date)
-		self.batch_week = max(0, int(flt(days) // 7))
+		days = max(0, date_diff(ref_date, self.start_date))
+		weeks = int(days // 7)
+		week_str = f"{weeks} week{'s' if weeks != 1 else ''}"
+		day_str = f"{days} day{'s' if days != 1 else ''}"
+		self.batch_week = f"{week_str} ({day_str})"
 
 	def validate_layer_sexed_counts(self):
 		if self.breed_type == "Layer":
@@ -342,18 +350,18 @@ class PoultryBatch(Document):
 		self.save()
 		self.recalculate_performance()
 		remaining_in_source = shed_counts.get(from_shed, 0)
-		frappe.msgprint(
-			_(
-				"Successfully transferred {0} birds from {1} to {2} ({3} birds placed, {4} transit mortality, {5} remaining in {1})"
-			).format(
-				birds_to_transfer,
-				from_shed,
-				new_shed,
-				birds_placed,
-				transit_mortality,
-				remaining_in_source,
-			)
+		msg = _(
+			"Successfully transferred {0} birds from {1} to {2} ({3} birds placed, {4} transit mortality, {5} remaining in {1})"
+		).format(
+			birds_to_transfer,
+			from_shed,
+			new_shed,
+			birds_placed,
+			transit_mortality,
+			remaining_in_source,
 		)
+		frappe.msgprint(msg, alert=True)
+		return msg
 
 	@frappe.whitelist()
 	def transfer_to_layer_house(

@@ -64,10 +64,44 @@
             "in_list_view": 1
         },
         {
+            "fieldname": "section_break_hatch_results",
+            "fieldtype": "Section Break"
+        },
+        {
+            "fieldname": "hatched_egg",
+            "fieldtype": "Int",
+            "label": "Hatched Egg",
+            "in_list_view": 1
+        },
+        {
+            "fieldname": "move_to_stock",
+            "fieldtype": "Int",
+            "label": "Move to Stock",
+            "depends_on": "eval:doc.hatched_egg !== undefined && doc.hatched_egg !== null && doc.hatched_egg !== ''"
+        },
+        {
+            "fieldname": "column_break_hatch_results_2",
+            "fieldtype": "Column Break"
+        },
+        {
+            "fieldname": "remaining_eggs",
+            "fieldtype": "Int",
+            "label": "Remaining Eggs",
+            "read_only": 1,
+            "in_list_view": 1,
+            "depends_on": "eval:doc.hatched_egg !== undefined && doc.hatched_egg !== null && doc.hatched_egg !== ''"
+        },
+        {
+            "fieldname": "wasted_eggs",
+            "fieldtype": "Int",
+            "label": "Wasted Eggs",
+            "depends_on": "eval:doc.hatched_egg !== undefined && doc.hatched_egg !== null && doc.hatched_egg !== ''"
+        },
+        {
             "fieldname": "initial_bird_count",
             "fieldtype": "Int",
             "label": "Initial Bird Count",
-            "in_list_view": 1
+            "hidden": 1
         },
         {
             "fieldname": "section_break_hatch_dates",

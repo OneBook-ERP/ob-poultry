@@ -11,4 +11,3 @@ def validate_sales_order(doc, method=None):
 		for item in items:
 			if not item.delivery_date or item.delivery_date != doc.delivery_date:
 				item.delivery_date = doc.delivery_date
-

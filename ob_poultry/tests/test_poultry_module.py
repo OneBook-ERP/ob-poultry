@@ -1426,8 +1426,8 @@ class TestPoultryModule(IntegrationTestCase):
 			}
 		).insert(ignore_permissions=True)
 
-		# Verify batch_week is 18
-		self.assertEqual(batch.batch_week, 18)
+		# Verify batch_week is 18 weeks (126 days)
+		self.assertEqual(batch.batch_week, "18 weeks (126 days)")
 
 		# Verify Layer sexed count: male is 0, female is 5000
 		self.assertEqual(batch.male_bird_count, 0)
@@ -1490,6 +1490,58 @@ class TestPoultryModule(IntegrationTestCase):
 		transfer = frappe.get_doc("Poultry Chick Transfer", res["transfer"])
 		self.assertEqual(transfer.docstatus, 1)
 		self.assertEqual(transfer.quantity, 4200)
+
+	def test_hatch_eggs_and_unhatched_allocation(self):
+		hatchery = frappe.get_doc(
+			{
+				"doctype": "Poultry Hatchery",
+				"hatchery_name": "Allocation Test Hatchery",
+				"breed_type": "Layer",
+				"capacity_eggs": 10000,
+			}
+		).insert(ignore_permissions=True)
+
+		hatch = frappe.get_doc(
+			{
+				"doctype": "Poultry Hatch",
+				"hatchery": hatchery.name,
+				"schedule_date": nowdate(),
+				"initial_egg_count": 1000,
+				"hatched_egg": 850,
+				"move_to_stock": 100,
+				"wasted_eggs": 50,
+			}
+		).insert(ignore_permissions=True)
+
+		self.assertEqual(hatch.remaining_eggs, 150)
+		self.assertEqual(hatch.initial_bird_count, 850)
+		self.assertEqual(hatch.actual_chicks, 850)
+
+		# Range check: move_to_stock + wasted_eggs > remaining_eggs should fail
+		with self.assertRaises(frappe.ValidationError):
+			frappe.get_doc(
+				{
+					"doctype": "Poultry Hatch",
+					"hatchery": hatchery.name,
+					"schedule_date": nowdate(),
+					"initial_egg_count": 1000,
+					"hatched_egg": 850,
+					"move_to_stock": 120,
+					"wasted_eggs": 50,
+				}
+			).insert(ignore_permissions=True)
+
+		# Range check: hatched_egg > initial_egg_count should fail
+		with self.assertRaises(frappe.ValidationError):
+			frappe.get_doc(
+				{
+					"doctype": "Poultry Hatch",
+					"hatchery": hatchery.name,
+					"schedule_date": nowdate(),
+					"initial_egg_count": 1000,
+					"hatched_egg": 1050,
+				}
+			).insert(ignore_permissions=True)
 
 	def test_batch_breed_and_initial_count_immutable(self):
 		batch = frappe.get_doc(

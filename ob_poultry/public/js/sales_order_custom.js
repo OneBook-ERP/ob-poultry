@@ -4,16 +4,22 @@
 frappe.ui.form.on("Sales Order", {
 	setup(frm) {
 		setup_customer_query(frm);
+		reorder_items_grid_columns(frm);
+		load_batch_names(frm);
 	},
 
 	onload(frm) {
 		setup_customer_query(frm);
+		reorder_items_grid_columns(frm);
+		load_batch_names(frm);
 	},
 
 	refresh(frm) {
 		setup_customer_query(frm);
 		setup_egg_rate_actions(frm);
 		fetch_and_display_egg_rates(frm);
+		reorder_items_grid_columns(frm);
+		load_batch_names(frm);
 	},
 
 	delivery_date(frm) {
@@ -41,6 +47,37 @@ frappe.ui.form.on("Sales Order Item", {
 
 	uom(frm, cdt, cdn) {
 		auto_apply_egg_rate_to_row(frm, cdt, cdn);
+	},
+
+	poultry_batch(frm, cdt, cdn) {
+		let row = locals[cdt][cdn];
+		if (!row || !row.poultry_batch) return;
+
+		frappe.call({
+			method: "ob_poultry.poultry.api.get_batch_egg_stock",
+			args: { batch: row.poultry_batch },
+			callback(r) {
+				if (r.message) {
+					let data = r.message;
+					let bname = data.batch_name || row.poultry_batch;
+					frappe.show_alert(
+						{
+							message: __("🥚 {0}: {1} left in stock", [bname, data.summary]),
+							indicator: data.eggs_left > 0 ? "green" : "orange",
+						},
+						6
+					);
+					if (!row.description) {
+						frappe.model.set_value(
+							cdt,
+							cdn,
+							"description",
+							__("Batch: {0} ({1} left in stock)", [bname, data.summary])
+						);
+					}
+				}
+			},
+		});
 	},
 });
 
@@ -258,4 +295,58 @@ function get_rate_for_uom(frm, uom) {
 		return flt(info.rate_per_100);
 	}
 	return flt(info.rate_per_piece);
+}
+
+function reorder_items_grid_columns(frm) {
+	let grid = frm.fields_dict.items && frm.fields_dict.items.grid;
+	if (!grid || !grid.docfields) return;
+
+	let pb_idx = grid.docfields.findIndex((df) => df.fieldname === "poultry_batch");
+	if (pb_idx !== -1) {
+		let pb_field = grid.docfields.splice(pb_idx, 1)[0];
+		pb_field.in_list_view = 1;
+		pb_field.columns = 2;
+
+		let item_idx = grid.docfields.findIndex((df) => df.fieldname === "item_code");
+		if (item_idx !== -1) {
+			grid.docfields.splice(item_idx, 0, pb_field);
+		} else {
+			grid.docfields.unshift(pb_field);
+		}
+
+		// Attach batch name formatter so grid displays Batch Name instead of raw ID
+		pb_field.formatter = function (value) {
+			if (!value) return "";
+			if (frm._batch_names && frm._batch_names[value]) {
+				return `<span style="font-weight: 500;">${frm._batch_names[value]}</span>`;
+			}
+			return value;
+		};
+
+		grid.visible_columns = null;
+		grid.setup_visible_columns();
+		if (grid.make_head) grid.make_head();
+		grid.refresh();
+	}
+}
+
+function load_batch_names(frm) {
+	if (!frm._batch_names) {
+		frm._batch_names = {};
+		frappe.db
+			.get_list("Poultry Batch", {
+				fields: ["name", "batch_name"],
+				limit: 1000,
+			})
+			.then((batches) => {
+				if (batches) {
+					batches.forEach((b) => {
+						frm._batch_names[b.name] = b.batch_name || b.name;
+					});
+					if (frm.fields_dict.items && frm.fields_dict.items.grid) {
+						frm.fields_dict.items.grid.refresh();
+					}
+				}
+			});
+	}
 }

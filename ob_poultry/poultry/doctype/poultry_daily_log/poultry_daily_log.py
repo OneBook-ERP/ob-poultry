@@ -189,6 +189,9 @@ class PoultryDailyLog(Document):
 			total_dead += cint(row.dead)
 			total_culls += cint(row.culled)
 
+		if not self.flock_entries and self.get("mortality_details"):
+			total_dead = sum(cint(r.count) for r in self.mortality_details)
+
 		self.total_mortality = total_dead
 		self.total_culled = total_culls
 
@@ -498,7 +501,7 @@ def get_active_sheds():
 		)
 		shed["active_batches_count"] = len(batches)
 		shed["total_birds"] = sum(cint(b.current_bird_count) for b in batches)
-		shed["breeds"] = ", ".join(sorted(list({b.breed for b in batches if b.breed})))
+		shed["breeds"] = ", ".join(sorted(list({b.breed for b in batches if b.breed})))[:130]
 
 	return sheds
 

@@ -58,7 +58,9 @@ function load_default_values(frm) {
 				}
 				frm.refresh_field("benchmarks");
 				frappe.show_alert({
-					message: __("Loaded real-world default benchmark values for {0}", [breed_type]),
+					message: __("Loaded real-world default benchmark values for {0}", [
+						breed_type,
+					]),
 					indicator: "green",
 				});
 			}
@@ -79,7 +81,9 @@ frappe.ui.form.on("Poultry Breed", {
 		frm.add_custom_button(__("Load Default Values"), () => {
 			const breed_type = frm.doc.breed_type || "Broiler";
 			frappe.confirm(
-				__("Are you sure you want to load default benchmark values for {0}?", [breed_type]),
+				__("Are you sure you want to load default benchmark values for {0}?", [
+					breed_type,
+				]),
 				() => {
 					load_default_values(frm);
 				}
@@ -97,11 +101,18 @@ frappe.ui.form.on("Poultry Breed", {
 	breed_type(frm) {
 		if (frm.doc.breed_type) {
 			let has_metrics = (frm.doc.benchmarks || []).some(
-				(r) => (r.standard_body_weight_g > 0 || r.standard_feed_per_bird_g > 0 || r.standard_mortality_pct > 0 || r.standard_fcr > 0)
+				(r) =>
+					r.standard_body_weight_g > 0 ||
+					r.standard_feed_per_bird_g > 0 ||
+					r.standard_mortality_pct > 0 ||
+					r.standard_fcr > 0
 			);
 			if (has_metrics) {
 				frappe.confirm(
-					__("Update days lineup to match {0}? Existing metric values will be replaced.", [frm.doc.breed_type]),
+					__(
+						"Update days lineup to match {0}? Existing metric values will be replaced.",
+						[frm.doc.breed_type]
+					),
 					() => {
 						populate_days_lineup(frm);
 					}
@@ -115,8 +126,9 @@ frappe.ui.form.on("Poultry Breed", {
 
 function sync_day_bounds(cdt, cdn) {
 	let row = locals[cdt][cdn];
-	let from_day = (row.from_day !== null && row.from_day !== undefined) ? parseInt(row.from_day, 10) : null;
-	let to_day = (row.to_day !== null && row.to_day !== undefined) ? parseInt(row.to_day, 10) : null;
+	let from_day =
+		row.from_day !== null && row.from_day !== undefined ? parseInt(row.from_day, 10) : null;
+	let to_day = row.to_day !== null && row.to_day !== undefined ? parseInt(row.to_day, 10) : null;
 
 	if (!isNaN(from_day) && from_day !== null) {
 		frappe.model.set_value(cdt, cdn, "day_start", from_day);
