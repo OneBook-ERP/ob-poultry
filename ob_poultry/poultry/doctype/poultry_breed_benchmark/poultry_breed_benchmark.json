@@ -49,6 +49,13 @@
             "columns": 2
         },
         {
+            "fieldname": "standard_hdep_pct",
+            "fieldtype": "Percent",
+            "label": "Standard HDEP %",
+            "in_list_view": 1,
+            "columns": 2
+        },
+        {
             "fieldname": "age_in_days",
             "fieldtype": "Data",
             "label": "Age (Days)",

@@ -19,6 +19,7 @@
   "column_break_shed_right",
   "record_weight",
   "average_body_weight_g",
+  "benchmark_variance_html",
   "section_break_eggs",
   "egg_entries",
   "total_eggs_produced",
@@ -133,6 +134,12 @@
    "fieldname": "average_body_weight_g",
    "fieldtype": "Float",
    "label": "Average Body Weight (g)"
+  },
+  {
+   "fieldname": "benchmark_variance_html",
+   "fieldtype": "HTML",
+   "hidden": 1,
+   "label": "Benchmark Variance & Health Check"
   },
   {
    "fieldname": "section_break_eggs",

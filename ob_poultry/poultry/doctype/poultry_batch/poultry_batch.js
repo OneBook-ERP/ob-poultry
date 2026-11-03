@@ -471,24 +471,26 @@ function show_transfer_dialog(
 
 function update_batch_week_ui(frm) {
 	if (!frm.doc.start_date) {
-		frm.set_value("batch_week", 0);
+		frm.set_value("batch_week", "W0 D0");
 		return;
 	}
 	const ref_date =
 		frm.doc.status === "Closed" && frm.doc.end_date
 			? frm.doc.end_date
 			: frappe.datetime.get_today();
-	const age_days = frappe.datetime.get_day_diff(ref_date, frm.doc.start_date);
-	const age_weeks = Math.max(0, Math.floor(age_days / 7));
+	const age_days = Math.max(0, frappe.datetime.get_day_diff(ref_date, frm.doc.start_date));
+	const age_weeks = Math.floor(age_days / 7);
+	const day_rem = age_days % 7;
+	const week_day_str = `W${age_weeks} D${day_rem}`;
 
-	if (frm.doc.batch_week !== age_weeks) {
-		frm.set_value("batch_week", age_weeks);
+	if (frm.doc.batch_week !== week_day_str) {
+		frm.set_value("batch_week", week_day_str);
 	}
 	if (frm.fields_dict.batch_week) {
 		frm.set_df_property(
 			"batch_week",
 			"description",
-			__("Flock age: {0} weeks ({1} days)", [age_weeks, age_days])
+			__("Flock age: {0} ({1} days)", [week_day_str, age_days])
 		);
 	}
 }

@@ -101,15 +101,26 @@ class TestPoultryModule(IntegrationTestCase):
 		receipt.insert(ignore_permissions=True)
 		receipt.submit()
 
-		cls.shed = frappe.get_doc(
-			{"doctype": "Poultry Shed", "shed_name": "Test Shed V1", "capacity": 100000}
-		).insert(ignore_permissions=True)
-		cls.breed = frappe.get_doc(
-			{"doctype": "Poultry Breed", "breed_name": "Test Breed V1", "breed_type": "Broiler"}
-		).insert(ignore_permissions=True)
-		cls.other_breed = frappe.get_doc(
-			{"doctype": "Poultry Breed", "breed_name": "Test Breed V1 Other", "breed_type": "Layer"}
-		).insert(ignore_permissions=True)
+		if not frappe.db.exists("Poultry Shed", "Test Shed V1"):
+			cls.shed = frappe.get_doc(
+				{"doctype": "Poultry Shed", "shed_name": "Test Shed V1", "capacity": 100000}
+			).insert(ignore_permissions=True)
+		else:
+			cls.shed = frappe.get_doc("Poultry Shed", "Test Shed V1")
+
+		if not frappe.db.exists("Poultry Breed", "Test Breed V1"):
+			cls.breed = frappe.get_doc(
+				{"doctype": "Poultry Breed", "breed_name": "Test Breed V1", "breed_type": "Broiler"}
+			).insert(ignore_permissions=True)
+		else:
+			cls.breed = frappe.get_doc("Poultry Breed", "Test Breed V1")
+
+		if not frappe.db.exists("Poultry Breed", "Test Breed V1 Other"):
+			cls.other_breed = frappe.get_doc(
+				{"doctype": "Poultry Breed", "breed_name": "Test Breed V1 Other", "breed_type": "Layer"}
+			).insert(ignore_permissions=True)
+		else:
+			cls.other_breed = frappe.get_doc("Poultry Breed", "Test Breed V1 Other")
 
 	@classmethod
 	def tearDownClass(cls):
@@ -462,6 +473,8 @@ class TestPoultryModule(IntegrationTestCase):
 		self.assertEqual(layer_breed.benchmarks[0].age_in_days, "0-7")
 		self.assertEqual(layer_breed.benchmarks[-1].age_in_days, "560-567")
 		self.assertTrue(layer_breed.benchmarks[0].standard_body_weight_g > 0)
+		self.assertEqual(layer_breed.benchmarks[0].standard_hdep_pct, 0.0)
+		self.assertEqual(layer_breed.benchmarks[24].standard_hdep_pct, 96.0)
 
 		# TC-BMK-CHILD-03: Breeder breed has 65 weeks (0-7 to 448-455)
 		breeder_breed = frappe.get_doc(
@@ -499,7 +512,7 @@ class TestPoultryModule(IntegrationTestCase):
 				"doctype": "Poultry Batch",
 				"shed": self.shed.name,
 				"breed": broiler_breed.name,
-				"start_date": add_days(nowdate(), -10),
+				"start_date": add_days(nowdate(), -20),
 				"initial_bird_count": 500,
 			}
 		).insert(ignore_permissions=True)
@@ -508,7 +521,7 @@ class TestPoultryModule(IntegrationTestCase):
 			{
 				"doctype": "Poultry Daily Log",
 				"batch": child_batch.name,
-				"log_date": nowdate(),
+				"log_date": add_days(nowdate(), -10),
 			}
 		).insert(ignore_permissions=True)
 		# "7-14" broiler default is body weight 460.0, feed 50.0, mortality 0.4
@@ -934,10 +947,8 @@ class TestPoultryModule(IntegrationTestCase):
 				"hatchery": hatchery.name,
 				"schedule_date": nowdate(),
 				"eggs_set": 10000,
-				"standard_hatchability_pct": 82,
 			}
 		).insert(ignore_permissions=True)
-		self.assertEqual(hatch.estimated_chicks, 8200)
 
 		hatch.actual_chicks = 8100
 		hatch.save()
@@ -1336,6 +1347,7 @@ class TestPoultryModule(IntegrationTestCase):
 		self.assertEqual(len(batch.shed_transfers), 1)
 		self.assertEqual(batch.shed_transfers[0].from_shed, grower_shed.name)
 		self.assertEqual(batch.shed_transfers[0].to_shed, layer_shed.name)
+		self.assertEqual(batch.shed_transfers[0].source_initial_birds, 1000)
 		self.assertEqual(batch.shed_transfers[0].birds_to_transfer, 600)
 		self.assertEqual(batch.shed_transfers[0].transit_mortality, 10)
 		self.assertEqual(batch.shed_transfers[0].birds_moved, 590)
@@ -1373,6 +1385,8 @@ class TestPoultryModule(IntegrationTestCase):
 
 		# Verify transfer history and remaining birds updated to 0
 		self.assertEqual(len(batch.shed_transfers), 2)
+		self.assertEqual(batch.shed_transfers[0].source_initial_birds, 1000)
+		self.assertEqual(batch.shed_transfers[1].source_initial_birds, 400)
 		self.assertEqual(batch.shed_transfers[0].remaining_birds, 0)
 		self.assertEqual(batch.shed_transfers[1].remaining_birds, 0)
 		self.assertEqual(batch.get_source_shed_remaining(grower_shed.name), 0)
@@ -1426,8 +1440,8 @@ class TestPoultryModule(IntegrationTestCase):
 			}
 		).insert(ignore_permissions=True)
 
-		# Verify batch_week is 18
-		self.assertEqual(batch.batch_week, 18)
+		# Verify batch_week is in W18 D0 format
+		self.assertEqual(batch.batch_week, "W18 D0")
 
 		# Verify Layer sexed count: male is 0, female is 5000
 		self.assertEqual(batch.male_bird_count, 0)

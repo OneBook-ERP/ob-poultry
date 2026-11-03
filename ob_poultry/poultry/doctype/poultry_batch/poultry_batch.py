@@ -20,11 +20,16 @@ class PoultryBatch(Document):
 
 	def update_batch_week(self):
 		if not self.start_date:
-			self.batch_week = 0
+			self.batch_week = "W0 D0"
 			return
 		ref_date = self.end_date if (self.status == "Closed" and self.end_date) else nowdate()
 		days = date_diff(ref_date, self.start_date)
-		self.batch_week = max(0, int(flt(days) // 7))
+		if days < 0:
+			self.batch_week = "W0 D0"
+			return
+		weeks = max(0, int(flt(days) // 7))
+		day_rem = max(0, int(flt(days) % 7))
+		self.batch_week = f"W{weeks} D{day_rem}"
 
 	def validate_layer_sexed_counts(self):
 		if self.breed_type == "Layer":
@@ -73,12 +78,16 @@ class PoultryBatch(Document):
 		for row in self.get("shed_transfers", []):
 			rem = counts.get(row.from_shed, 0)
 			row.remaining_birds = rem
+			if not getattr(row, "source_initial_birds", None):
+				row.source_initial_birds = (row.remaining_birds or 0) + (row.birds_to_transfer or row.birds_moved or 0)
 			if getattr(row, "name", None) and not str(row.name).startswith("new-"):
 				frappe.db.set_value(
 					"Poultry Batch Shed Transfer",
 					row.name,
-					"remaining_birds",
-					rem,
+					{
+						"remaining_birds": rem,
+						"source_initial_birds": row.source_initial_birds,
+					},
 					update_modified=False,
 				)
 
@@ -235,6 +244,7 @@ class PoultryBatch(Document):
 				"from_shed": from_shed,
 				"to_shed": new_shed,
 				"transfer_date": transfer_date,
+				"source_initial_birds": available_birds,
 				"birds_to_transfer": birds_to_transfer,
 				"transit_mortality": transit_mortality,
 				"birds_moved": birds_placed,

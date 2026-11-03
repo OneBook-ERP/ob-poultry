@@ -1,3 +1,4 @@
+from erpnext.stock.get_item_details import get_conversion_factor
 import frappe
 from frappe import _
 from frappe.model.document import Document
@@ -124,14 +125,54 @@ class PoultryDailyLog(Document):
 		self.compute_feed_rollups()
 		self.compute_sales_rollups()
 
-		# Keep summary fields synced for home page reflection
-		self.feed_consumed_kg = self.total_feed_consumed_kg
-		self.mortality_count = self.total_mortality
-		self.cull_count = self.total_culled
+		# Support legacy mortality_details if flock_entries not present
+		if self.get("mortality_details") and not self.flock_entries:
+			self.mortality_count = sum(cint(r.get("count") or getattr(r, "count", 0)) for r in self.mortality_details)
+			self.total_mortality = self.mortality_count
+			self.total_culled = cint(self.cull_count)
+		elif self.flock_entries:
+			self.mortality_count = self.total_mortality
+			self.cull_count = self.total_culled
+		else:
+			self.mortality_count = cint(self.mortality_count)
+			self.cull_count = cint(self.cull_count)
+			self.total_mortality = self.mortality_count
+			self.total_culled = self.cull_count
+
+		# Support legacy feed_consumed_kg if feed_entries not present
+		if not self.feed_entries and self.feed_consumed_kg:
+			self.total_feed_consumed_kg = flt(self.feed_consumed_kg)
+		elif self.feed_entries:
+			self.feed_consumed_kg = self.total_feed_consumed_kg
+		else:
+			self.feed_consumed_kg = flt(self.feed_consumed_kg)
+			self.total_feed_consumed_kg = self.feed_consumed_kg
+
+		self.apply_feed_uom_conversion()
 
 		if self.get("batch"):
 			self.validate_bird_count()
+			self.compute_daily_mortality_pct()
 			self.apply_benchmarks()
+
+	def apply_feed_uom_conversion(self):
+		if not (self.get("feed_uom") and self.get("feed_qty")):
+			return
+		if not self.get("feed_item"):
+			frappe.throw(_("Set a Feed Item before entering Feed Qty in an alternate unit"))
+		conversion_factor = flt(get_conversion_factor(self.feed_item, self.feed_uom).get("conversion_factor"))
+		if not conversion_factor:
+			frappe.throw(_("No UOM conversion factor found for {0} and {1}").format(self.feed_item, self.feed_uom))
+		self.feed_consumed_kg = round(flt(self.feed_qty) * conversion_factor, 3)
+		self.total_feed_consumed_kg = self.feed_consumed_kg
+
+	def compute_daily_mortality_pct(self):
+		if self.batch_doc and self.batch_doc.current_bird_count:
+			self.daily_mortality_pct = round(
+				(flt(self.mortality_count) / self.batch_doc.current_bird_count * 100), 2
+			)
+		else:
+			self.daily_mortality_pct = 0.0
 
 	def on_update(self):
 		self.update_batch_flocks()
@@ -164,9 +205,12 @@ class PoultryDailyLog(Document):
 					b.insert(ignore_permissions=True)
 
 	def validate_unique_daily_log(self):
+		filters = {"log_date": self.log_date}
+		if not self.is_new() and self.name:
+			filters["name"] = ("!=", self.name)
 		existing = frappe.db.get_value(
 			"Poultry Daily Log",
-			{"log_date": self.log_date, "name": ("!=", self.name)},
+			filters,
 			"name",
 		)
 		if existing:
@@ -325,83 +369,17 @@ class PoultryDailyLog(Document):
 		if not batch or not getattr(batch, "breed", None):
 			return
 		age_in_days = date_diff(self.log_date, batch.start_date)
-		benchmark = None
-
-		if frappe.db.table_exists("Poultry Breed Benchmark"):
-			all_rows = frappe.db.sql(
-				"""
-				select standard_mortality_pct, standard_feed_per_bird_g, standard_body_weight_g, standard_fcr,
-				       day_start, day_end, age_in_days, from_day, to_day
-				from `tabPoultry Breed Benchmark`
-				where parent = %s and parenttype = 'Poultry Breed'
-				order by idx asc, coalesce(day_start, from_day) asc
-				""",
-				(batch.breed,),
-				as_dict=True,
-			)
-			for r in all_rows:
-				if r.day_start is None and r.get("from_day") is not None:
-					r.day_start = r.get("from_day")
-				if r.day_end is None and r.get("to_day") is not None:
-					r.day_end = r.get("to_day")
-			rows = [
-				r
-				for r in all_rows
-				if any(
-					(r.get(f) or 0) > 0
-					for f in (
-						"standard_mortality_pct",
-						"standard_feed_per_bird_g",
-						"standard_body_weight_g",
-						"standard_fcr",
-					)
-				)
-			]
-			if rows:
-				exact = [
-					r
-					for r in rows
-					if (
-						r.day_start is not None
-						and r.day_end is not None
-						and r.day_start <= age_in_days <= r.day_end
-					)
-				]
-				if exact:
-					benchmark = exact[-1]
-				else:
-					earlier = [
-						r
-						for r in rows
-						if (r.day_start is not None and r.day_start <= age_in_days)
-						or (r.day_end is not None and r.day_end <= age_in_days)
-					]
-					if earlier:
-						benchmark = earlier[-1]
-
-		if not benchmark and frappe.db.table_exists("Poultry Benchmark"):
-			legacy = frappe.db.sql(
-				"""
-				select standard_mortality_pct, standard_feed_per_bird_g, standard_body_weight_g
-				from `tabPoultry Benchmark`
-				where breed = %s and age_in_days <= %s
-				order by age_in_days desc
-				limit 1
-				""",
-				(batch.breed, age_in_days),
-				as_dict=True,
-			)
-			if legacy:
-				benchmark = legacy[0]
-
+		benchmark = get_benchmark_for_age(batch.breed, age_in_days)
 		if not benchmark:
 			self.std_mortality_pct = None
 			self.std_feed_per_bird_g = None
 			self.std_body_weight_g = None
+			self.std_hdep_pct = None
 			return
 		self.std_mortality_pct = benchmark.get("standard_mortality_pct")
 		self.std_feed_per_bird_g = benchmark.get("standard_feed_per_bird_g")
 		self.std_body_weight_g = benchmark.get("standard_body_weight_g")
+		self.std_hdep_pct = benchmark.get("standard_hdep_pct")
 
 	def on_submit(self):
 		self.update_batch_flocks()
@@ -459,6 +437,8 @@ class PoultryDailyLog(Document):
 			batch_doc.current_bird_count = max(0, cint(row.closing_birds))
 			batch_doc.total_mortality = cint(batch_doc.total_mortality) + cint(row.dead)
 			batch_doc.save(ignore_permissions=True)
+		if not self.flock_entries and self.get("batch") and hasattr(self.batch_doc, "recalculate_performance"):
+			self.batch_doc.recalculate_performance()
 
 	def issue_feed_stock(self):
 		for row in self.feed_entries:
@@ -478,6 +458,9 @@ class PoultryDailyLog(Document):
 					flt(frappe.db.get_value("Poultry Batch", row.batch, "cumulative_feed_kg"))
 					+ row.feed_spent_kg,
 				)
+		if not self.feed_entries and self.get("batch") and self.get("feed_consumed_kg"):
+			current_feed = flt(frappe.db.get_value("Poultry Batch", self.batch, "cumulative_feed_kg"))
+			frappe.db.set_value("Poultry Batch", self.batch, "cumulative_feed_kg", current_feed + flt(self.feed_consumed_kg))
 
 
 @frappe.whitelist()
@@ -498,7 +481,7 @@ def get_active_sheds():
 		)
 		shed["active_batches_count"] = len(batches)
 		shed["total_birds"] = sum(cint(b.current_bird_count) for b in batches)
-		shed["breeds"] = ", ".join(sorted(list({b.breed for b in batches if b.breed})))
+		shed["breeds"] = ", ".join(sorted(list({b.breed for b in batches if b.breed})))[:130]
 
 	return sheds
 
@@ -573,6 +556,122 @@ def get_batch_opening_figures(batch, log_dt, current_birds_fallback=0):
 	return opening_birds, opening_eggs
 
 
+def get_benchmark_for_age(breed, age_in_days, breed_type=None):
+	if not breed and not breed_type:
+		return {}
+	benchmark = {}
+	if breed and frappe.db.table_exists("Poultry Breed Benchmark"):
+		all_rows = frappe.db.sql(
+			"""
+			select standard_mortality_pct, standard_feed_per_bird_g, standard_body_weight_g, standard_fcr, standard_hdep_pct,
+			       day_start, day_end, age_in_days, from_day, to_day
+			from `tabPoultry Breed Benchmark`
+			where parent = %s and parenttype = 'Poultry Breed'
+			order by idx asc, coalesce(day_start, from_day) asc
+			""",
+			(breed,),
+			as_dict=True,
+		)
+		for r in all_rows:
+			if r.day_start is None and r.get("from_day") is not None:
+				r.day_start = r.get("from_day")
+			if r.day_end is None and r.get("to_day") is not None:
+				r.day_end = r.get("to_day")
+		rows = [
+			r
+			for r in all_rows
+			if any(
+				(r.get(f) or 0) > 0
+				for f in (
+					"standard_mortality_pct",
+					"standard_feed_per_bird_g",
+					"standard_body_weight_g",
+					"standard_fcr",
+					"standard_hdep_pct",
+				)
+			)
+		]
+		if rows:
+			# Match exact day interval
+			exact = [
+				r
+				for r in rows
+				if (
+					r.day_start is not None
+					and r.day_end is not None
+					and r.day_start <= age_in_days <= r.day_end
+				)
+			]
+			if exact:
+				benchmark = exact[-1]
+			elif rows[0].day_start is not None and age_in_days <= rows[0].day_start:
+				# Day 0 or young flock before first interval
+				benchmark = rows[0]
+			else:
+				# Check if rows are entered by week number (e.g. 1, 2, 3...)
+				batch_week_num = (age_in_days // 7) + 1
+				week_match = [
+					r
+					for r in rows
+					if (
+						r.day_start is not None
+						and r.day_end is not None
+						and r.day_start <= batch_week_num <= r.day_end
+					)
+				]
+				if week_match:
+					benchmark = week_match[-1]
+				else:
+					earlier = [
+						r
+						for r in rows
+						if (r.day_start is not None and r.day_start <= age_in_days)
+						or (r.day_end is not None and r.day_end <= age_in_days)
+					]
+					if earlier:
+						benchmark = earlier[-1]
+					else:
+						benchmark = rows[-1]
+
+	# Fallback to standard built-in defaults by breed_type if custom benchmarks are not defined
+	if not benchmark:
+		if not breed_type and breed:
+			breed_type = frappe.db.get_value("Poultry Breed", breed, "breed_type")
+		if breed_type:
+			from ob_poultry.poultry.doctype.poultry_breed.poultry_breed import get_default_benchmarks
+			defaults = get_default_benchmarks(breed_type) or []
+			if defaults:
+				exact = [
+					r
+					for r in defaults
+					if r.get("day_start") is not None
+					and r.get("day_end") is not None
+					and r["day_start"] <= age_in_days <= r["day_end"]
+				]
+				if exact:
+					benchmark = exact[-1]
+				elif age_in_days <= defaults[0].get("day_start", 0):
+					benchmark = defaults[0]
+				else:
+					benchmark = defaults[-1]
+
+	if not benchmark and frappe.db.table_exists("Poultry Benchmark"):
+		legacy = frappe.db.sql(
+			"""
+			select standard_mortality_pct, standard_feed_per_bird_g, standard_body_weight_g
+			from `tabPoultry Benchmark`
+			where breed = %s and age_in_days <= %s
+			order by age_in_days desc
+			limit 1
+			""",
+			(breed, age_in_days),
+			as_dict=True,
+		)
+		if legacy:
+			benchmark = legacy[0]
+	return benchmark or {}
+
+
 @frappe.whitelist()
 def get_shed_context(shed, log_date=None):
 	"""Returns active batches and prefilled values for a given shed."""
@@ -620,6 +719,7 @@ def get_shed_context(shed, log_date=None):
 			sex = "Female"
 
 	batch_list = []
+	shed_benchmark = None
 	for idx, b in enumerate(batches):
 		# Calculate Week / Day from batch start_date
 		start_dt = getdate(b.start_date)
@@ -627,6 +727,11 @@ def get_shed_context(shed, log_date=None):
 		weeks = days_elapsed // 7
 		day_rem = days_elapsed % 7
 		week_day_str = f"W{weeks} D{day_rem}"
+
+		batch_breed = b.breed or breed
+		bmk = get_benchmark_for_age(batch_breed, days_elapsed, b.breed_type)
+		if not shed_benchmark and bmk:
+			shed_benchmark = bmk
 
 		# Warehouse prepopulation
 		warehouse = b.feed_warehouse or shed_doc.default_feed_warehouse or ""
@@ -662,15 +767,27 @@ def get_shed_context(shed, log_date=None):
 			{
 				"batch": b.name,
 				"batch_name": batch_name,
+				"breed": batch_breed,
+				"breed_type": b.breed_type,
 				"week_day": week_day_str,
+				"days_elapsed": days_elapsed,
 				"opening_birds": opening_birds,
 				"opening_eggs": opening_eggs,
 				"feed_item": feed_item,
 				"warehouse": warehouse,
 				"opening_stock_kg": stock_qty,
 				"rate_per_kg": rate_per_kg,
+				"benchmark": {
+					"standard_body_weight_g": flt(bmk.get("standard_body_weight_g")),
+					"standard_hdep_pct": flt(bmk.get("standard_hdep_pct")),
+					"standard_mortality_pct": flt(bmk.get("standard_mortality_pct")),
+					"standard_feed_per_bird_g": flt(bmk.get("standard_feed_per_bird_g")),
+				} if bmk else {},
 			}
 		)
+
+	if not shed_benchmark and breed:
+		shed_benchmark = get_benchmark_for_age(breed, 0, batches[0].breed_type if batches else None)
 
 	return {
 		"shed_name": shed_doc.shed_name or shed,
@@ -678,4 +795,10 @@ def get_shed_context(shed, log_date=None):
 		"breed": breed,
 		"sex": sex,
 		"batches": batch_list,
+		"benchmark": {
+			"standard_body_weight_g": flt(shed_benchmark.get("standard_body_weight_g")),
+			"standard_hdep_pct": flt(shed_benchmark.get("standard_hdep_pct")),
+			"standard_mortality_pct": flt(shed_benchmark.get("standard_mortality_pct")),
+			"standard_feed_per_bird_g": flt(shed_benchmark.get("standard_feed_per_bird_g")),
+		} if shed_benchmark else {},
 	}
