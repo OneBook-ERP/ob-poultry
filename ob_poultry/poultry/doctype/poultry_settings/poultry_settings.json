@@ -51,6 +51,18 @@
    "fieldtype": "Data",
    "label": "Sync Status",
    "read_only": 1
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "section_break_item_groups",
+   "fieldtype": "Section Break",
+   "label": "Item Group Mappings"
+  },
+  {
+   "fieldname": "item_group_mappings",
+   "fieldtype": "Table",
+   "label": "Item Group Mappings",
+   "options": "Poultry Item Group Mapping"
   }
  ],
  "permissions": [

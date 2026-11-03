@@ -166,3 +166,91 @@ def get_batch_egg_stock(batch: str) -> dict:
 		"rem_eggs": rem_eggs,
 		"summary": summary,
 	}
+
+
+def get_child_item_groups(group_name: str) -> list[str]:
+	"""Returns the item group itself and all its descendant sub-groups."""
+	if not group_name or not frappe.db.exists("Item Group", group_name):
+		return [group_name] if group_name else []
+
+	bounds = frappe.db.get_value("Item Group", group_name, ["lft", "rgt"], as_dict=True)
+	if not bounds or not bounds.get("lft") or not bounds.get("rgt"):
+		return [group_name]
+
+	return frappe.db.get_all(
+		"Item Group",
+		filters={"lft": (">=", bounds.lft), "rgt": ("<=", bounds.rgt)},
+		pluck="name",
+	)
+
+
+@frappe.whitelist()
+def get_mapped_item_groups(place: str) -> list[str]:
+	"""Returns all configured Item Groups (including children) for a specific place/dropdown."""
+	if not place:
+		return []
+
+	matched_groups = set()
+	if frappe.db.exists("DocType", "Poultry Settings"):
+		settings = frappe.get_cached_doc("Poultry Settings")
+		for row in settings.get("item_group_mappings", []):
+			if row.place == place and row.item_group:
+				for child_g in get_child_item_groups(row.item_group):
+					matched_groups.add(child_g)
+
+	# Fallbacks if settings table is unpopulated
+	if not matched_groups:
+		fallback_map = {
+			"Feed Items": ["Feed & Raw Materials", "Poultry Feed", "Products"],
+			"Feed Raw Materials": ["Feed & Raw Materials", "Raw Material"],
+			"Egg Items": ["Eggs"],
+			"Live Bird Items": ["Live Birds"],
+			"Medicines & Vaccines": ["Medicines & Vaccines"],
+			"Poultry Sales Items": [
+				"Eggs",
+				"Feed & Raw Materials",
+				"Live Birds",
+				"Poultry By-Products",
+			],
+		}
+		for g in fallback_map.get(place, []):
+			if frappe.db.exists("Item Group", g):
+				for child_g in get_child_item_groups(g):
+					matched_groups.add(child_g)
+
+	return sorted(list(matched_groups))
+
+
+@frappe.whitelist()
+@frappe.validate_and_sanitize_search_inputs
+def item_query_by_place(doctype, txt, searchfield, start, page_len, filters):
+	"""Dynamic Link query for Item fields filtered by Poultry Settings item group mapping."""
+	place = (filters or {}).get("place")
+	groups = get_mapped_item_groups(place) if place else []
+
+	conditions = ["disabled = 0"]
+	params = {}
+
+	if groups:
+		placeholders = ", ".join([f"%(g_{i})s" for i in range(len(groups))])
+		conditions.append(f"item_group in ({placeholders})")
+		for i, g in enumerate(groups):
+			params[f"g_{i}"] = g
+
+	if txt:
+		conditions.append("(name like %(txt)s or item_name like %(txt)s)")
+		params["txt"] = f"%{txt}%"
+
+	where_clause = " and ".join(conditions)
+
+	return frappe.db.sql(
+		f"""
+		select name, item_name, item_group, stock_uom
+		from `tabItem`
+		where {where_clause}
+		order by idx desc, name asc
+		limit %(start)s, %(page_len)s
+		""",
+		{**params, "start": cint(start), "page_len": cint(page_len)},
+		as_list=True,
+	)

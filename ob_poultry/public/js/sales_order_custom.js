@@ -4,6 +4,7 @@
 frappe.ui.form.on("Sales Order", {
 	setup(frm) {
 		setup_customer_query(frm);
+		setup_item_query(frm);
 		reorder_items_grid_columns(frm);
 		load_batch_names(frm);
 	},
@@ -95,6 +96,17 @@ function setup_customer_query(frm) {
 		delete df.filters;
 		delete df.filter_description;
 	}
+}
+
+function setup_item_query(frm) {
+	frm.set_query("item_code", "items", function () {
+		return {
+			query: "ob_poultry.poultry.api.item_query_by_place",
+			filters: {
+				place: "Poultry Sales Items",
+			},
+		};
+	});
 }
 
 function sync_delivery_date_to_items(frm) {

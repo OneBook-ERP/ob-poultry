@@ -12,6 +12,27 @@ frappe.ui.form.on("Poultry Daily Log", {
 			};
 		});
 
+		// Feed item query: filtered by Poultry Settings item group mapping
+		frm.set_query("feed_item", "feed_entries", function () {
+			return {
+				query: "ob_poultry.poultry.api.item_query_by_place",
+				filters: {
+					place: "Feed Items",
+				},
+			};
+		});
+
+		if (frm.fields_dict.feed_item) {
+			frm.set_query("feed_item", function () {
+				return {
+					query: "ob_poultry.poultry.api.item_query_by_place",
+					filters: {
+						place: "Feed Items",
+					},
+				};
+			});
+		}
+
 		// Global styles for strict 3-tier view separation & shed child table
 		frappe.dom.set_style(`
 			/* Level 2: Shed List View - strictly show shed list, strictly hide data entry sections */

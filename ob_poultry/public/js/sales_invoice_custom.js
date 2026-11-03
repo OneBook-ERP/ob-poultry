@@ -4,6 +4,7 @@
 frappe.ui.form.on("Sales Invoice", {
 	setup(frm) {
 		setup_customer_query(frm);
+		setup_item_query(frm);
 		hide_unwanted_fields(frm);
 	},
 
@@ -44,6 +45,17 @@ function setup_customer_query(frm) {
 		delete df.filters;
 		delete df.filter_description;
 	}
+}
+
+function setup_item_query(frm) {
+	frm.set_query("item_code", "items", function () {
+		return {
+			query: "ob_poultry.poultry.api.item_query_by_place",
+			filters: {
+				place: "Poultry Sales Items",
+			},
+		};
+	});
 }
 
 function hide_unwanted_fields(frm) {
