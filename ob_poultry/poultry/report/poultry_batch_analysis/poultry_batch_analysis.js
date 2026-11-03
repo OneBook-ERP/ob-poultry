@@ -11,6 +11,12 @@ frappe.query_reports["Poultry Batch Analysis"] = {
 			fieldtype: "Date",
 		},
 		{
+			fieldname: "shed",
+			label: __("Shed"),
+			fieldtype: "Link",
+			options: "Poultry Shed",
+		},
+		{
 			fieldname: "flock_source",
 			label: __("Flock Source"),
 			fieldtype: "Select",

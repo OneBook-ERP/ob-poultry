@@ -1,5 +1,6 @@
 import frappe
 from frappe import _
+from frappe.utils import flt
 
 
 def execute(filters=None):
@@ -12,6 +13,13 @@ def execute(filters=None):
 def get_columns():
 	return [
 		{"label": _("Date"), "fieldname": "log_date", "fieldtype": "Date", "width": 100},
+		{
+			"label": _("Shed"),
+			"fieldname": "shed",
+			"fieldtype": "Link",
+			"options": "Poultry Shed",
+			"width": 120,
+		},
 		{
 			"label": _("Batch"),
 			"fieldname": "batch",
@@ -28,54 +36,114 @@ def get_columns():
 		},
 		{
 			"label": _("Feed Consumed (kg)"),
-			"fieldname": "feed_consumed_kg",
+			"fieldname": "feed_spent_kg",
 			"fieldtype": "Float",
+			"precision": 2,
 			"width": 140,
 		},
 		{
-			"label": _("Cumulative in Range (kg)"),
+			"label": _("Grams / Bird (g)"),
+			"fieldname": "feed_spent_g_per_bird",
+			"fieldtype": "Float",
+			"precision": 1,
+			"width": 120,
+		},
+		{"label": _("Feed Cost"), "fieldname": "total_feed_cost", "fieldtype": "Currency", "width": 110},
+		{
+			"label": _("Cumulative Feed (kg)"),
 			"fieldname": "cumulative_feed_kg",
 			"fieldtype": "Float",
-			"width": 170,
+			"precision": 2,
+			"width": 150,
 		},
-		{"label": _("Feed Cost"), "fieldname": "feed_cost", "fieldtype": "Currency", "width": 120},
 		{
-			"label": _("Cumulative Cost in Range"),
-			"fieldname": "cumulative_feed_cost",
-			"fieldtype": "Currency",
-			"width": 180,
+			"label": _("Water (L)"),
+			"fieldname": "water_consumption_liters",
+			"fieldtype": "Float",
+			"precision": 1,
+			"width": 90,
+		},
+		{
+			"label": _("Water:Feed Ratio"),
+			"fieldname": "water_feed_ratio",
+			"fieldtype": "Float",
+			"precision": 2,
+			"width": 120,
 		},
 	]
 
 
 def get_data(filters):
-	conditions = [
-		"d.docstatus = 1",
-		"d.feed_consumed_kg > 0",
-		"d.log_date between %(from_date)s and %(to_date)s",
-	]
+	conditions = ["d.docstatus = 1", "d.log_date between %(from_date)s and %(to_date)s"]
+	values = {
+		"from_date": filters.get("from_date"),
+		"to_date": filters.get("to_date"),
+	}
+
 	if filters.get("batch"):
-		conditions.append("d.batch = %(batch)s")
+		conditions.append("fe.batch = %(batch)s")
+		values["batch"] = filters.get("batch")
+	if filters.get("shed"):
+		conditions.append("fe.shed = %(shed)s")
+		values["shed"] = filters.get("shed")
+
+	where_clause = " and ".join(conditions)
 
 	rows = frappe.db.sql(
 		f"""
-		select d.batch, d.log_date, d.feed_item, d.feed_consumed_kg, sed.amount as feed_cost
-		from `tabPoultry Daily Log` d
-		left join `tabStock Entry Detail` sed
-			on sed.parent = d.stock_entry and sed.item_code = d.feed_item
-		where {" and ".join(conditions)}
-		order by d.batch, d.log_date
+		select
+			d.log_date,
+			fe.shed,
+			fe.batch,
+			fe.feed_item,
+			fe.feed_spent_kg,
+			fe.feed_spent_g_per_bird,
+			fe.total_feed_cost,
+			d.water_consumption_liters,
+			d.water_feed_ratio
+		from `tabPoultry Daily Log Feed Entry` fe
+		inner join `tabPoultry Daily Log` d on d.name = fe.parent
+		where {where_clause} and fe.feed_spent_kg > 0
+		order by fe.batch, d.log_date asc
 		""",
-		filters,
+		values,
 		as_dict=True,
 	)
 
+	# If no feed entries, fallback to legacy parent fields
+	if not rows:
+		p_cond = [
+			"d.docstatus = 1",
+			"d.feed_consumed_kg > 0",
+			"d.log_date between %(from_date)s and %(to_date)s",
+		]
+		if filters.get("batch"):
+			p_cond.append("d.batch = %(batch)s")
+		rows = frappe.db.sql(
+			f"""
+			select
+				d.log_date,
+				b.shed,
+				d.batch,
+				d.feed_item,
+				d.feed_consumed_kg as feed_spent_kg,
+				0 as feed_spent_g_per_bird,
+				d.total_feed_cost,
+				d.water_consumption_liters,
+				d.water_feed_ratio
+			from `tabPoultry Daily Log` d
+			left join `tabPoultry Batch` b on b.name = d.batch
+			where {" and ".join(p_cond)}
+			order by d.batch, d.log_date asc
+			""",
+			values,
+			as_dict=True,
+		)
+
 	running_total = {}
-	running_cost = {}
 	for row in rows:
-		running_total[row.batch] = running_total.get(row.batch, 0) + (row.feed_consumed_kg or 0)
-		running_cost[row.batch] = running_cost.get(row.batch, 0) + (row.feed_cost or 0)
-		row["cumulative_feed_kg"] = running_total[row.batch]
-		row["cumulative_feed_cost"] = running_cost[row.batch]
+		b = row.batch or "Unknown"
+		running_total[b] = running_total.get(b, 0.0) + flt(row.feed_spent_kg)
+		row["cumulative_feed_kg"] = round(running_total[b], 2)
 
 	return rows

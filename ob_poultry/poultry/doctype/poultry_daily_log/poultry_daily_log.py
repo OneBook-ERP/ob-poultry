@@ -121,9 +121,10 @@ class PoultryDailyLog(Document):
 		self.validate_unique_daily_log()
 		self.compute_day_of_week()
 		self.compute_flock_rollups()
-		self.compute_egg_rollups()
 		self.compute_feed_rollups()
+		self.compute_egg_rollups()
 		self.compute_sales_rollups()
+		self.compute_environmental_metrics()
 
 		# Support legacy mortality_details if flock_entries not present
 		if self.get("mortality_details") and not self.flock_entries:
@@ -295,6 +296,7 @@ class PoultryDailyLog(Document):
 		batch_birds = {row.batch: cint(row.opening_birds) for row in self.flock_entries if row.batch}
 
 		total_produced = 0
+		total_good_produced = 0
 		for row in self.egg_entries:
 			row.total_eggs = (
 				cint(row.good_eggs)
@@ -303,6 +305,7 @@ class PoultryDailyLog(Document):
 				+ cint(row.waste_eggs)
 			)
 			total_produced += row.total_eggs
+			total_good_produced += cint(row.good_eggs) + cint(row.double_yolk_eggs)
 
 			# Calculate Broken %
 			if row.total_eggs > 0:
@@ -310,7 +313,7 @@ class PoultryDailyLog(Document):
 			else:
 				row.broken_egg_pct = 0.0
 
-			# Calculate Production %
+			# Calculate Production % (HDEP based on opening/current birds)
 			birds = batch_birds.get(row.batch)
 			if not birds and row.batch:
 				birds = cint(frappe.db.get_value("Poultry Batch", row.batch, "current_bird_count"))
@@ -318,6 +321,17 @@ class PoultryDailyLog(Document):
 				row.egg_production_pct = round((row.total_eggs / birds) * 100, 2)
 			else:
 				row.egg_production_pct = 0.0
+
+			# Calculate HHEP % (Hen Housed Egg Production based on initial placed birds)
+			initial_placed = 0
+			if row.batch:
+				initial_placed = cint(frappe.db.get_value("Poultry Batch", row.batch, "initial_bird_count"))
+			if not initial_placed and self.get("batch") and self.batch_doc:
+				initial_placed = cint(self.batch_doc.initial_bird_count)
+			if initial_placed and initial_placed > 0:
+				row.hhep_pct = round((row.total_eggs / initial_placed) * 100, 2)
+			else:
+				row.hhep_pct = 0.0
 
 			# Trays (30 eggs/tray) and Left
 			trays = row.total_eggs // 30
@@ -327,6 +341,26 @@ class PoultryDailyLog(Document):
 			row.tray_summary = f"{trays} Trays, {left} Eggs"
 
 		self.total_eggs_produced = total_produced
+
+		# Header Hen-Housed Production % (HHEP)
+		header_initial_birds = 0
+		if self.flock_entries:
+			batches = {r.batch for r in self.flock_entries if r.batch}
+			for b in batches:
+				header_initial_birds += cint(frappe.db.get_value("Poultry Batch", b, "initial_bird_count"))
+		if not header_initial_birds and self.get("batch") and self.batch_doc:
+			header_initial_birds = cint(self.batch_doc.initial_bird_count)
+
+		if header_initial_birds > 0 and total_produced > 0:
+			self.hen_housed_production_pct = round((total_produced / header_initial_birds) * 100, 2)
+		else:
+			self.hen_housed_production_pct = 0.0
+
+		# Feed Cost per Egg: Total Feed Cost Today / Good Eggs Produced
+		if total_good_produced > 0 and flt(self.total_feed_cost) > 0:
+			self.feed_cost_per_egg = round(flt(self.total_feed_cost) / total_good_produced, 2)
+		else:
+			self.feed_cost_per_egg = 0.0
 
 	def compute_feed_rollups(self):
 		batch_birds = {row.batch: cint(row.opening_birds) for row in self.flock_entries if row.batch}
@@ -388,22 +422,117 @@ class PoultryDailyLog(Document):
 		self.std_body_weight_g = benchmark.get("standard_body_weight_g")
 		self.std_hdep_pct = benchmark.get("standard_hdep_pct")
 
+	def compute_environmental_metrics(self):
+		total_birds = sum(cint(r.closing_birds) for r in self.flock_entries)
+		if not total_birds and self.get("batch") and self.batch_doc:
+			total_birds = cint(self.batch_doc.current_bird_count)
+
+		water_liters = flt(self.water_consumption_liters)
+		if total_birds > 0 and water_liters > 0:
+			self.water_per_bird_ml = round((water_liters * 1000.0) / total_birds, 2)
+		else:
+			self.water_per_bird_ml = 0.0
+
+		feed_kg = flt(self.total_feed_consumed_kg) or flt(self.feed_consumed_kg)
+		if feed_kg > 0 and water_liters > 0:
+			self.water_feed_ratio = round(water_liters / feed_kg, 2)
+		else:
+			self.water_feed_ratio = 0.0
+
 	def on_submit(self):
 		self.update_batch_flocks()
 		self.issue_feed_stock()
 		self.update_bin_stock()
 		if self.get("batch"):
 			self.create_feed_stock_entry()
-			if self.batch_doc and hasattr(self.batch_doc, "recalculate_performance"):
-				self.batch_doc.recalculate_performance()
+		self.create_egg_stock_entry()
+		if self.get("batch") and self.batch_doc and hasattr(self.batch_doc, "recalculate_performance"):
+			self.batch_doc.recalculate_performance()
 
 	def on_cancel(self):
 		if self.get("stock_entry"):
 			stock_entry = frappe.get_doc("Stock Entry", self.stock_entry)
 			if stock_entry.docstatus == 1:
 				stock_entry.cancel()
+		if self.get("egg_stock_entry"):
+			egg_se = frappe.get_doc("Stock Entry", self.egg_stock_entry)
+			if egg_se.docstatus == 1:
+				egg_se.cancel()
 		if self.get("batch") and self.batch_doc and hasattr(self.batch_doc, "recalculate_performance"):
 			self.batch_doc.recalculate_performance()
+
+	def create_egg_stock_entry(self):
+		if frappe.db.exists("DocType", "Poultry Settings"):
+			settings = frappe.get_cached_doc("Poultry Settings")
+			if hasattr(settings, "auto_post_egg_stock_entry") and not cint(
+				settings.auto_post_egg_stock_entry
+			):
+				return
+			default_egg_wh = settings.get("default_egg_warehouse")
+			default_egg_item = settings.get("default_egg_item")
+		else:
+			default_egg_wh = None
+			default_egg_item = None
+
+		if not default_egg_item:
+			default_egg_item = frappe.db.get_value(
+				"Item",
+				{"item_group": ("in", ["Eggs", "Egg", "Poultry Eggs"]), "is_stock_item": 1},
+				"name",
+			)
+		if not default_egg_item:
+			default_egg_item = frappe.db.get_value(
+				"Item", {"is_stock_item": 1, "item_name": ("like", "%Egg%")}, "name"
+			)
+
+		items = []
+		for row in self.egg_entries:
+			qty = cint(row.good_eggs) + cint(row.double_yolk_eggs)
+			if qty <= 0:
+				continue
+			wh = None
+			if row.shed:
+				wh = frappe.db.get_value("Poultry Shed", row.shed, "default_egg_warehouse")
+			if not wh:
+				wh = default_egg_wh
+			if not wh or not default_egg_item:
+				continue
+
+			uom = frappe.db.get_value("Item", default_egg_item, "stock_uom") or "Nos"
+			rate = flt(self.feed_cost_per_egg) or 1.0
+			items.append(
+				{
+					"item_code": default_egg_item,
+					"t_warehouse": wh,
+					"qty": qty,
+					"uom": uom,
+					"basic_rate": rate,
+					"conversion_factor": 1.0,
+				}
+			)
+
+		if not items:
+			return
+
+		company = frappe.db.get_value("Warehouse", items[0]["t_warehouse"], "company")
+		if not company:
+			company = frappe.defaults.get_user_default("Company") or frappe.db.get_single_value(
+				"Global Defaults", "default_company"
+			)
+
+		stock_entry = frappe.get_doc(
+			{
+				"doctype": "Stock Entry",
+				"stock_entry_type": "Material Receipt",
+				"company": company,
+				"posting_date": self.log_date or nowdate(),
+				"items": items,
+			}
+		)
+		stock_entry.insert(ignore_permissions=True)
+		stock_entry.submit()
+		self.db_set("egg_stock_entry", stock_entry.name)
+		self.egg_stock_entry = stock_entry.name
 
 	def create_feed_stock_entry(self):
 		if not self.get("feed_consumed_kg"):

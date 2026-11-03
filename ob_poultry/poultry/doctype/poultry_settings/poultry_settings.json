@@ -13,6 +13,36 @@
    "reqd": 1
   },
   {
+   "fieldname": "section_break_egg_inventory",
+   "fieldtype": "Section Break",
+   "label": "Egg Inventory & Cold Room"
+  },
+  {
+   "description": "Default destination warehouse when logging daily egg collection or returning clear unhatched eggs to stock",
+   "fieldname": "default_egg_warehouse",
+   "fieldtype": "Link",
+   "label": "Default Egg Cold Room / Warehouse",
+   "options": "Warehouse"
+  },
+  {
+   "description": "ERPNext stock item used when auto-posting egg production into the cold room",
+   "fieldname": "default_egg_item",
+   "fieldtype": "Link",
+   "label": "Default Table Egg Item",
+   "options": "Item"
+  },
+  {
+   "fieldname": "column_break_egg_inv",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "1",
+   "description": "Automatically generates a Stock Entry (Material Receipt) into the Egg Cold Room when a Daily Log with egg production is submitted",
+   "fieldname": "auto_post_egg_stock_entry",
+   "fieldtype": "Check",
+   "label": "Auto Post Egg Stock Entry (Receipt) on Daily Log Submit"
+  },
+  {
    "fieldname": "section_break_mkisan",
    "fieldtype": "Section Break",
    "label": "MKisan Daily Egg Rate Sync"

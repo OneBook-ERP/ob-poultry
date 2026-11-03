@@ -23,6 +23,15 @@
   "section_break_eggs",
   "egg_entries",
   "total_eggs_produced",
+  "hen_housed_production_pct",
+  "feed_cost_per_egg",
+  "egg_stock_entry",
+  "section_break_environmental",
+  "water_consumption_liters",
+  "water_per_bird_ml",
+  "column_break_env_1",
+  "water_feed_ratio",
+  "lighting_hours",
   "section_break_feeds",
   "feed_entries",
   "total_feed_consumed_kg",
@@ -160,6 +169,57 @@
    "fieldtype": "Int",
    "label": "Total Eggs Produced",
    "read_only": 1
+  },
+  {
+   "fieldname": "hen_housed_production_pct",
+   "fieldtype": "Percent",
+   "label": "Hen-Housed Production % (HHEP)",
+   "read_only": 1
+  },
+  {
+   "fieldname": "feed_cost_per_egg",
+   "fieldtype": "Currency",
+   "label": "Feed Cost per Egg",
+   "read_only": 1
+  },
+  {
+   "fieldname": "egg_stock_entry",
+   "fieldtype": "Link",
+   "label": "Egg Stock Entry",
+   "options": "Stock Entry",
+   "read_only": 1
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "section_break_environmental",
+   "fieldtype": "Section Break",
+   "label": "Water & Environmental / Lighting"
+  },
+  {
+   "fieldname": "water_consumption_liters",
+   "fieldtype": "Float",
+   "label": "Water Consumption (Liters)"
+  },
+  {
+   "fieldname": "water_per_bird_ml",
+   "fieldtype": "Float",
+   "label": "Water per Bird (ml)",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_env_1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "water_feed_ratio",
+   "fieldtype": "Float",
+   "label": "Water : Feed Ratio",
+   "read_only": 1
+  },
+  {
+   "fieldname": "lighting_hours",
+   "fieldtype": "Float",
+   "label": "Lighting Hours (Natural + Artificial)"
   },
   {
    "fieldname": "section_break_feeds",

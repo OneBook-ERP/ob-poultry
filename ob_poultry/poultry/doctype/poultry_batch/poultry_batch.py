@@ -39,7 +39,9 @@ class PoultryBatch(Document):
 			self.batch_week = ""
 			return
 		ref_date = self.end_date if (self.status == "Closed" and self.end_date) else nowdate()
-		days = max(0, date_diff(ref_date, self.start_date))
+		elapsed_days = max(0, date_diff(ref_date, self.start_date))
+		placement_days = (cint(self.placement_age_weeks or 0) * 7) + cint(self.placement_age_days or 0)
+		days = elapsed_days + placement_days
 		weeks = int(days // 7)
 		week_str = f"{weeks} week{'s' if weeks != 1 else ''}"
 		day_str = f"{days} day{'s' if days != 1 else ''}"
@@ -445,6 +447,46 @@ class PoultryBatch(Document):
 			if live_weight_kg + mortality_weight_kg:
 				cfcr = cumulative_feed_kg / (live_weight_kg + mortality_weight_kg)
 
+		# Layer KPIs: Cumulative Eggs, EHH, and Avg Feed Cost / Egg
+		egg_totals = frappe.db.sql(
+			"""
+			select
+				sum(good_eggs) as good_eggs,
+				sum(total_eggs) as total_eggs,
+				count(distinct parent) as log_days
+			from `tabPoultry Daily Log Egg Entry`
+			where batch = %s and docstatus = 1
+			""",
+			self.name,
+			as_dict=True,
+		)[0]
+
+		feed_cost_total = (
+			frappe.db.sql(
+				"""
+			select sum(total_feed_cost) as feed_cost
+			from `tabPoultry Daily Log Feed Entry`
+			where batch = %s and docstatus = 1
+			""",
+				self.name,
+				as_dict=True,
+			)[0].get("feed_cost")
+			or 0
+		)
+
+		cum_eggs = cint(egg_totals.total_eggs or 0)
+		good_eggs = cint(egg_totals.good_eggs or 0)
+		log_days = cint(egg_totals.log_days or 0)
+		initial_birds = cint(self.initial_bird_count or 0)
+
+		cum_ehh = round(flt(cum_eggs) / initial_birds, 1) if initial_birds > 0 else 0.0
+		avg_feed_cost_per_egg = round(flt(feed_cost_total) / good_eggs, 2) if good_eggs > 0 else 0.0
+		avg_hhep_pct = (
+			round(flt(cum_eggs) / (initial_birds * log_days) * 100, 2)
+			if (initial_birds > 0 and log_days > 0)
+			else 0.0
+		)
+
 		frappe.db.set_value(
 			self.doctype,
 			self.name,
@@ -454,6 +496,10 @@ class PoultryBatch(Document):
 				"cumulative_feed_kg": cumulative_feed_kg,
 				"fcr": fcr,
 				"cfcr": cfcr,
+				"cumulative_eggs_produced": cum_eggs,
+				"cumulative_ehh": cum_ehh,
+				"avg_feed_cost_per_egg": avg_feed_cost_per_egg,
+				"avg_hhep_pct": avg_hhep_pct,
 			},
 			update_modified=False,
 		)

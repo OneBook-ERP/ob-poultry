@@ -67,6 +67,19 @@
             "in_list_view": 1
         },
         {
+            "fieldname": "placement_age_weeks",
+            "fieldtype": "Int",
+            "label": "Placement Age (Weeks)",
+            "default": "0",
+            "description": "Age when placed in shed (e.g. 16 for 16-week pullets, 0 for day-old chicks)"
+        },
+        {
+            "fieldname": "placement_age_days",
+            "fieldtype": "Int",
+            "label": "Placement Age (Days)",
+            "default": "0"
+        },
+        {
             "fieldname": "status",
             "fieldtype": "Select",
             "label": "Status",
@@ -149,6 +162,44 @@
             "precision": "3",
             "default": "0",
             "description": "Mortality-corrected FCR. Uses the batch's latest recorded average body weight to value mortality weight — an approximation; confirm the formula with farm operations before using it for any payout calculation."
+        },
+        {
+            "fieldname": "section_break_layer_kpis",
+            "fieldtype": "Section Break",
+            "label": "Layer Performance & Egg Metrics",
+            "collapsible": 1,
+            "depends_on": "eval:doc.breed_type == 'Layer' || doc.breed_type == 'Breeder'"
+        },
+        {
+            "fieldname": "cumulative_eggs_produced",
+            "fieldtype": "Int",
+            "label": "Cumulative Eggs Produced",
+            "read_only": 1
+        },
+        {
+            "fieldname": "cumulative_ehh",
+            "fieldtype": "Float",
+            "label": "Eggs Per Hen Housed (EHH)",
+            "read_only": 1,
+            "precision": "1",
+            "description": "Cumulative Eggs / Initial Birds Placed (Industry standard target ~330–350 eggs by 72 weeks)"
+        },
+        {
+            "fieldname": "column_break_kpi_1",
+            "fieldtype": "Column Break"
+        },
+        {
+            "fieldname": "avg_feed_cost_per_egg",
+            "fieldtype": "Currency",
+            "label": "Avg Feed Cost / Egg",
+            "read_only": 1,
+            "description": "Cumulative Feed Cost / Cumulative Good Eggs"
+        },
+        {
+            "fieldname": "avg_hhep_pct",
+            "fieldtype": "Percent",
+            "label": "Avg Hen-Housed Production % (HHEP)",
+            "read_only": 1
         },
         {
             "fieldname": "section_break_batch_sexed",

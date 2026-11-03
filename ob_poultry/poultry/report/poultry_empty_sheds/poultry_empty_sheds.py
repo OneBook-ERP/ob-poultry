@@ -15,17 +15,32 @@ def get_columns():
 			"fieldname": "name",
 			"fieldtype": "Link",
 			"options": "Poultry Shed",
-			"width": 150,
+			"width": 140,
 		},
-		{"label": _("Location"), "fieldname": "location", "fieldtype": "Data", "width": 200},
-		{"label": _("Capacity (Birds)"), "fieldname": "capacity", "fieldtype": "Int", "width": 130},
+		{"label": _("Housing Type"), "fieldname": "housing_type", "fieldtype": "Data", "width": 120},
+		{"label": _("Location"), "fieldname": "location", "fieldtype": "Data", "width": 160},
+		{"label": _("Capacity (Birds)"), "fieldname": "capacity", "fieldtype": "Int", "width": 120},
+		{
+			"label": _("Default Feed Warehouse"),
+			"fieldname": "default_feed_warehouse",
+			"fieldtype": "Link",
+			"options": "Warehouse",
+			"width": 160,
+		},
+		{
+			"label": _("Default Egg Warehouse"),
+			"fieldname": "default_egg_warehouse",
+			"fieldtype": "Link",
+			"options": "Warehouse",
+			"width": 160,
+		},
 	]
 
 
 def get_data():
 	return frappe.db.sql(
 		"""
-		select s.name, s.location, s.capacity
+		select s.name, s.housing_type, s.location, s.capacity, s.default_feed_warehouse, s.default_egg_warehouse
 		from `tabPoultry Shed` s
 		where s.is_active = 1
 		and not exists (

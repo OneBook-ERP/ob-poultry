@@ -14,6 +14,7 @@
   "waste_eggs",
   "total_eggs",
   "egg_production_pct",
+  "hhep_pct",
   "broken_egg_pct",
   "tray_summary",
   "trays",
@@ -92,6 +93,14 @@
    "fieldtype": "Percent",
    "in_list_view": 1,
    "label": "Production %",
+   "read_only": 1
+  },
+  {
+   "default": "0",
+   "fieldname": "hhep_pct",
+   "fieldtype": "Percent",
+   "in_list_view": 1,
+   "label": "HHEP %",
    "read_only": 1
   },
   {

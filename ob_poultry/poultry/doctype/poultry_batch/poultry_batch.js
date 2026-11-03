@@ -272,6 +272,12 @@ frappe.ui.form.on("Poultry Batch", {
 	start_date(frm) {
 		update_batch_week_ui(frm);
 	},
+	placement_age_weeks(frm) {
+		update_batch_week_ui(frm);
+	},
+	placement_age_days(frm) {
+		update_batch_week_ui(frm);
+	},
 	end_date(frm) {
 		update_batch_week_ui(frm);
 	},
@@ -712,7 +718,10 @@ function update_batch_week_ui(frm) {
 		frm.doc.status === "Closed" && frm.doc.end_date
 			? frm.doc.end_date
 			: frappe.datetime.get_today();
-	const age_days = Math.max(0, frappe.datetime.get_day_diff(ref_date, frm.doc.start_date));
+	const elapsed_days = Math.max(0, frappe.datetime.get_day_diff(ref_date, frm.doc.start_date));
+	const placement_days =
+		cint(frm.doc.placement_age_weeks || 0) * 7 + cint(frm.doc.placement_age_days || 0);
+	const age_days = elapsed_days + placement_days;
 	const age_weeks = Math.floor(age_days / 7);
 	const week_str = age_weeks === 1 ? __("1 week") : __("{0} weeks", [age_weeks]);
 	const day_str = age_days === 1 ? __("1 day") : __("{0} days", [age_days]);

@@ -1543,6 +1543,10 @@ frappe.ui.form.on("Poultry Daily Log", {
 		frm.events.render_benchmark_variance_card(frm);
 	},
 
+	water_consumption_liters(frm) {
+		frm.trigger("calculate_all_totals");
+	},
+
 	toggle_weight_field(frm) {
 		let checked = cint(frm.doc.record_weight) === 1;
 		frm.toggle_enable("average_body_weight_g", checked);
@@ -1558,8 +1562,10 @@ frappe.ui.form.on("Poultry Daily Log", {
 
 		// Calculate Eggs
 		let total_eggs = 0;
+		let good_eggs = 0;
 		(frm.doc.egg_entries || []).forEach((r) => {
 			total_eggs += flt(r.total_eggs) || 0;
+			good_eggs += (flt(r.good_eggs) || 0) + (flt(r.double_yolk_eggs) || 0);
 		});
 		frm.set_value("total_eggs_produced", total_eggs);
 
@@ -1573,15 +1579,33 @@ frappe.ui.form.on("Poultry Daily Log", {
 		frm.set_value("total_feed_consumed_kg", total_feed_kg);
 		frm.set_value("total_feed_cost", total_feed_cost);
 
+		// Layer KPIs: Feed Cost per Egg
+		let feed_cost_per_egg =
+			good_eggs > 0 && total_feed_cost > 0
+				? flt((total_feed_cost / good_eggs).toFixed(2))
+				: 0;
+		frm.set_value("feed_cost_per_egg", feed_cost_per_egg);
+
 		// Calculate Flock
 		let total_mortality = 0;
 		let total_culls = 0;
+		let total_closing = 0;
 		(frm.doc.flock_entries || []).forEach((r) => {
 			total_mortality += flt(r.dead) || 0;
 			total_culls += flt(r.culled) || 0;
+			total_closing += flt(r.closing_birds) || 0;
 		});
 		frm.set_value("total_mortality", total_mortality);
 		frm.set_value("total_culled", total_culls);
+
+		// Environmental / Water calculations
+		let water = flt(frm.doc.water_consumption_liters) || 0;
+		let water_per_bird =
+			total_closing > 0 && water > 0 ? flt(((water * 1000) / total_closing).toFixed(2)) : 0;
+		let water_feed_ratio =
+			total_feed_kg > 0 && water > 0 ? flt((water / total_feed_kg).toFixed(2)) : 0;
+		frm.set_value("water_per_bird_ml", water_per_bird);
+		frm.set_value("water_feed_ratio", water_feed_ratio);
 
 		// Calculate Sales
 		let total_sales = 0;
@@ -1589,6 +1613,25 @@ frappe.ui.form.on("Poultry Daily Log", {
 			total_sales += flt(r.total_amount) || 0;
 		});
 		frm.set_value("total_sales_amount", total_sales);
+
+		// Hen-Housed Production % (HHEP)
+		let total_initial = 0;
+		(frm.doc.flock_entries || []).forEach((f) => {
+			if (frm._batch_initial_counts && frm._batch_initial_counts[f.batch]) {
+				total_initial += flt(frm._batch_initial_counts[f.batch]);
+			}
+		});
+		if (total_initial > 0 && total_eggs > 0) {
+			frm.set_value(
+				"hen_housed_production_pct",
+				flt(((total_eggs / total_initial) * 100).toFixed(2))
+			);
+		} else if (total_closing > 0 && total_eggs > 0 && !frm.doc.hen_housed_production_pct) {
+			frm.set_value(
+				"hen_housed_production_pct",
+				flt(((total_eggs / total_closing) * 100).toFixed(2))
+			);
+		}
 
 		// Update vertical totals on all tables
 		frm.events.render_all_table_totals(frm);
@@ -1655,7 +1698,29 @@ function calculate_egg_row(frm, cdt, cdn) {
 	frappe.model.set_value(cdt, cdn, "eggs_left", left);
 	frappe.model.set_value(cdt, cdn, "tray_summary", `${trays} Trays, ${left} Eggs`);
 
-	frm.trigger("calculate_all_totals");
+	// Calculate HHEP %
+	if (
+		row.batch &&
+		(!frm._batch_initial_counts || frm._batch_initial_counts[row.batch] === undefined)
+	) {
+		if (!frm._batch_initial_counts) frm._batch_initial_counts = {};
+		frappe.db.get_value("Poultry Batch", row.batch, "initial_bird_count").then((r) => {
+			let init_count =
+				(r && r.message && r.message.initial_bird_count) || opening_birds || 0;
+			frm._batch_initial_counts[row.batch] = init_count;
+			let hhep = init_count > 0 ? ((total / init_count) * 100).toFixed(2) : 0;
+			frappe.model.set_value(cdt, cdn, "hhep_pct", flt(hhep));
+			frm.trigger("calculate_all_totals");
+		});
+	} else {
+		let init_count =
+			(frm._batch_initial_counts && frm._batch_initial_counts[row.batch]) ||
+			opening_birds ||
+			0;
+		let hhep = init_count > 0 ? ((total / init_count) * 100).toFixed(2) : 0;
+		frappe.model.set_value(cdt, cdn, "hhep_pct", flt(hhep));
+		frm.trigger("calculate_all_totals");
+	}
 }
 
 // Real-time calculations on Feeds Table

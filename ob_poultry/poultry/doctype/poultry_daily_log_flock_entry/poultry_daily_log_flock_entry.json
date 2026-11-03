@@ -9,6 +9,7 @@
   "week_day",
   "opening_birds",
   "dead",
+  "mortality_cause",
   "culled",
   "closing_birds"
  ],
@@ -49,6 +50,13 @@
    "fieldtype": "Int",
    "in_list_view": 1,
    "label": "Mortality"
+  },
+  {
+   "fieldname": "mortality_cause",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Cause",
+   "options": "\nNormal / Natural\nHeat Stress\nProlapse / Peritonitis\nCannibalism / Pecking\nBacterial / E. Coli\nRespiratory\nEgg Bound\nUnknown / Other"
   },
   {
    "default": "0",

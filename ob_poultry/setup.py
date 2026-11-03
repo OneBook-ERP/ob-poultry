@@ -111,6 +111,53 @@ def setup_default_item_group_mappings():
 
 
 def setup_custom_fields():
+	live_bird_fields = [
+		{
+			"fieldname": "is_weight_based_live_bird_sale",
+			"label": "Weight-Based Live Bird Sale",
+			"fieldtype": "Check",
+			"default": "0",
+			"insert_after": "poultry_shed",
+		},
+		{
+			"fieldname": "gross_weight_kg",
+			"label": "Gross Weight (kg)",
+			"fieldtype": "Float",
+			"insert_after": "is_weight_based_live_bird_sale",
+			"depends_on": "eval:doc.is_weight_based_live_bird_sale",
+		},
+		{
+			"fieldname": "tare_weight_kg",
+			"label": "Tare Weight (kg)",
+			"fieldtype": "Float",
+			"insert_after": "gross_weight_kg",
+			"depends_on": "eval:doc.is_weight_based_live_bird_sale",
+		},
+		{
+			"fieldname": "net_weight_kg",
+			"label": "Net Weight (kg)",
+			"fieldtype": "Float",
+			"read_only": 1,
+			"insert_after": "tare_weight_kg",
+			"depends_on": "eval:doc.is_weight_based_live_bird_sale",
+		},
+		{
+			"fieldname": "birds_count",
+			"label": "Bird Count (Cull Birds)",
+			"fieldtype": "Int",
+			"insert_after": "net_weight_kg",
+			"depends_on": "eval:doc.is_weight_based_live_bird_sale",
+		},
+		{
+			"fieldname": "avg_bird_weight_kg",
+			"label": "Avg Bird Weight (kg)",
+			"fieldtype": "Float",
+			"read_only": 1,
+			"insert_after": "birds_count",
+			"depends_on": "eval:doc.is_weight_based_live_bird_sale",
+		},
+	]
+
 	custom_fields = {
 		"Sales Order Item": [
 			{
@@ -129,6 +176,7 @@ def setup_custom_fields():
 				"options": "Poultry Shed",
 				"insert_after": "poultry_batch",
 			},
+			*live_bird_fields,
 		],
 		"Delivery Note Item": [
 			{
@@ -147,6 +195,7 @@ def setup_custom_fields():
 				"options": "Poultry Shed",
 				"insert_after": "poultry_batch",
 			},
+			*live_bird_fields,
 		],
 		"Sales Invoice Item": [
 			{
@@ -165,6 +214,7 @@ def setup_custom_fields():
 				"options": "Poultry Shed",
 				"insert_after": "poultry_batch",
 			},
+			*live_bird_fields,
 		],
 	}
 	create_custom_fields(custom_fields, update=True)

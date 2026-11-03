@@ -1,5 +1,6 @@
 import frappe
 from frappe import _
+from frappe.utils import cint
 
 
 def execute(filters=None):
@@ -23,16 +24,19 @@ def get_columns():
 			"fieldname": "hatchery",
 			"fieldtype": "Link",
 			"options": "Poultry Hatchery",
-			"width": 160,
+			"width": 150,
 		},
-		{"label": _("Actual Chicks"), "fieldname": "actual_chicks", "fieldtype": "Int", "width": 120},
-		{"label": _("Transferred"), "fieldname": "transferred", "fieldtype": "Int", "width": 110},
-		{"label": _("Balance"), "fieldname": "balance", "fieldtype": "Int", "width": 100},
+		{"label": _("Eggs Set"), "fieldname": "initial_egg_count", "fieldtype": "Int", "width": 100},
+		{"label": _("Hatched Chicks"), "fieldname": "hatched_egg", "fieldtype": "Int", "width": 120},
+		{"label": _("Move to Stock"), "fieldname": "move_to_stock", "fieldtype": "Int", "width": 110},
+		{"label": _("Wasted Eggs"), "fieldname": "wasted_eggs", "fieldtype": "Int", "width": 100},
+		{"label": _("Chicks Transferred"), "fieldname": "transferred", "fieldtype": "Int", "width": 130},
+		{"label": _("Chick Balance"), "fieldname": "balance", "fieldtype": "Int", "width": 110},
 	]
 
 
 def get_data(filters):
-	conditions = ["actual_chicks is not null"]
+	conditions = ["(hatched_egg is not null or actual_chicks is not null)"]
 	values = {}
 
 	if filters.get("hatchery"):
@@ -43,7 +47,13 @@ def get_data(filters):
 
 	hatches = frappe.db.sql(
 		f"""
-		select name, hatchery, actual_chicks
+		select
+			name,
+			hatchery,
+			coalesce(initial_egg_count, eggs_set, 0) as initial_egg_count,
+			coalesce(hatched_egg, actual_chicks, 0) as hatched_egg,
+			coalesce(move_to_stock, 0) as move_to_stock,
+			coalesce(wasted_eggs, 0) as wasted_eggs
 		from `tabPoultry Hatch`
 		where {where_clause}
 		order by hatchery, name
@@ -71,6 +81,6 @@ def get_data(filters):
 	for hatch in hatches:
 		transferred = transferred_map.get(hatch.name, 0)
 		hatch.transferred = transferred
-		hatch.balance = (hatch.actual_chicks or 0) - transferred
+		hatch.balance = (cint(hatch.hatched_egg) or 0) - transferred
 
 	return hatches

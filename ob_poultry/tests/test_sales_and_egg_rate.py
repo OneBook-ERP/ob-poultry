@@ -10,16 +10,22 @@ class TestSalesAndEggRate(IntegrationTestCase):
 	def setUp(self):
 		super().setUp()
 		# Ensure test daily egg rate exists
-		existing = frappe.db.get_value("Poultry Daily Egg Rate", {"rate_date": nowdate(), "market": "Namakkal"}, "name")
+		existing = frappe.db.get_value(
+			"Poultry Daily Egg Rate", {"rate_date": nowdate(), "market": "Namakkal"}, "name"
+		)
 		if existing:
-			frappe.db.set_value("Poultry Daily Egg Rate", existing, {
-				"rate_per_piece": 5.70,
-				"rate_per_tray": 171.0,
-				"rate_per_100": 570.0,
-				"rate_per_peti": 1197.0,
-				"national_average": 6.16,
-				"trend": "Stable",
-			})
+			frappe.db.set_value(
+				"Poultry Daily Egg Rate",
+				existing,
+				{
+					"rate_per_piece": 5.70,
+					"rate_per_tray": 171.0,
+					"rate_per_100": 570.0,
+					"rate_per_peti": 1197.0,
+					"national_average": 6.16,
+					"trend": "Stable",
+				},
+			)
 		else:
 			frappe.get_doc(
 				{

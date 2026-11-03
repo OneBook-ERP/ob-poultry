@@ -25,7 +25,43 @@ frappe.ui.form.on("Delivery Note Item", {
 	uom(frm, cdt, cdn) {
 		auto_apply_egg_rate_to_row(frm, cdt, cdn);
 	},
+
+	is_weight_based_live_bird_sale(frm, cdt, cdn) {
+		calculate_weight_based_live_bird(frm, cdt, cdn);
+	},
+	gross_weight_kg(frm, cdt, cdn) {
+		calculate_weight_based_live_bird(frm, cdt, cdn);
+	},
+	tare_weight_kg(frm, cdt, cdn) {
+		calculate_weight_based_live_bird(frm, cdt, cdn);
+	},
+	birds_count(frm, cdt, cdn) {
+		calculate_weight_based_live_bird(frm, cdt, cdn);
+	},
 });
+
+function calculate_weight_based_live_bird(frm, cdt, cdn) {
+	let row = locals[cdt][cdn];
+	if (!row) return;
+
+	let gross = flt(row.gross_weight_kg) || 0;
+	let tare = flt(row.tare_weight_kg) || 0;
+	let count = cint(row.birds_count) || 0;
+	let net = Math.max(0, gross - tare);
+
+	frappe.model.set_value(cdt, cdn, "net_weight_kg", flt(net.toFixed(2)));
+
+	if (row.is_weight_based_live_bird_sale) {
+		if (net > 0) {
+			frappe.model.set_value(cdt, cdn, "qty", flt(net.toFixed(2)));
+		}
+		if (count > 0 && net > 0) {
+			frappe.model.set_value(cdt, cdn, "avg_bird_weight_kg", flt((net / count).toFixed(3)));
+		} else {
+			frappe.model.set_value(cdt, cdn, "avg_bird_weight_kg", 0);
+		}
+	}
+}
 
 function setup_customer_query(frm) {
 	// Remove "Filtered by: is enabled and Company equals 'Poultry'."
