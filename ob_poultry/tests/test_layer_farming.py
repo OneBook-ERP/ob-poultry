@@ -262,3 +262,100 @@ class TestLayerFarming(IntegrationTestCase):
 		log.record_weight = 0
 		log.compute_flock_rollups()
 		self.assertEqual(flt(log.average_body_weight_g), 0.0)
+
+	def test_daily_egg_stock_and_sales_flow(self):
+		"""Test automated egg receipt into Cold Room and deduction on egg sales."""
+		from ob_poultry.setup import setup_default_egg_cold_room
+
+		setup_default_egg_cold_room()
+
+		wh = frappe.db.get_single_value("Poultry Settings", "default_egg_warehouse") or "Egg Cold Room - P"
+		item = frappe.db.get_single_value("Poultry Settings", "default_egg_item") or "Table Egg"
+
+		# Ensure shed has default_egg_warehouse set
+		frappe.db.set_value("Poultry Shed", "Test Layer Shed", "default_egg_warehouse", wh)
+
+		# Baseline Bin qty
+		init_bin_qty = flt(
+			frappe.db.get_value("Bin", {"item_code": item, "warehouse": wh}, "actual_qty") or 0.0
+		)
+
+		# Create Batch
+		batch = frappe.new_doc("Poultry Batch")
+		batch.batch_name = "Test Cold Room Batch"
+		batch.breed = "Test Layer Breed"
+		batch.shed = "Test Layer Shed"
+		batch.start_date = "2026-11-20"
+		batch.initial_bird_count = 500
+		batch.current_bird_count = 500
+		batch.status = "Active"
+		batch.save(ignore_permissions=True)
+
+		# Remove any existing log for this test date
+		test_date = "2026-11-20"
+		existing_log = frappe.db.get_value("Poultry Daily Log", {"log_date": test_date}, "name")
+		if existing_log:
+			frappe.delete_doc("Poultry Daily Log", existing_log, force=1)
+
+		# 1. Create Daily Log with 100 Good + 20 Double Yolk = 120 Table Eggs, and 30 Sold
+		log = frappe.new_doc("Poultry Daily Log")
+		log.log_date = test_date
+		log.selected_shed = "Test Layer Shed"
+		log.append(
+			"egg_entries",
+			{
+				"shed": "Test Layer Shed",
+				"batch": batch.name,
+				"good_eggs": 100,
+				"double_yolk_eggs": 20,
+				"broken_eggs": 0,
+				"waste_eggs": 0,
+			},
+		)
+		log.append(
+			"sales_entries",
+			{
+				"shed": "Test Layer Shed",
+				"batch": batch.name,
+				"good_eggs": 30,
+				"table_egg_rate": 5.0,
+			},
+		)
+		log.save(ignore_permissions=True)
+
+		# Verify Receipt Stock Entry created and submitted
+		self.assertTrue(log.egg_stock_entry)
+		se_receipt = frappe.get_doc("Stock Entry", log.egg_stock_entry)
+		self.assertEqual(se_receipt.docstatus, 1)
+		self.assertEqual(se_receipt.stock_entry_type, "Material Receipt")
+		self.assertEqual(flt(se_receipt.items[0].qty), 120.0)
+
+		# Verify Sales Stock Entry created and submitted
+		self.assertTrue(log.egg_sales_stock_entry)
+		se_sales = frappe.get_doc("Stock Entry", log.egg_sales_stock_entry)
+		self.assertEqual(se_sales.docstatus, 1)
+		self.assertEqual(se_sales.stock_entry_type, "Material Issue")
+		self.assertEqual(flt(se_sales.items[0].qty), 30.0)
+
+		# Verify net Bin stock: init + 120 - 30 = init + 90
+		curr_bin_qty = flt(frappe.db.get_value("Bin", {"item_code": item, "warehouse": wh}, "actual_qty"))
+		self.assertEqual(curr_bin_qty, init_bin_qty + 90.0)
+
+		# 2. Update Daily Log egg production (change good_eggs to 150 -> 170 table eggs)
+		log.egg_entries[0].good_eggs = 150
+		log.save(ignore_permissions=True)
+
+		new_bin_qty = flt(frappe.db.get_value("Bin", {"item_code": item, "warehouse": wh}, "actual_qty"))
+		self.assertEqual(new_bin_qty, init_bin_qty + 140.0)
+
+		# 3. Cancel Stock Entries on log cancellation
+		log.on_cancel()
+		reloaded_receipt = frappe.get_doc("Stock Entry", log.egg_stock_entry)
+		reloaded_sales = frappe.get_doc("Stock Entry", log.egg_sales_stock_entry)
+		self.assertEqual(reloaded_receipt.docstatus, 2)
+		self.assertEqual(reloaded_sales.docstatus, 2)
+
+		cancelled_bin_qty = flt(
+			frappe.db.get_value("Bin", {"item_code": item, "warehouse": wh}, "actual_qty")
+		)
+		self.assertEqual(cancelled_bin_qty, init_bin_qty)

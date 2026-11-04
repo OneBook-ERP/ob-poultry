@@ -43,6 +43,7 @@
   "section_break_sales",
   "sales_entries",
   "total_sales_amount",
+  "egg_sales_stock_entry",
   "section_break_notes",
   "notes",
   "batch",
@@ -296,6 +297,14 @@
    "fieldname": "total_sales_amount",
    "fieldtype": "Currency",
    "label": "Total Sales Revenue",
+   "read_only": 1
+  },
+  {
+   "allow_on_submit": 1,
+   "fieldname": "egg_sales_stock_entry",
+   "fieldtype": "Link",
+   "label": "Egg Sales Stock Entry",
+   "options": "Stock Entry",
    "read_only": 1
   },
   {

@@ -70,7 +70,7 @@ def get_data(filters):
 		from `tabPoultry Daily Log Egg Entry` e
 		inner join `tabPoultry Daily Log` d on d.name = e.parent
 		left join `tabPoultry Batch` b on b.name = e.batch
-		where d.docstatus = 1 and d.log_date <= %(as_of_date)s {batch_cond} {shed_cond}
+		where d.docstatus < 2 and d.log_date <= %(as_of_date)s {batch_cond} {shed_cond}
 		group by e.batch, e.shed
 		order by e.batch, e.shed
 		""",
@@ -91,7 +91,7 @@ def get_data(filters):
 			sum(s.good_eggs + s.double_yolk_eggs + s.broken_eggs) as sold
 		from `tabPoultry Daily Log Sales Entry` s
 		inner join `tabPoultry Daily Log` d on d.name = s.parent
-		where d.docstatus = 1 and d.log_date <= %(as_of_date)s and s.batch in %(batches)s
+		where d.docstatus < 2 and d.log_date <= %(as_of_date)s and s.batch in %(batches)s
 		group by s.batch
 		""",
 		{"as_of_date": as_of_date, "batches": batches},

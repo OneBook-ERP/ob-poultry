@@ -86,7 +86,7 @@ def get_data(filters):
 			count(distinct d.name) as log_days
 		from `tabPoultry Daily Log Egg Entry` e
 		inner join `tabPoultry Daily Log` d on d.name = e.parent
-		where d.docstatus = 1 {date_filter} {batch_filter.replace("batch", "e.batch")} {shed_filter.replace("shed", "e.shed")}
+		where d.docstatus < 2 {date_filter} {batch_filter.replace("batch", "e.batch")} {shed_filter.replace("shed", "e.shed")}
 		group by e.batch, e.shed
 		""",
 		values,
@@ -103,7 +103,7 @@ def get_data(filters):
 			sum(fe.total_feed_cost) as feed_cost
 		from `tabPoultry Daily Log Feed Entry` fe
 		inner join `tabPoultry Daily Log` d on d.name = fe.parent
-		where d.docstatus = 1 {date_filter} {batch_filter.replace("batch", "fe.batch")} {shed_filter.replace("shed", "fe.shed")}
+		where d.docstatus < 2 {date_filter} {batch_filter.replace("batch", "fe.batch")} {shed_filter.replace("shed", "fe.shed")}
 		group by fe.batch, fe.shed
 		""",
 		values,

@@ -50,7 +50,7 @@ def get_columns():
 
 
 def get_data(filters):
-	conditions = ["d.docstatus = 1", "d.log_date between %(from_date)s and %(to_date)s"]
+	conditions = ["d.docstatus < 2", "d.log_date between %(from_date)s and %(to_date)s"]
 	values = {
 		"from_date": filters.get("from_date"),
 		"to_date": filters.get("to_date"),
@@ -95,7 +95,7 @@ def get_data(filters):
 
 	# Also check legacy mortality entries if rows are empty and table exists
 	if not rows and frappe.db.table_exists("Poultry Daily Log Mortality Entry"):
-		legacy_cond = ["d.docstatus = 1", "d.log_date between %(from_date)s and %(to_date)s"]
+		legacy_cond = ["d.docstatus < 2", "d.log_date between %(from_date)s and %(to_date)s"]
 		if filters.get("batch"):
 			legacy_cond.append("d.batch = %(batch)s")
 		if filters.get("cause"):

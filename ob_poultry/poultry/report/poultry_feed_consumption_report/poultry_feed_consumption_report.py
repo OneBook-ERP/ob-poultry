@@ -74,7 +74,7 @@ def get_columns():
 
 
 def get_data(filters):
-	conditions = ["d.docstatus = 1", "d.log_date between %(from_date)s and %(to_date)s"]
+	conditions = ["d.docstatus < 2", "d.log_date between %(from_date)s and %(to_date)s"]
 	values = {
 		"from_date": filters.get("from_date"),
 		"to_date": filters.get("to_date"),
@@ -113,7 +113,7 @@ def get_data(filters):
 	# If no feed entries, fallback to legacy parent fields
 	if not rows:
 		p_cond = [
-			"d.docstatus = 1",
+			"d.docstatus < 2",
 			"d.feed_consumed_kg > 0",
 			"d.log_date between %(from_date)s and %(to_date)s",
 		]

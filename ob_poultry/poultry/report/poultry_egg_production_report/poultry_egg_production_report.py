@@ -83,7 +83,7 @@ def get_columns():
 
 
 def get_data(filters):
-	conditions = ["d.docstatus = 1", "d.log_date between %(from_date)s and %(to_date)s"]
+	conditions = ["d.docstatus < 2", "d.log_date between %(from_date)s and %(to_date)s"]
 	values = {
 		"from_date": filters.get("from_date"),
 		"to_date": filters.get("to_date"),

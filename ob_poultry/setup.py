@@ -1,11 +1,13 @@
 import frappe
 from frappe.custom.doctype.custom_field.custom_field import create_custom_fields
+from frappe.utils import flt
 
 
 def after_migrate():
 	setup_custom_fields()
 	setup_poultry_item_groups()
 	setup_default_item_group_mappings()
+	setup_default_egg_cold_room()
 
 
 def setup_poultry_item_groups():
@@ -108,6 +110,79 @@ def setup_default_item_group_mappings():
 
 	settings.flags.ignore_permissions = True
 	settings.save()
+
+
+def setup_default_egg_cold_room():
+	"""Ensures Egg Cold Room warehouse and default settings exist for all active companies."""
+	default_wh_candidate = None
+	for company in frappe.get_all("Company", fields=["name", "abbr"]):
+		wh_name = f"Egg Cold Room - {company.abbr}"
+		if not frappe.db.exists("Warehouse", wh_name):
+			parent_wh = f"All Warehouses - {company.abbr}"
+			if frappe.db.exists("Warehouse", parent_wh):
+				wh_doc = frappe.get_doc(
+					{
+						"doctype": "Warehouse",
+						"warehouse_name": "Egg Cold Room",
+						"parent_warehouse": parent_wh,
+						"company": company.name,
+						"is_group": 0,
+					}
+				).insert(ignore_permissions=True)
+				if not default_wh_candidate:
+					default_wh_candidate = wh_doc.name
+		else:
+			if not default_wh_candidate:
+				default_wh_candidate = wh_name
+
+	if not frappe.db.exists("DocType", "Poultry Settings"):
+		return
+
+	settings = frappe.get_single("Poultry Settings")
+	save_settings = False
+	if not settings.default_egg_warehouse and default_wh_candidate:
+		settings.default_egg_warehouse = default_wh_candidate
+		save_settings = True
+
+	if not settings.default_egg_item:
+		egg_item = frappe.db.get_value("Item", {"name": "Table Egg", "is_stock_item": 1}, "name")
+		if not egg_item:
+			egg_item = frappe.db.get_value(
+				"Item",
+				{
+					"item_group": ("in", ["Eggs", "Egg", "Products"]),
+					"is_stock_item": 1,
+					"name": ("like", "%Egg%"),
+				},
+				"name",
+			)
+		if egg_item:
+			settings.default_egg_item = egg_item
+			save_settings = True
+
+	if not settings.auto_post_egg_stock_entry:
+		settings.auto_post_egg_stock_entry = 1
+		save_settings = True
+
+	if save_settings:
+		settings.flags.ignore_permissions = True
+		settings.save()
+
+	# Link default_egg_warehouse to active sheds if empty
+	if default_wh_candidate:
+		for shed in frappe.get_all("Poultry Shed", fields=["name", "default_egg_warehouse"]):
+			if not shed.default_egg_warehouse:
+				frappe.db.set_value("Poultry Shed", shed.name, "default_egg_warehouse", default_wh_candidate)
+
+	# Ensure Table Egg and Cracked Egg have standard valuation rates if 0
+	if frappe.db.exists("Item", "Table Egg") and not flt(
+		frappe.db.get_value("Item", "Table Egg", "valuation_rate")
+	):
+		frappe.db.set_value("Item", "Table Egg", "valuation_rate", 5.0)
+	if frappe.db.exists("Item", "Cracked Egg") and not flt(
+		frappe.db.get_value("Item", "Cracked Egg", "valuation_rate")
+	):
+		frappe.db.set_value("Item", "Cracked Egg", "valuation_rate", 2.5)
 
 
 def setup_custom_fields():

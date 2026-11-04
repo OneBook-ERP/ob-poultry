@@ -42,7 +42,7 @@ def get_data(filters):
 	from ob_poultry.poultry.doctype.poultry_daily_log.poultry_daily_log import get_benchmark_for_age
 
 	conditions = [
-		"d.docstatus = 1",
+		"d.docstatus < 2",
 		"d.log_date between %(from_date)s and %(to_date)s",
 	]
 	batch_condition = "and d.batch = %(batch)s" if filters.get("batch") else ""

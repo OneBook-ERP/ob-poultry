@@ -182,10 +182,11 @@ class PoultryDailyLog(Document):
 	def on_update(self):
 		self.update_batch_flocks()
 		self.issue_feed_stock()
+		self.sync_egg_stock()
 		self.update_bin_stock()
 
 	def update_bin_stock(self):
-		"""Update stock in Bin from daily log feed entries so warehouse balance is up to date."""
+		"""Update stock in Bin from daily log feed entries and egg entries so warehouse balance is up to date."""
 		default_feed_item = frappe.db.get_value("Poultry Settings", None, "default_feed_item")
 		for row in self.feed_entries:
 			if not row.warehouse:
@@ -207,6 +208,32 @@ class PoultryDailyLog(Document):
 					b.warehouse = row.warehouse
 					b.actual_qty = avail_qty
 					b.valuation_rate = flt(row.rate_per_kg)
+					b.insert(ignore_permissions=True)
+
+		# Ensure egg bins in Cold Room warehouse are initialized or tracked when auto_post is disabled
+		auto_post = frappe.db.get_single_value("Poultry Settings", "auto_post_egg_stock_entry")
+		if auto_post is not None and not cint(auto_post):
+			default_wh = frappe.db.get_single_value("Poultry Settings", "default_egg_warehouse")
+			default_item = frappe.db.get_single_value("Poultry Settings", "default_egg_item") or "Table Egg"
+			for row in self.egg_entries:
+				wh = None
+				if row.shed:
+					wh = frappe.db.get_value("Poultry Shed", row.shed, "default_egg_warehouse")
+				wh = wh or default_wh
+				if not wh or not default_item:
+					continue
+				net_eggs = flt(row.in_stock) + flt(row.good_eggs) + flt(row.double_yolk_eggs)
+				for s in self.sales_entries:
+					if s.batch == row.batch:
+						net_eggs -= flt(s.good_eggs) + flt(s.double_yolk_eggs)
+				bin_name = frappe.db.get_value("Bin", {"item_code": default_item, "warehouse": wh}, "name")
+				if bin_name:
+					frappe.db.set_value("Bin", bin_name, "actual_qty", max(0.0, net_eggs))
+				else:
+					b = frappe.new_doc("Bin")
+					b.item_code = default_item
+					b.warehouse = wh
+					b.actual_qty = max(0.0, net_eggs)
 					b.insert(ignore_permissions=True)
 
 	def validate_unique_daily_log(self):
@@ -271,7 +298,7 @@ class PoultryDailyLog(Document):
 				"""
 			select sum(mortality_count) + sum(cull_count) as removed
 			from `tabPoultry Daily Log`
-			where batch = %s and docstatus = 1 and name != %s
+			where batch = %s and docstatus < 2 and name != %s
 			""",
 				(self.batch, self.name or ""),
 				as_dict=True,
@@ -464,71 +491,189 @@ class PoultryDailyLog(Document):
 			self.batch_doc.recalculate_performance()
 
 	def on_cancel(self):
-		if self.get("stock_entry"):
-			stock_entry = frappe.get_doc("Stock Entry", self.stock_entry)
-			if stock_entry.docstatus == 1:
-				stock_entry.cancel()
+		if self.get("egg_sales_stock_entry"):
+			egg_sales_se = frappe.get_doc("Stock Entry", self.egg_sales_stock_entry)
+			if egg_sales_se.docstatus == 1:
+				egg_sales_se.cancel()
 		if self.get("egg_stock_entry"):
 			egg_se = frappe.get_doc("Stock Entry", self.egg_stock_entry)
 			if egg_se.docstatus == 1:
 				egg_se.cancel()
+		if self.get("stock_entry"):
+			stock_entry = frappe.get_doc("Stock Entry", self.stock_entry)
+			if stock_entry.docstatus == 1:
+				stock_entry.cancel()
 		if self.get("batch") and self.batch_doc and hasattr(self.batch_doc, "recalculate_performance"):
 			self.batch_doc.recalculate_performance()
+		self.update_bin_stock()
 
-	def create_egg_stock_entry(self):
-		if frappe.db.exists("DocType", "Poultry Settings"):
-			settings = frappe.get_cached_doc("Poultry Settings")
-			if hasattr(settings, "auto_post_egg_stock_entry") and not cint(
-				settings.auto_post_egg_stock_entry
-			):
-				return
-			default_egg_wh = settings.get("default_egg_warehouse")
-			default_egg_item = settings.get("default_egg_item")
-		else:
-			default_egg_wh = None
-			default_egg_item = None
+	def on_trash(self):
+		for fieldname in ["egg_sales_stock_entry", "egg_stock_entry", "stock_entry"]:
+			se_name = self.get(fieldname)
+			if se_name and frappe.db.exists("Stock Entry", se_name):
+				se = frappe.get_doc("Stock Entry", se_name)
+				if se.docstatus == 1:
+					se.cancel()
 
-		if not default_egg_item:
-			default_egg_item = frappe.db.get_value(
-				"Item",
-				{"item_group": ("in", ["Eggs", "Egg", "Poultry Eggs"]), "is_stock_item": 1},
-				"name",
+	def sync_egg_stock(self):
+		"""Synchronizes egg collection (Material Receipt) and egg sales (Material Issue) to/from Egg Cold Room."""
+		auto_post = frappe.db.get_single_value("Poultry Settings", "auto_post_egg_stock_entry")
+		if auto_post is not None and not cint(auto_post):
+			return
+
+		default_wh = frappe.db.get_single_value("Poultry Settings", "default_egg_warehouse")
+		default_item = frappe.db.get_single_value("Poultry Settings", "default_egg_item") or "Table Egg"
+		cracked_item = "Cracked Egg" if frappe.db.exists("Item", "Cracked Egg") else default_item
+
+		# Fallback warehouse if default is not configured
+		if not default_wh:
+			company = frappe.defaults.get_user_default("Company") or frappe.db.get_single_value(
+				"Global Defaults", "default_company"
 			)
-		if not default_egg_item:
-			default_egg_item = frappe.db.get_value(
-				"Item", {"is_stock_item": 1, "item_name": ("like", "%Egg%")}, "name"
-			)
+			if company:
+				abbr = frappe.db.get_value("Company", company, "abbr")
+				candidate = f"Egg Cold Room - {abbr}"
+				if frappe.db.exists("Warehouse", candidate):
+					default_wh = candidate
 
-		items = []
+		# 1. Collect Egg Production (Receipt into Cold Room)
+		receipt_items_map = {}
 		for row in self.egg_entries:
-			qty = cint(row.good_eggs) + cint(row.double_yolk_eggs)
-			if qty <= 0:
-				continue
 			wh = None
 			if row.shed:
 				wh = frappe.db.get_value("Poultry Shed", row.shed, "default_egg_warehouse")
+			wh = wh or default_wh
 			if not wh:
-				wh = default_egg_wh
-			if not wh or not default_egg_item:
 				continue
 
-			uom = frappe.db.get_value("Item", default_egg_item, "stock_uom") or "Nos"
-			rate = flt(self.feed_cost_per_egg) or 1.0
-			items.append(
+			good_qty = cint(row.good_eggs) + cint(row.double_yolk_eggs)
+			if good_qty > 0:
+				key = (wh, default_item)
+				receipt_items_map[key] = receipt_items_map.get(key, 0) + good_qty
+
+			broken_qty = cint(row.broken_eggs)
+			if broken_qty > 0:
+				key = (wh, cracked_item)
+				receipt_items_map[key] = receipt_items_map.get(key, 0) + broken_qty
+
+		receipt_items = []
+		rate = (
+			flt(self.feed_cost_per_egg)
+			or flt(frappe.db.get_value("Item", default_item, "valuation_rate"))
+			or 5.0
+		)
+		for (wh, item_code), qty in receipt_items_map.items():
+			uom = frappe.db.get_value("Item", item_code, "stock_uom") or "Nos"
+			item_rate = rate if item_code == default_item else max(round(rate * 0.5, 2), 0.5)
+			receipt_items.append(
 				{
-					"item_code": default_egg_item,
+					"item_code": item_code,
 					"t_warehouse": wh,
 					"qty": qty,
 					"uom": uom,
-					"basic_rate": rate,
+					"basic_rate": item_rate,
 					"conversion_factor": 1.0,
+					"allow_zero_valuation_rate": 1,
 				}
 			)
 
+		# 2. Collect Egg Sales (Issue out of Cold Room)
+		issue_items_map = {}
+		for row in self.sales_entries:
+			wh = None
+			if row.shed:
+				wh = frappe.db.get_value("Poultry Shed", row.shed, "default_egg_warehouse")
+			wh = wh or default_wh
+			if not wh:
+				continue
+
+			good_qty = cint(row.good_eggs) + cint(row.double_yolk_eggs)
+			if good_qty > 0:
+				key = (wh, default_item)
+				issue_items_map[key] = issue_items_map.get(key, 0) + good_qty
+
+			broken_qty = cint(row.broken_eggs)
+			if broken_qty > 0:
+				key = (wh, cracked_item)
+				issue_items_map[key] = issue_items_map.get(key, 0) + broken_qty
+
+		issue_items = []
+		for (wh, item_code), qty in issue_items_map.items():
+			uom = frappe.db.get_value("Item", item_code, "stock_uom") or "Nos"
+			item_rate = rate if item_code == default_item else max(round(rate * 0.5, 2), 0.5)
+			issue_items.append(
+				{
+					"item_code": item_code,
+					"s_warehouse": wh,
+					"qty": qty,
+					"uom": uom,
+					"basic_rate": item_rate,
+					"conversion_factor": 1.0,
+					"allow_zero_valuation_rate": 1,
+				}
+			)
+
+		receipt_changed = self._needs_stock_entry_update(receipt_items, "Material Receipt", "egg_stock_entry")
+		sales_changed = self._needs_stock_entry_update(issue_items, "Material Issue", "egg_sales_stock_entry")
+
+		if not receipt_changed and not sales_changed:
+			return
+
+		# If receipt changed, cancel consumer (sales) first, then provider (receipt)
+		# to ensure Cold Room bin balance never dips negative during cancellation
+		if receipt_changed:
+			self._cancel_stock_entry_field("egg_sales_stock_entry")
+			self._cancel_stock_entry_field("egg_stock_entry")
+			if receipt_items:
+				self._create_and_submit_stock_entry(
+					receipt_items, "Material Receipt", "egg_stock_entry", "Egg Production Receipt"
+				)
+			if issue_items:
+				self._create_and_submit_stock_entry(
+					issue_items, "Material Issue", "egg_sales_stock_entry", "Egg Sales Issue"
+				)
+		elif sales_changed:
+			self._cancel_stock_entry_field("egg_sales_stock_entry")
+			if issue_items:
+				self._create_and_submit_stock_entry(
+					issue_items, "Material Issue", "egg_sales_stock_entry", "Egg Sales Issue"
+				)
+
+	def _needs_stock_entry_update(self, items, stock_entry_type, fieldname):
+		current_se_name = self.get(fieldname)
+		if not current_se_name:
+			return bool(items)
+
+		if not frappe.db.exists("Stock Entry", current_se_name):
+			return bool(items)
+
+		existing_se = frappe.get_doc("Stock Entry", current_se_name)
+		if existing_se.docstatus != 1:
+			return bool(items)
+
+		if not items:
+			return True
+
+		wh_attr = "t_warehouse" if stock_entry_type == "Material Receipt" else "s_warehouse"
+		existing_map = {(d.item_code, getattr(d, wh_attr)): flt(d.qty) for d in existing_se.items}
+		new_map = {(d["item_code"], d.get(wh_attr)): flt(d["qty"]) for d in items}
+		return existing_map != new_map
+
+	def _cancel_stock_entry_field(self, fieldname):
+		current_se_name = self.get(fieldname)
+		if current_se_name and frappe.db.exists("Stock Entry", current_se_name):
+			se = frappe.get_doc("Stock Entry", current_se_name)
+			if se.docstatus == 1:
+				se.cancel()
+		self.db_set(fieldname, None)
+		self.set(fieldname, None)
+
+	def _create_and_submit_stock_entry(self, items, stock_entry_type, fieldname, remarks_prefix):
 		if not items:
 			return
 
-		company = frappe.db.get_value("Warehouse", items[0]["t_warehouse"], "company")
+		wh = items[0].get("t_warehouse") or items[0].get("s_warehouse")
+		company = frappe.db.get_value("Warehouse", wh, "company") if wh else None
 		if not company:
 			company = frappe.defaults.get_user_default("Company") or frappe.db.get_single_value(
 				"Global Defaults", "default_company"
@@ -537,16 +682,21 @@ class PoultryDailyLog(Document):
 		stock_entry = frappe.get_doc(
 			{
 				"doctype": "Stock Entry",
-				"stock_entry_type": "Material Receipt",
+				"stock_entry_type": stock_entry_type,
 				"company": company,
 				"posting_date": self.log_date or nowdate(),
 				"items": items,
+				"remarks": f"{remarks_prefix} for Poultry Daily Log {self.name} ({self.log_date})",
 			}
 		)
 		stock_entry.insert(ignore_permissions=True)
 		stock_entry.submit()
-		self.db_set("egg_stock_entry", stock_entry.name)
-		self.egg_stock_entry = stock_entry.name
+		self.db_set(fieldname, stock_entry.name)
+		self.set(fieldname, stock_entry.name)
+
+	def create_egg_stock_entry(self):
+		"""Backward compatible wrapper."""
+		self.sync_egg_stock()
 
 	def create_feed_stock_entry(self):
 		if not self.get("feed_consumed_kg"):

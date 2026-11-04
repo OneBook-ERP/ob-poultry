@@ -50,7 +50,7 @@ def get_data(filters):
 			f.closing_birds as bird_count
 		from `tabPoultry Daily Log Flock Entry` f
 		inner join `tabPoultry Daily Log` d on d.name = f.parent
-		where f.batch = %(batch)s and d.docstatus = 1
+		where f.batch = %(batch)s and d.docstatus < 2
 		order by d.log_date asc
 		""",
 		{"batch": batch_name},
@@ -69,7 +69,7 @@ def get_data(filters):
 				cull_count,
 				null as bird_count
 			from `tabPoultry Daily Log`
-			where batch = %(batch)s and docstatus = 1
+			where batch = %(batch)s and docstatus < 2
 			order by log_date asc
 			""",
 			{"batch": batch_name},
