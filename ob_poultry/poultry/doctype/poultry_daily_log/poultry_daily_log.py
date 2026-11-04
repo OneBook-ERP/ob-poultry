@@ -244,6 +244,16 @@ class PoultryDailyLog(Document):
 		self.total_mortality = total_dead
 		self.total_culled = total_culls
 
+		if self.record_weight:
+			weights = [
+				flt(row.average_body_weight_g)
+				for row in self.flock_entries
+				if flt(row.average_body_weight_g) > 0
+			]
+			self.average_body_weight_g = round(sum(weights) / len(weights), 2) if weights else 0.0
+		else:
+			self.average_body_weight_g = 0.0
+
 	@property
 	def batch_doc(self):
 		if not hasattr(self, "_batch_doc"):
@@ -410,7 +420,11 @@ class PoultryDailyLog(Document):
 		if not batch or not getattr(batch, "breed", None):
 			return
 		age_in_days = date_diff(self.log_date, batch.start_date)
-		benchmark = get_benchmark_for_age(batch.breed, age_in_days)
+		placement_days = cint(getattr(batch, "placement_age_weeks", 0) or 0) * 7 + cint(
+			getattr(batch, "placement_age_days", 0) or 0
+		)
+		effective_age = age_in_days + placement_days
+		benchmark = get_benchmark_for_age(batch.breed, effective_age, getattr(batch, "breed_type", None))
 		if not benchmark:
 			self.std_mortality_pct = None
 			self.std_feed_per_bird_g = None
@@ -831,6 +845,8 @@ def get_shed_context(shed, log_date=None):
 		"breed",
 		"breed_type",
 		"start_date",
+		"placement_age_weeks",
+		"placement_age_days",
 		"current_bird_count",
 		"initial_bird_count",
 		"feed_warehouse",
@@ -864,15 +880,17 @@ def get_shed_context(shed, log_date=None):
 	batch_list = []
 	shed_benchmark = None
 	for idx, b in enumerate(batches):
-		# Calculate Week / Day from batch start_date
+		# Calculate Week / Day from batch start_date including placement age
 		start_dt = getdate(b.start_date)
 		days_elapsed = max(0, date_diff(log_dt, start_dt))
-		weeks = days_elapsed // 7
-		day_rem = days_elapsed % 7
+		placement_days = cint(b.placement_age_weeks or 0) * 7 + cint(b.placement_age_days or 0)
+		effective_age_days = days_elapsed + placement_days
+		weeks = effective_age_days // 7
+		day_rem = effective_age_days % 7
 		week_day_str = f"W{weeks} D{day_rem}"
 
 		batch_breed = b.breed or breed
-		bmk = get_benchmark_for_age(batch_breed, days_elapsed, b.breed_type)
+		bmk = get_benchmark_for_age(batch_breed, effective_age_days, b.breed_type)
 		if not shed_benchmark and bmk:
 			shed_benchmark = bmk
 
@@ -914,6 +932,7 @@ def get_shed_context(shed, log_date=None):
 				"breed_type": b.breed_type,
 				"week_day": week_day_str,
 				"days_elapsed": days_elapsed,
+				"effective_age_days": effective_age_days,
 				"opening_birds": opening_birds,
 				"opening_eggs": opening_eggs,
 				"feed_item": feed_item,

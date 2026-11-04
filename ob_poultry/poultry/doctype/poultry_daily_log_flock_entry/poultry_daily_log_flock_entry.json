@@ -11,7 +11,8 @@
   "dead",
   "mortality_cause",
   "culled",
-  "closing_birds"
+  "closing_birds",
+  "average_body_weight_g"
  ],
  "fields": [
   {
@@ -72,6 +73,13 @@
    "in_list_view": 1,
    "label": "Closing Birds",
    "read_only": 1
+  },
+  {
+   "default": "0",
+   "fieldname": "average_body_weight_g",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "label": "Avg Weight (g)"
   }
  ],
  "istable": 1,

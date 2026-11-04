@@ -214,3 +214,51 @@ class TestLayerFarming(IntegrationTestCase):
 
 			cols, _ = poultry_bodyweight_report.execute({"from_date": "2026-01-01", "to_date": "2026-12-31"})
 			self.assertTrue(any(c["fieldname"] == "age_weeks" for c in cols))
+
+	def test_batch_individual_weight_and_context(self):
+		"""Test per-batch body weight in flock entries and get_shed_context benchmarks."""
+		from ob_poultry.poultry.doctype.poultry_daily_log.poultry_daily_log import get_shed_context
+		from ob_poultry.poultry.report.poultry_bodyweight_report import poultry_bodyweight_report
+
+		# Create 17-week pullet batch
+		batch = frappe.new_doc("Poultry Batch")
+		batch.batch_name = "Test Weight Pullet Batch"
+		batch.breed = "Test Layer Breed"
+		batch.shed = "Test Layer Shed"
+		batch.start_date = nowdate()
+		batch.initial_bird_count = 500
+		batch.current_bird_count = 500
+		batch.status = "Active"
+		batch.placement_age_weeks = 17
+		batch.placement_age_days = 0
+		batch.save(ignore_permissions=True)
+
+		ctx = get_shed_context("Test Layer Shed", nowdate())
+		self.assertIn("batches", ctx)
+		b_item = next((b for b in ctx["batches"] if b["batch"] == batch.name), None)
+		self.assertIsNotNone(b_item)
+		self.assertEqual(b_item["effective_age_days"], 119)  # 17 * 7
+		self.assertEqual(b_item["week_day"], "W17 D0")
+
+		# Create Daily Log with record_weight enabled
+		log = frappe.new_doc("Poultry Daily Log")
+		log.log_date = nowdate()
+		log.record_weight = 1
+		log.append(
+			"flock_entries",
+			{
+				"batch": batch.name,
+				"shed": "Test Layer Shed",
+				"opening_birds": 500,
+				"dead": 0,
+				"culled": 0,
+				"average_body_weight_g": 1625.5,
+			},
+		)
+		log.compute_flock_rollups()
+		self.assertEqual(flt(log.average_body_weight_g), 1625.5)
+
+		# When record_weight is 0, average_body_weight_g resets to 0.0
+		log.record_weight = 0
+		log.compute_flock_rollups()
+		self.assertEqual(flt(log.average_body_weight_g), 0.0)

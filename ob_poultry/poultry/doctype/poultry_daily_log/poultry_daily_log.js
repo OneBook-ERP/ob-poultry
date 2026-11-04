@@ -92,6 +92,13 @@ frappe.ui.form.on("Poultry Daily Log", {
 				pointer-events: none !important;
 			}
 
+			/* Dynamic toggle for Average Body Weight column in Flock Entries */
+			.hide-pdl-weight [data-fieldname="flock_entries"] [data-fieldname="average_body_weight_g"],
+			.hide-pdl-weight [data-fieldname="flock_entries"] .grid-static-col[data-fieldname="average_body_weight_g"],
+			.hide-pdl-weight [data-fieldname="flock_entries"] .col[data-fieldname="average_body_weight_g"] {
+				display: none !important;
+			}
+
 			/* Vertical Column Totals Row Styling */
 			.grid-totals-row {
 				background-color: var(--subtle-accent-background, #f8fafc) !important;
@@ -531,6 +538,7 @@ frappe.ui.form.on("Poultry Daily Log", {
 		}
 
 		frm.events.format_batch_cells(frm);
+		frm.events.toggle_weight_field(frm);
 	},
 
 	cache_batch_names(frm) {
@@ -905,6 +913,7 @@ frappe.ui.form.on("Poultry Daily Log", {
 				frm.trigger("calculate_all_totals");
 				frm.events.render_all_table_totals(frm);
 				frm.events.format_batch_cells(frm);
+				frm.events.toggle_weight_field(frm);
 				frm.events.render_benchmark_variance_card(frm);
 			},
 		});
@@ -951,145 +960,147 @@ frappe.ui.form.on("Poultry Daily Log", {
 	render_benchmark_dialog_content(frm, on_proceed) {
 		let ctx = frm.__current_shed_context || {};
 		let batches = ctx.batches || [];
-		let primary = batches.length ? batches[0] : {};
-		let bmk = ctx.benchmark || {};
-		if (primary.benchmark && Object.keys(primary.benchmark).length) {
-			bmk = Object.assign({}, bmk, primary.benchmark);
-		}
-
-		let std_wt = flt(bmk.standard_body_weight_g) || 0;
-		let std_hdep = flt(bmk.standard_hdep_pct) || 0;
-		let std_mort = flt(bmk.standard_mortality_pct) || 0;
-		let std_feed = flt(bmk.standard_feed_per_bird_g) || 0;
-
-		let record_wt = cint(frm.doc.record_weight) === 1;
-		let act_wt = record_wt ? flt(frm.doc.average_body_weight_g) : 0;
-		let wt_dev_val = act_wt > 0 && std_wt > 0 ? ((act_wt - std_wt) / std_wt) * 100 : null;
-		let wt_dev_str =
-			wt_dev_val !== null ? (wt_dev_val >= 0 ? "+" : "") + wt_dev_val.toFixed(1) + "%" : "—";
-
 		let cur_shed = frm.doc.selected_shed;
-		let eggs = 0;
-		(frm.doc.egg_entries || []).forEach((r) => {
-			if (
-				!cur_shed ||
-				r.shed === cur_shed ||
-				(!r.shed && batches.some((b) => b.batch === r.batch))
-			) {
-				eggs += flt(r.total_eggs) || 0;
-			}
-		});
+		let record_wt = cint(frm.doc.record_weight) === 1;
 
-		let birds = 0;
-		let dead = 0;
-		(frm.doc.flock_entries || []).forEach((r) => {
-			if (
-				!cur_shed ||
-				r.shed === cur_shed ||
-				(!r.shed && batches.some((b) => b.batch === r.batch))
-			) {
-				birds += flt(r.opening_birds) || 0;
-				dead += flt(r.dead) || 0;
-			}
-		});
-		if (birds === 0 && primary.opening_birds) birds = flt(primary.opening_birds);
-
-		let act_hdep = birds > 0 ? (eggs / birds) * 100 : 0;
-		let hdep_dev_val =
-			std_hdep > 0 && birds > 0 ? ((act_hdep - std_hdep) / std_hdep) * 100 : null;
-		let hdep_dev_str =
-			hdep_dev_val !== null
-				? (hdep_dev_val >= 0 ? "+" : "") + hdep_dev_val.toFixed(1) + "%"
-				: "—";
-
-		let act_mort = birds > 0 ? (dead / birds) * 100 : 0;
-		let mort_dev_val =
-			std_mort > 0 && birds > 0 ? ((act_mort - std_mort) / std_mort) * 100 : null;
-		let mort_dev_str =
-			mort_dev_val !== null
-				? (mort_dev_val >= 0 ? "+" : "") + mort_dev_val.toFixed(1) + "%"
-				: "—";
-
-		let feed_spent = 0;
-		(frm.doc.feed_entries || []).forEach((r) => {
-			if (
-				!cur_shed ||
-				r.shed === cur_shed ||
-				(!r.shed && batches.some((b) => b.batch === r.batch))
-			) {
-				feed_spent += flt(r.feed_spent_kg) || 0;
-			}
-		});
-		let act_feed_g = birds > 0 ? (feed_spent * 1000) / birds : 0;
-		let feed_dev_val =
-			act_feed_g > 0 && std_feed > 0 ? ((act_feed_g - std_feed) / std_feed) * 100 : null;
-		let feed_dev_str =
-			feed_dev_val !== null
-				? (feed_dev_val >= 0 ? "+" : "") + feed_dev_val.toFixed(1) + "%"
-				: "—";
-
-		// Analyze Warnings & build advisory messages for each metric
 		let warnings = [];
-		if (wt_dev_val !== null) {
-			if (wt_dev_val <= -10) {
-				warnings.push({
-					title: __("Weight Warning (Underweight by {0})", [
-						Math.abs(wt_dev_val).toFixed(1) + "%",
-					]),
-					actual: act_wt + " g",
-					standard: std_wt + " g",
-					/* Warning recommendation commented out for now:
-					message: __("Check the nutrient on feed (ensure adequate metabolizable energy and crude protein levels), daily feed intake per bird, feeder space distribution, and clean water availability.")
-					*/
-				});
-			} else if (wt_dev_val >= 10) {
-				warnings.push({
-					title: __("Weight Warning (Overweight by +{0})", [
-						wt_dev_val.toFixed(1) + "%",
-					]),
-					actual: act_wt + " g",
-					standard: std_wt + " g",
-					/* Warning recommendation commented out for now:
-					message: __("Check the nutrient on feed and daily feed intake. Review ration portioning to ensure birds are not over-consuming energy-dense feed.")
-					*/
-				});
+
+		batches.forEach(function (b, idx) {
+			let bmk = b.benchmark || {};
+			let std_wt = flt(bmk.standard_body_weight_g) || 0;
+			let std_hdep = flt(bmk.standard_hdep_pct) || 0;
+			let std_mort = flt(bmk.standard_mortality_pct) || 0;
+			let std_feed = flt(bmk.standard_feed_per_bird_g) || 0;
+
+			let batch_name = b.batch_name || `Batch ${idx + 1}`;
+			let batch_label = `${batch_name}${b.week_day ? " (" + b.week_day + ")" : ""}`;
+
+			// Find matching child rows for this batch
+			let f_row = (frm.doc.flock_entries || []).find((r) => r.batch === b.batch) || {};
+			let e_row = (frm.doc.egg_entries || []).find((r) => r.batch === b.batch) || {};
+			let feed_row = (frm.doc.feed_entries || []).find((r) => r.batch === b.batch) || {};
+
+			let birds = flt(f_row.opening_birds) || flt(b.opening_birds) || 0;
+			let dead = flt(f_row.dead) || 0;
+			let eggs = flt(e_row.total_eggs) || 0;
+			let feed_spent = flt(feed_row.feed_spent_kg) || 0;
+
+			// 1. Avg Body Weight (evaluated per batch if record_weight is enabled)
+			if (record_wt) {
+				let act_wt = flt(f_row.average_body_weight_g) || 0;
+				if (act_wt > 0 && std_wt > 0) {
+					let dev = ((act_wt - std_wt) / std_wt) * 100;
+					if (dev <= -10) {
+						warnings.push({
+							batch: batch_label,
+							metric: __("Avg Body Weight"),
+							actual: `${act_wt.toLocaleString()} g`,
+							standard: `${std_wt.toLocaleString()} g`,
+							variance: dev.toFixed(1) + "%",
+							issue: __("Underweight ({0})", [Math.abs(dev).toFixed(1) + "%"]),
+							type: "danger",
+						});
+					} else if (dev >= 10) {
+						warnings.push({
+							batch: batch_label,
+							metric: __("Avg Body Weight"),
+							actual: `${act_wt.toLocaleString()} g`,
+							standard: `${std_wt.toLocaleString()} g`,
+							variance: "+" + dev.toFixed(1) + "%",
+							issue: __("Overweight (+{0})", [dev.toFixed(1) + "%"]),
+							type: "warning",
+						});
+					}
+				}
 			}
-		}
 
-		if (hdep_dev_val !== null && hdep_dev_val <= -10) {
-			warnings.push({
-				title: __("Egg Production Warning (Low Yield by {0})", [
-					Math.abs(hdep_dev_val).toFixed(1) + "%",
-				]),
-				actual: act_hdep.toFixed(1) + "%",
-				standard: std_hdep.toFixed(1) + "%",
-				/* Warning recommendation commented out for now:
-				message: __("Check the nutrient on feed (calcium, phosphorus, and amino acid balance), daily water intake, lighting program duration/lux intensity, egg collection timing, and monitor flock for subclinical disease or heat stress.")
-				*/
-			});
-		}
+			// 2. Egg Production (HDEP %)
+			if (std_hdep > 0 && birds > 0) {
+				let act_hdep = (eggs / birds) * 100;
+				let dev = ((act_hdep - std_hdep) / std_hdep) * 100;
+				if (dev <= -10) {
+					warnings.push({
+						batch: batch_label,
+						metric: __("Egg Production (HDEP)"),
+						actual: `${act_hdep.toFixed(1)}% (${eggs.toLocaleString()} eggs)`,
+						standard: `${std_hdep.toFixed(1)}%`,
+						variance: dev.toFixed(1) + "%",
+						issue: __("Low Yield ({0})", [Math.abs(dev).toFixed(1) + "%"]),
+						type: "danger",
+					});
+				}
+			}
 
-		if (mort_dev_val !== null && mort_dev_val >= 10 && dead > 0) {
-			warnings.push({
-				title: __("Mortality Warning (Exceeds Standard by +{0})", [
-					mort_dev_val.toFixed(1) + "%",
-				]),
-				actual: act_mort.toFixed(2) + "% (" + dead + " dead)",
-				standard: std_mort.toFixed(2) + "%",
-				/* Warning recommendation commented out for now:
-				message: __("Check shed ventilation and ammonia levels, temperature/humidity control, water line hygiene and biosecurity, inspect dead birds for pathology, and consult a poultry veterinarian for medication if needed.")
-				*/
-			});
-		}
+			// 3. Daily Mortality
+			if (birds > 0 && dead > 0) {
+				let act_mort = (dead / birds) * 100;
+				if (std_mort > 0) {
+					let dev = ((act_mort - std_mort) / std_mort) * 100;
+					if (dev >= 10) {
+						warnings.push({
+							batch: batch_label,
+							metric: __("Daily Mortality"),
+							actual: `${act_mort.toFixed(2)}% (${dead} dead)`,
+							standard: `${std_mort.toFixed(2)}%`,
+							variance: "+" + dev.toFixed(1) + "%",
+							issue: __("High Mortality (+{0})", [dev.toFixed(1) + "%"]),
+							type: "danger",
+						});
+					}
+				} else if (act_mort >= 0.1) {
+					warnings.push({
+						batch: batch_label,
+						metric: __("Daily Mortality"),
+						actual: `${act_mort.toFixed(2)}% (${dead} dead)`,
+						standard: "≤ 0.05%",
+						variance: "> normal",
+						issue: __("High Mortality ({0} dead)", [dead]),
+						type: "danger",
+					});
+				}
+			}
+
+			// 4. Feed Intake
+			if (std_feed > 0 && birds > 0 && feed_spent > 0) {
+				let act_feed_g = (feed_spent * 1000) / birds;
+				let dev = ((act_feed_g - std_feed) / std_feed) * 100;
+				if (dev <= -15) {
+					warnings.push({
+						batch: batch_label,
+						metric: __("Feed Intake / Bird"),
+						actual: `${act_feed_g.toFixed(1)} g`,
+						standard: `${std_feed.toFixed(1)} g`,
+						variance: dev.toFixed(1) + "%",
+						issue: __("Under-consumption ({0})", [Math.abs(dev).toFixed(1) + "%"]),
+						type: "warning",
+					});
+				} else if (dev >= 15) {
+					warnings.push({
+						batch: batch_label,
+						metric: __("Feed Intake / Bird"),
+						actual: `${act_feed_g.toFixed(1)} g`,
+						standard: `${std_feed.toFixed(1)} g`,
+						variance: "+" + dev.toFixed(1) + "%",
+						issue: __("Over-consumption (+{0})", [dev.toFixed(1) + "%"]),
+						type: "warning",
+					});
+				}
+			}
+		});
 
 		let is_on_save = typeof on_proceed === "function";
 
+		// If saving and no warnings exist, smoothly proceed without interrupting
+		if (is_on_save && warnings.length === 0) {
+			on_proceed();
+			return;
+		}
+
 		let d = new frappe.ui.Dialog({
-			title: __("Benchmark Variance & Health Check{0}", [
-				cur_shed
-					? ": " + cur_shed + (primary.week_day ? " (" + primary.week_day + ")" : "")
-					: "",
-			]),
+			title:
+				warnings.length > 0
+					? __("Benchmark Warnings Check{0}", [cur_shed ? ": " + cur_shed : ""])
+					: __("Benchmark Check{0}", [cur_shed ? ": " + cur_shed : ""]),
 			size: "large",
 			fields: [
 				{
@@ -1113,110 +1124,86 @@ frappe.ui.form.on("Poultry Daily Log", {
 			});
 		}
 
-		/* Warning recommendation banner commented out for now per user request:
-		let banner_html = "";
+		let modal_content = "";
 		if (warnings.length > 0) {
-			banner_html = `
-				<div class="border rounded p-3 mb-3 bg-light">
-					${warnings.map(w => `
-						<div class="mb-2">
-							<div class="d-flex justify-content-between align-items-center">
-								<span class="font-weight-bold">${w.title}</span>
-								<span class="text-muted small">Actual: ${w.actual} | Std: ${w.standard}</span>
-							</div>
-							${w.message ? `
-								<div class="small mt-1 text-muted">
-									<b>${__("Recommendation")}:</b> ${w.message}
-								</div>
-							` : ""}
-						</div>
-					`).join("<hr class='my-2'>")}
+			modal_content = `
+			<div>
+				<p class="text-muted small mb-2">
+					${__("Only metrics that failed standard breed benchmark tolerances are listed below:")}
+				</p>
+				<div class="table-responsive border rounded" style="overflow: hidden;">
+					<table class="table table-bordered table-hover table-sm m-0">
+						<thead style="background-color: var(--subtle-accent-background, #f8fafc); border-bottom: 1px solid var(--border-color, #d1d8dd);">
+							<tr>
+								<th style="padding: 8px 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; font-size: 11px;">${__(
+									"Batch"
+								)}</th>
+								<th style="padding: 8px 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; font-size: 11px;">${__(
+									"Metric"
+								)}</th>
+								<th style="padding: 8px 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; font-size: 11px; text-align: right;">${__(
+									"Actual Value"
+								)}</th>
+								<th style="padding: 8px 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; font-size: 11px; text-align: right;">${__(
+									"Standard Benchmark"
+								)}</th>
+								<th style="padding: 8px 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; font-size: 11px; text-align: right;">${__(
+									"Variance %"
+								)}</th>
+								<th style="padding: 8px 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; font-size: 11px;">${__(
+									"Warning Condition"
+								)}</th>
+							</tr>
+						</thead>
+						<tbody>
+							${warnings
+								.map(
+									(w) => `
+								<tr>
+									<td style="padding: 8px 10px; font-weight: 600;">${frappe.utils.escape_html(w.batch)}</td>
+									<td style="padding: 8px 10px;">${frappe.utils.escape_html(w.metric)}</td>
+									<td style="padding: 8px 10px; text-align: right; font-weight: 600;">${frappe.utils.escape_html(
+										w.actual
+									)}</td>
+									<td style="padding: 8px 10px; text-align: right; color: var(--text-muted, #64748b);">${frappe.utils.escape_html(
+										w.standard
+									)}</td>
+									<td style="padding: 8px 10px; text-align: right; font-weight: 700; color: ${
+										w.type === "danger" ? "#dc2626" : "#d97706"
+									};">${frappe.utils.escape_html(w.variance)}</td>
+									<td style="padding: 8px 10px;">
+										<span style="display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; background-color: ${
+											w.type === "danger" ? "#fee2e2" : "#fef3c7"
+										}; color: ${
+										w.type === "danger" ? "#991b1b" : "#92400e"
+									}; border: 1px solid ${
+										w.type === "danger" ? "#fca5a5" : "#fde68a"
+									};">
+											${frappe.utils.escape_html(w.issue)}
+										</span>
+									</td>
+								</tr>
+							`
+								)
+								.join("")}
+						</tbody>
+					</table>
 				</div>
+			</div>
 			`;
 		} else {
-			banner_html = `
-				<div class="border rounded p-2 mb-3 text-muted small">
-					${__("All recorded metrics are within normal breed benchmark tolerance (±10%).")}
-				</div>
+			modal_content = `
+			<div class="text-center p-4 my-2" style="background-color: var(--subtle-accent-background, #f0fdf4); border: 1px solid #bbf7d0; border-radius: 6px;">
+				<div style="font-size: 28px; color: #16a34a; line-height: 1; margin-bottom: 8px;">✓</div>
+				<div style="font-weight: 700; color: #15803d; font-size: 14px;">${__(
+					"All Batches Meet Standard Benchmarks"
+				)}</div>
+				<div class="text-muted small mt-1 mb-0">${__(
+					"No abnormal variances detected in body weight, egg production (HDEP), mortality, or feed intake."
+				)}</div>
+			</div>
 			`;
 		}
-		*/
-
-		let modal_content = `
-		<div>
-			<p class="text-muted small mb-3">
-				${__(
-					"Comparison of actual flock performance against the standard breed benchmark for"
-				)} <b>${frappe.utils.escape_html(
-			ctx.breed || primary.breed || "Active Breed"
-		)}</b>.
-			</p>
-			<!-- Warning recommendation commented out for now -->
-			<table class="table table-bordered table-hover table-sm m-0">
-				<thead>
-					<tr>
-						<th>${__("Metric")}</th>
-						<th>${__("Actual Value")}</th>
-						<th>${__("Standard Benchmark")}</th>
-						<th>${__("Deviation %")}</th>
-						<th>${__("Status")}</th>
-					</tr>
-				</thead>
-				<tbody>
-					<tr>
-						<td><b>${__("Average Body Weight")}</b></td>
-						<td>${act_wt > 0 ? act_wt.toLocaleString() + " g" : __("Not Recorded")}</td>
-						<td>${std_wt > 0 ? std_wt.toLocaleString() + " g" : "—"}</td>
-						<td>${wt_dev_str}</td>
-						<td>${
-							wt_dev_val !== null && Math.abs(wt_dev_val) >= 10
-								? '<span class="font-weight-bold">' +
-								  __("Warning (>±10%)") +
-								  "</span>"
-								: '<span class="text-muted">' + __("Normal") + "</span>"
-						}</td>
-					</tr>
-					<tr>
-						<td><b>${__("Egg Production (HDEP %)")}</b></td>
-						<td>${
-							act_hdep > 0
-								? act_hdep.toFixed(2) + "% (" + eggs + " eggs)"
-								: eggs > 0
-								? eggs + " eggs"
-								: "0%"
-						}</td>
-						<td>${std_hdep > 0 ? std_hdep.toFixed(2) + "%" : "—"}</td>
-						<td>${hdep_dev_str}</td>
-						<td>${
-							hdep_dev_val !== null && hdep_dev_val <= -10
-								? '<span class="font-weight-bold">' + __("Low Yield") + "</span>"
-								: '<span class="text-muted">' + __("Normal") + "</span>"
-						}</td>
-					</tr>
-					<tr>
-						<td><b>${__("Daily Mortality %")}</b></td>
-						<td>${act_mort.toFixed(2)}% (${dead} dead)</td>
-						<td>${std_mort > 0 ? std_mort.toFixed(2) + "%" : "—"}</td>
-						<td>${mort_dev_str}</td>
-						<td>${
-							mort_dev_val !== null && mort_dev_val >= 10 && dead > 0
-								? '<span class="font-weight-bold">' +
-								  __("High Mortality") +
-								  "</span>"
-								: '<span class="text-muted">' + __("Normal") + "</span>"
-						}</td>
-					</tr>
-					<tr>
-						<td><b>${__("Feed Consumed / Bird")}</b></td>
-						<td>${act_feed_g > 0 ? act_feed_g.toFixed(1) + " g" : "—"}</td>
-						<td>${std_feed > 0 ? std_feed.toFixed(1) + " g" : "—"}</td>
-						<td>${feed_dev_str}</td>
-						<td><span class="text-muted">${__("Tracked")}</span></td>
-					</tr>
-				</tbody>
-			</table>
-		</div>
-		`;
 
 		d.fields_dict.modal_html.$wrapper.html(modal_content);
 		d.show();
@@ -1401,6 +1388,18 @@ frappe.ui.form.on("Poultry Daily Log", {
 							: "0.0";
 					cell_html = `<span style="font-weight: 700; color: var(--text-color, #0f172a); font-size: 11px;">${g_bird}</span>`;
 					align_right = true;
+				} else if (fn === "average_body_weight_g") {
+					let total_wt = 0;
+					let count = 0;
+					visible_rows.forEach((r) => {
+						if (flt(r.average_body_weight_g) > 0) {
+							total_wt += flt(r.average_body_weight_g);
+							count += 1;
+						}
+					});
+					let avg_str = count > 0 ? (total_wt / count).toFixed(1) + " g" : "—";
+					cell_html = `<span style="font-weight: 700; color: var(--text-color, #0f172a); font-size: 11px;">${avg_str}</span>`;
+					align_right = true;
 				} else if (
 					["Int", "Check"].includes(ft) ||
 					[
@@ -1424,7 +1423,13 @@ frappe.ui.form.on("Poultry Daily Log", {
 					align_right = true;
 				} else if (
 					["Float", "Currency"].includes(ft) &&
-					!["rate", "rate_per_kg", "table_egg_rate", "broken_egg_rate"].includes(fn)
+					![
+						"rate",
+						"rate_per_kg",
+						"table_egg_rate",
+						"broken_egg_rate",
+						"average_body_weight_g",
+					].includes(fn)
 				) {
 					let formatted = ft === "Currency" ? format_currency(sum) : sum.toFixed(2);
 					cell_html = `<span style="font-weight: 700; color: var(--text-color, #0f172a); font-size: 12px;">${formatted}</span>`;
@@ -1483,16 +1488,15 @@ frappe.ui.form.on("Poultry Daily Log", {
 
 		let check_and_show = function () {
 			let ctx = frm.__current_shed_context || {};
-			let bmk = ctx.benchmark || {};
 			let batches = ctx.batches || [];
-			if (batches.length && batches[0].benchmark) {
-				bmk = Object.assign({}, bmk, batches[0].benchmark);
-			}
-
-			let has_benchmarks =
-				flt(bmk.standard_body_weight_g) > 0 ||
-				flt(bmk.standard_hdep_pct) > 0 ||
-				flt(bmk.standard_mortality_pct) > 0;
+			let has_benchmarks = batches.some((b) => {
+				let bmk = b.benchmark || {};
+				return (
+					flt(bmk.standard_body_weight_g) > 0 ||
+					flt(bmk.standard_hdep_pct) > 0 ||
+					flt(bmk.standard_mortality_pct) > 0
+				);
+			});
 
 			if (!has_benchmarks) {
 				// No standard benchmarks found; proceed with saving
@@ -1539,8 +1543,10 @@ frappe.ui.form.on("Poultry Daily Log", {
 	},
 
 	record_weight(frm) {
-		frm.trigger("toggle_weight_field");
-		frm.events.render_benchmark_variance_card(frm);
+		frm.events.toggle_weight_field(frm);
+		if (!cint(frm.doc.record_weight)) {
+			frm.set_value("average_body_weight_g", 0);
+		}
 	},
 
 	water_consumption_liters(frm) {
@@ -1549,8 +1555,23 @@ frappe.ui.form.on("Poultry Daily Log", {
 
 	toggle_weight_field(frm) {
 		let checked = cint(frm.doc.record_weight) === 1;
-		frm.toggle_enable("average_body_weight_g", checked);
-		frm.toggle_display("average_body_weight_g", checked);
+		if (checked) {
+			$(frm.wrapper).removeClass("hide-pdl-weight");
+		} else {
+			$(frm.wrapper).addClass("hide-pdl-weight");
+		}
+		if (frm.fields_dict.flock_entries && frm.fields_dict.flock_entries.grid) {
+			try {
+				frm.fields_dict.flock_entries.grid.set_column_disp(
+					"average_body_weight_g",
+					checked
+				);
+				frm.fields_dict.flock_entries.grid.refresh();
+			} catch (e) {
+				// handled by CSS
+			}
+		}
+		frm.events.render_table_totals(frm, "flock_entries");
 	},
 
 	calculate_all_totals(frm) {
@@ -1590,13 +1611,24 @@ frappe.ui.form.on("Poultry Daily Log", {
 		let total_mortality = 0;
 		let total_culls = 0;
 		let total_closing = 0;
+		let total_weight = 0;
+		let weight_count = 0;
 		(frm.doc.flock_entries || []).forEach((r) => {
 			total_mortality += flt(r.dead) || 0;
 			total_culls += flt(r.culled) || 0;
 			total_closing += flt(r.closing_birds) || 0;
+			if (flt(r.average_body_weight_g) > 0) {
+				total_weight += flt(r.average_body_weight_g);
+				weight_count += 1;
+			}
 		});
 		frm.set_value("total_mortality", total_mortality);
 		frm.set_value("total_culled", total_culls);
+		if (cint(frm.doc.record_weight) === 1 && weight_count > 0) {
+			frm.set_value("average_body_weight_g", flt((total_weight / weight_count).toFixed(2)));
+		} else if (!cint(frm.doc.record_weight)) {
+			frm.set_value("average_body_weight_g", 0);
+		}
 
 		// Environmental / Water calculations
 		let water = flt(frm.doc.water_consumption_liters) || 0;
@@ -1798,6 +1830,19 @@ frappe.ui.form.on("Poultry Daily Log Flock Entry", {
 	},
 	culled(frm, cdt, cdn) {
 		calculate_flock_row(frm, cdt, cdn);
+	},
+	average_body_weight_g(frm) {
+		let total_wt = 0;
+		let count = 0;
+		(frm.doc.flock_entries || []).forEach((row) => {
+			if (flt(row.average_body_weight_g) > 0) {
+				total_wt += flt(row.average_body_weight_g);
+				count += 1;
+			}
+		});
+		let avg = count > 0 ? flt((total_wt / count).toFixed(2)) : 0;
+		frm.set_value("average_body_weight_g", avg);
+		frm.events.render_table_totals(frm, "flock_entries");
 	},
 	flock_entries_add(frm, cdt, cdn) {
 		let row = locals[cdt][cdn];

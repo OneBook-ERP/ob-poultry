@@ -92,14 +92,14 @@
    "fieldname": "egg_production_pct",
    "fieldtype": "Percent",
    "in_list_view": 1,
-   "label": "Production %",
+   "label": "HDEP %",
    "read_only": 1
   },
   {
    "default": "0",
    "fieldname": "hhep_pct",
    "fieldtype": "Percent",
-   "in_list_view": 1,
+   "in_list_view": 0,
    "label": "HHEP %",
    "read_only": 1
   },

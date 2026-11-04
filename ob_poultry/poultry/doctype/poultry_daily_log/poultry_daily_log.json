@@ -17,8 +17,6 @@
   "breed",
   "sex",
   "column_break_shed_right",
-  "record_weight",
-  "average_body_weight_g",
   "benchmark_variance_html",
   "section_break_eggs",
   "egg_entries",
@@ -37,9 +35,11 @@
   "total_feed_consumed_kg",
   "total_feed_cost",
   "section_break_flock",
+  "record_weight",
   "flock_entries",
   "total_mortality",
   "total_culled",
+  "average_body_weight_g",
   "section_break_sales",
   "sales_entries",
   "total_sales_amount",
@@ -129,20 +129,6 @@
   {
    "fieldname": "column_break_shed_right",
    "fieldtype": "Column Break"
-  },
-  {
-   "allow_on_submit": 1,
-   "default": "0",
-   "fieldname": "record_weight",
-   "fieldtype": "Check",
-   "label": "Record Bird Weight Today"
-  },
-  {
-   "allow_on_submit": 1,
-   "depends_on": "eval:doc.record_weight==1",
-   "fieldname": "average_body_weight_g",
-   "fieldtype": "Float",
-   "label": "Average Body Weight (g)"
   },
   {
    "fieldname": "benchmark_variance_html",
@@ -256,6 +242,13 @@
   },
   {
    "allow_on_submit": 1,
+   "default": "0",
+   "fieldname": "record_weight",
+   "fieldtype": "Check",
+   "label": "Record Bird Weight Today"
+  },
+  {
+   "allow_on_submit": 1,
    "fieldname": "flock_entries",
    "fieldtype": "Table",
    "label": "Flock Entries",
@@ -275,6 +268,14 @@
    "fieldname": "total_culled",
    "fieldtype": "Int",
    "label": "Total Culled",
+   "read_only": 1
+  },
+  {
+   "allow_on_submit": 1,
+   "fieldname": "average_body_weight_g",
+   "fieldtype": "Float",
+   "label": "Average Body Weight (g)",
+   "hidden": 1,
    "read_only": 1
   },
   {
