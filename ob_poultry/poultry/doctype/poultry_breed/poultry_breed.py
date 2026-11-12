@@ -10,7 +10,7 @@ BREED_TYPE_WEEKS = {
 
 
 @frappe.whitelist()
-def get_default_days_lineup(breed_type="Broiler"):
+def get_default_days_lineup(breed_type: str = "Broiler"):
 	"""Returns day intervals lineup (from_day, to_day, age_in_days) with empty metric values."""
 	breed_type = breed_type or "Broiler"
 	weeks = BREED_TYPE_WEEKS.get(breed_type, 7)
@@ -273,7 +273,7 @@ def get_layer_defaults():
 
 
 @frappe.whitelist()
-def get_default_benchmarks(breed_type="Broiler"):
+def get_default_benchmarks(breed_type: str = "Broiler"):
 	breed_type = breed_type or "Broiler"
 	if breed_type == "Broiler":
 		return get_broiler_defaults()
@@ -287,14 +287,12 @@ def get_default_benchmarks(breed_type="Broiler"):
 
 
 @frappe.whitelist()
-def get_default_benchmark_ranges(breed_type="Broiler"):
+def get_default_benchmark_ranges(breed_type: str = "Broiler"):
 	return [r["age_in_days"] for r in get_default_benchmarks(breed_type)]
 
 
 class PoultryBreed(Document):
 	def validate(self):
-		if not self.benchmarks:
-			self.populate_default_benchmarks()
 		self.update_benchmark_day_bounds()
 
 	def populate_days_lineup(self):

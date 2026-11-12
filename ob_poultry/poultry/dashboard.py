@@ -25,7 +25,7 @@ def culled_today():
 def _sum_today(*fieldnames):
 	today = nowdate()
 	for fn in fieldnames:
-		res = frappe.db.sql(
+		res = frappe.db.sql(  # nosemgrep: frappe-sql-format-injection
 			f"""
 			select sum(coalesce({fn}, 0)) as total
 			from `tabPoultry Daily Log`

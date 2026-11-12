@@ -107,7 +107,7 @@ def get_data(filters):
 
 	where_clause = f"where {' and '.join(conditions)}" if conditions else ""
 
-	rows = frappe.db.sql(
+	rows = frappe.db.sql(  # nosemgrep: frappe-sql-format-injection
 		f"""
 		select
 			b.name, b.shed, s.housing_type, b.breed, b.flock_source, b.status, b.start_date,

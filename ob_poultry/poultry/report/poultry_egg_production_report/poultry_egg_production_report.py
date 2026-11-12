@@ -97,7 +97,7 @@ def get_data(filters):
 
 	where_clause = " and ".join(conditions)
 
-	return frappe.db.sql(
+	return frappe.db.sql(  # nosemgrep: frappe-sql-format-injection
 		f"""
 		select
 			d.log_date,

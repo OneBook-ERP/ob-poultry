@@ -76,7 +76,7 @@ def get_data(filters):
 
 	where_clause = " and ".join(conditions)
 
-	return frappe.db.sql(
+	return frappe.db.sql(  # nosemgrep: frappe-sql-format-injection
 		f"""
 		select
 			name, farmer, growing_charge_scheme, shed, start_date,

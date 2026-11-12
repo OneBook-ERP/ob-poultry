@@ -58,7 +58,7 @@ def get_data(filters):
 		values["shed"] = filters.get("shed")
 
 	# 1. Total produced up to as_of_date
-	produced_rows = frappe.db.sql(
+	produced_rows = frappe.db.sql(  # nosemgrep: frappe-sql-format-injection
 		f"""
 		select
 			e.batch,

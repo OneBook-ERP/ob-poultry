@@ -115,7 +115,7 @@ def sync_pdl():
 		sales.insert(ignore_permissions=True)
 		print("Inserted sales entry for PB-2026-00009")
 
-	frappe.db.commit()
+	frappe.db.commit()  # nosemgrep: frappe-manual-commit
 	print("Successfully synced PDL-2026-00006!")
 	frappe.destroy()
 

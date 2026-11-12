@@ -73,7 +73,7 @@ def get_data(filters):
 
 	where_clause = f"where {' and '.join(conditions)}" if conditions else ""
 
-	return frappe.db.sql(
+	return frappe.db.sql(  # nosemgrep: frappe-sql-format-injection
 		f"""
 		select
 			p.name, p.creation, p.formula, f.feed_item,

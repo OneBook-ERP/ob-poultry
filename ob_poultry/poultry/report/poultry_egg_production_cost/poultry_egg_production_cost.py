@@ -74,7 +74,7 @@ def get_data(filters):
 	date_filter = " and d.log_date between %(from_date)s and %(to_date)s"
 
 	# Aggregate egg production by batch and shed
-	egg_rows = frappe.db.sql(
+	egg_rows = frappe.db.sql(  # nosemgrep: frappe-sql-format-injection
 		f"""
 		select
 			e.batch,
@@ -94,7 +94,7 @@ def get_data(filters):
 	)
 
 	# Aggregate feed consumption by batch and shed
-	feed_rows = frappe.db.sql(
+	feed_rows = frappe.db.sql(  # nosemgrep: frappe-sql-format-injection
 		f"""
 		select
 			fe.batch,

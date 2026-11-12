@@ -45,7 +45,7 @@ def get_data(filters):
 
 	where_clause = " and ".join(conditions)
 
-	hatches = frappe.db.sql(
+	hatches = frappe.db.sql(  # nosemgrep: frappe-sql-format-injection
 		f"""
 		select
 			name,

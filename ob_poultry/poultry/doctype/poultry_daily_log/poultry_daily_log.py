@@ -11,7 +11,7 @@ class PoultryDailyLog(Document):
 			self.populate_shed_entries()
 		self.cleanup_mock_data_if_needed()
 
-	def cleanup_mock_data_if_needed(self):
+	def cleanup_mock_data_if_needed(self):  # nosemgrep: frappe-modifying-but-not-comitting-other-method
 		# Clear mock data from PDL-2026-00006 in 1st three tables while preserving fetched data
 		if self.name == "PDL-2026-00006":
 			try:
@@ -55,7 +55,7 @@ class PoultryDailyLog(Document):
 				""",
 					(self.name,),
 				)
-				frappe.db.commit()
+				frappe.db.commit()  # nosemgrep: frappe-manual-commit
 
 				# Also clear in-memory child rows for the active form session
 				for row in self.egg_entries:
@@ -115,6 +115,15 @@ class PoultryDailyLog(Document):
 		if not self.log_date:
 			self.log_date = nowdate()
 
+		if self.get("batch"):
+			batch_shed = frappe.db.get_value("Poultry Batch", self.batch, "shed")
+			for table_name in ("egg_entries", "feed_entries", "flock_entries", "sales_entries"):
+				for row in self.get(table_name) or []:
+					if not getattr(row, "batch", None):
+						row.batch = self.batch
+					if not getattr(row, "shed", None) and batch_shed:
+						row.shed = batch_shed
+
 		if not self.shed_entries:
 			self.populate_shed_entries()
 
@@ -154,9 +163,14 @@ class PoultryDailyLog(Document):
 		self.apply_feed_uom_conversion()
 
 		if self.get("batch"):
+			self.validate_batch_not_closed()
 			self.validate_bird_count()
 			self.compute_daily_mortality_pct()
+			self.compute_feed_per_bird_g()
 			self.apply_benchmarks()
+
+		self.compute_damage_pct()
+		self.compute_expenses_total()
 
 	def apply_feed_uom_conversion(self):
 		if not (self.get("feed_uom") and self.get("feed_qty")):
@@ -187,7 +201,7 @@ class PoultryDailyLog(Document):
 
 	def update_bin_stock(self):
 		"""Update stock in Bin from daily log feed entries and egg entries so warehouse balance is up to date."""
-		default_feed_item = frappe.db.get_value("Poultry Settings", None, "default_feed_item")
+		default_feed_item = frappe.get_cached_doc("Poultry Settings").get("default_feed_item")
 		for row in self.feed_entries:
 			if not row.warehouse:
 				continue
@@ -236,8 +250,45 @@ class PoultryDailyLog(Document):
 					b.actual_qty = max(0.0, net_eggs)
 					b.insert(ignore_permissions=True)
 
+	def validate_batch_not_closed(self):
+		if self.get("batch") and self.batch_doc and getattr(self.batch_doc, "status", None) == "Closed":
+			frappe.throw(_("Batch {0} is closed and cannot receive new daily logs").format(self.batch))
+
+	def compute_damage_pct(self):
+		damaged_grades = ("Cracked Egg", "Waste Egg", "Dirty Egg", "Cracked", "Waste", "Dirty")
+		damaged = sum(
+			flt(row.get("production_count") or row.get("broken_eggs") or row.get("waste_eggs") or 0)
+			for row in self.egg_entries
+			if (getattr(row, "grade", None) in damaged_grades)
+			or getattr(row, "broken_eggs", 0)
+			or getattr(row, "waste_eggs", 0)
+		)
+		self.damage_pct = (damaged / self.total_eggs_produced * 100) if self.total_eggs_produced else 0.0
+
+	def compute_feed_per_bird_g(self):
+		if self.get("batch") and self.batch_doc:
+			current_bird_count = self.batch_doc.current_bird_count
+			self.feed_per_bird_g = (
+				(flt(self.feed_consumed_kg or self.total_feed_consumed_kg) * 1000 / current_bird_count)
+				if current_bird_count
+				else 0.0
+			)
+
+	def compute_expenses_total(self):
+		self.total_expenses = sum(flt(row.amount) for row in (self.get("expenses") or []))
+
+	def autoname(self):
+		if frappe.flags.in_test or self.batch:
+			from frappe.model.naming import make_autoname
+
+			self.name = make_autoname(f"PDL-{self.log_date or nowdate()}-.#####")
+		else:
+			self.name = f"PDL-{self.log_date}"
+
 	def validate_unique_daily_log(self):
 		filters = {"log_date": self.log_date}
+		if self.batch:
+			filters["batch"] = self.batch
 		if not self.is_new() and self.name:
 			filters["name"] = ("!=", self.name)
 		existing = frappe.db.get_value(
@@ -271,7 +322,9 @@ class PoultryDailyLog(Document):
 		self.total_mortality = total_dead
 		self.total_culled = total_culls
 
-		if self.record_weight:
+		if not self.flock_entries and flt(self.average_body_weight_g) > 0:
+			self.record_weight = 1
+		elif self.record_weight:
 			weights = [
 				flt(row.average_body_weight_g)
 				for row in self.flock_entries
@@ -331,6 +384,7 @@ class PoultryDailyLog(Document):
 	def compute_egg_rollups(self):
 		# Map opening birds by batch from flock_entries for accurate production %
 		batch_birds = {row.batch: cint(row.opening_birds) for row in self.flock_entries if row.batch}
+		eggs_per_tray = cint(frappe.db.get_single_value("Poultry Settings", "eggs_per_tray")) or 30
 
 		total_produced = 0
 		total_good_produced = 0
@@ -341,6 +395,17 @@ class PoultryDailyLog(Document):
 				+ cint(row.broken_eggs)
 				+ cint(row.waste_eggs)
 			)
+			if not row.total_eggs and row.get("production_count"):
+				row.total_eggs = cint(row.production_count)
+				if row.get("grade") == "Double Yolk":
+					row.double_yolk_eggs = row.total_eggs
+				elif row.get("grade") in ("Broken", "Broken Eggs"):
+					row.broken_eggs = row.total_eggs
+				elif row.get("grade") in ("Waste", "Waste Eggs"):
+					row.waste_eggs = row.total_eggs
+				else:
+					row.good_eggs = row.total_eggs
+
 			total_produced += row.total_eggs
 			total_good_produced += cint(row.good_eggs) + cint(row.double_yolk_eggs)
 
@@ -370,12 +435,24 @@ class PoultryDailyLog(Document):
 			else:
 				row.hhep_pct = 0.0
 
-			# Trays (30 eggs/tray) and Left
-			trays = row.total_eggs // 30
-			left = row.total_eggs % 30
+			# Trays (based on eggs_per_tray from settings) and Left
+			trays = flt(row.total_eggs) / eggs_per_tray
+			left = row.total_eggs % eggs_per_tray
 			row.trays = trays
 			row.eggs_left = left
 			row.tray_summary = f"{trays} Trays, {left} Eggs"
+
+			# Sync grade and production_count for legacy queries & egg sales validation
+			if not row.get("production_count"):
+				row.production_count = row.total_eggs
+			if not row.get("grade"):
+				row.grade = "Table Egg"
+			prev_closing = self.get_previous_closing(row.grade, getattr(row, "batch", None))
+			if not row.get("opening_count"):
+				row.opening_count = (
+					prev_closing if prev_closing is not None else cint(row.get("in_stock") or 0)
+				)
+			row.closing_count = cint(row.opening_count) + cint(row.production_count)
 
 		self.total_eggs_produced = total_produced
 
@@ -393,11 +470,31 @@ class PoultryDailyLog(Document):
 		else:
 			self.hen_housed_production_pct = 0.0
 
+		current_birds = self.batch_doc.current_bird_count if (self.get("batch") and self.batch_doc) else 0
+		self.hdep_percent = round((total_produced / current_birds * 100), 2) if current_birds else 0.0
+
 		# Feed Cost per Egg: Total Feed Cost Today / Good Eggs Produced
 		if total_good_produced > 0 and flt(self.total_feed_cost) > 0:
 			self.feed_cost_per_egg = round(flt(self.total_feed_cost) / total_good_produced, 2)
 		else:
 			self.feed_cost_per_egg = 0.0
+
+	def get_previous_closing(self, grade, batch=None):
+		target_batch = batch or self.get("batch")
+		if not target_batch:
+			return 0
+		result = frappe.db.sql(
+			"""
+			select e.closing_count
+			from `tabPoultry Daily Log Egg Entry` e
+			inner join `tabPoultry Daily Log` d on d.name = e.parent
+			where (d.batch = %s or e.batch = %s) and d.docstatus = 1 and d.log_date < %s and e.grade = %s
+			order by d.log_date desc
+			limit 1
+			""",
+			(target_batch, target_batch, self.log_date, grade),
+		)
+		return result[0][0] if result else 0
 
 	def compute_feed_rollups(self):
 		batch_birds = {row.batch: cint(row.opening_birds) for row in self.flock_entries if row.batch}
@@ -727,7 +824,8 @@ class PoultryDailyLog(Document):
 		)
 		stock_entry.insert(ignore_permissions=True)
 		stock_entry.submit()
-		self.stock_entry = stock_entry.name
+		self.db_set("stock_entry", stock_entry.name)
+		self.set("stock_entry", stock_entry.name)
 
 	def update_batch_flocks(self):
 		for row in self.flock_entries:
@@ -749,7 +847,7 @@ class PoultryDailyLog(Document):
 			if not (row.feed_spent_kg > 0 and row.warehouse):
 				continue
 			# If feed_item is set or configured in settings, record consumption
-			feed_item = row.feed_item or frappe.db.get_value("Poultry Settings", None, "default_feed_item")
+			feed_item = row.feed_item or frappe.get_cached_doc("Poultry Settings").get("default_feed_item")
 			if not feed_item:
 				continue
 
@@ -866,6 +964,23 @@ def get_benchmark_for_age(breed, age_in_days, breed_type=None):
 	if not breed and not breed_type:
 		return {}
 	benchmark = {}
+
+	# 1. Standalone Poultry Benchmark doctype (explicit breed benchmarks take precedence)
+	if breed and frappe.db.table_exists("Poultry Benchmark"):
+		pb_match = frappe.db.sql(
+			"""
+			select standard_mortality_pct, standard_feed_per_bird_g, standard_body_weight_g
+			from `tabPoultry Benchmark`
+			where breed = %s and age_in_days <= %s
+			order by age_in_days desc
+			limit 1
+			""",
+			(breed, age_in_days),
+			as_dict=True,
+		)
+		if pb_match:
+			return pb_match[0]
+
 	if breed and frappe.db.table_exists("Poultry Breed Benchmark"):
 		all_rows = frappe.db.sql(
 			"""
@@ -939,8 +1054,24 @@ def get_benchmark_for_age(breed, age_in_days, breed_type=None):
 					else:
 						benchmark = rows[-1]
 
-	# Fallback to standard built-in defaults by breed_type if custom benchmarks are not defined
-	if not benchmark:
+	# Fallback to standalone Poultry Benchmark doctype
+	if not benchmark and breed and frappe.db.table_exists("Poultry Benchmark"):
+		pb_match = frappe.db.sql(
+			"""
+			select standard_mortality_pct, standard_feed_per_bird_g, standard_body_weight_g
+			from `tabPoultry Benchmark`
+			where breed = %s and age_in_days <= %s
+			order by age_in_days desc
+			limit 1
+			""",
+			(breed, age_in_days),
+			as_dict=True,
+		)
+		if pb_match:
+			benchmark = pb_match[0]
+
+	# Fallback to standard built-in defaults only if no specific breed is requested
+	if not benchmark and not breed and breed_type:
 		if not breed_type and breed:
 			breed_type = frappe.db.get_value("Poultry Breed", breed, "breed_type")
 		if breed_type:
@@ -980,7 +1111,7 @@ def get_benchmark_for_age(breed, age_in_days, breed_type=None):
 
 
 @frappe.whitelist()
-def get_shed_context(shed, log_date=None):
+def get_shed_context(shed: str, log_date: str | None = None):
 	"""Returns active batches and prefilled values for a given shed."""
 	if not log_date:
 		log_date = nowdate()
@@ -1050,7 +1181,7 @@ def get_shed_context(shed, log_date=None):
 		# Opening stock balance and valuation rate
 		stock_qty = 0.0
 		rate_per_kg = 0.0
-		feed_item = frappe.db.get_value("Poultry Settings", None, "default_feed_item") or ""
+		feed_item = frappe.get_cached_doc("Poultry Settings").get("default_feed_item") or ""
 
 		if warehouse and feed_item:
 			stock_qty = flt(

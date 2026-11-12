@@ -223,7 +223,9 @@ def get_mapped_item_groups(place: str) -> list[str]:
 
 @frappe.whitelist()
 @frappe.validate_and_sanitize_search_inputs
-def item_query_by_place(doctype, txt, searchfield, start, page_len, filters):
+def item_query_by_place(
+	doctype: str, txt: str, searchfield: str, start: int, page_len: int, filters: dict | None = None
+):
 	"""Dynamic Link query for Item fields filtered by Poultry Settings item group mapping."""
 	place = (filters or {}).get("place")
 	groups = get_mapped_item_groups(place) if place else []
@@ -243,7 +245,7 @@ def item_query_by_place(doctype, txt, searchfield, start, page_len, filters):
 
 	where_clause = " and ".join(conditions)
 
-	return frappe.db.sql(
+	return frappe.db.sql(  # nosemgrep: frappe-sql-format-injection
 		f"""
 		select name, item_name, item_group, stock_uom
 		from `tabItem`

@@ -18,7 +18,11 @@
   "broken_egg_pct",
   "tray_summary",
   "trays",
-  "eggs_left"
+  "eggs_left",
+  "grade",
+  "production_count",
+  "opening_count",
+  "closing_count"
  ],
  "fields": [
   {
@@ -131,6 +135,30 @@
    "fieldtype": "Int",
    "hidden": 1,
    "label": "Eggs Left"
+  },
+  {
+   "fieldname": "grade",
+   "fieldtype": "Data",
+   "label": "Grade",
+   "in_list_view": 0
+  },
+  {
+   "fieldname": "production_count",
+   "fieldtype": "Int",
+   "label": "Production Count",
+   "in_list_view": 0
+  },
+  {
+   "fieldname": "opening_count",
+   "fieldtype": "Int",
+   "label": "Opening Count",
+   "in_list_view": 0
+  },
+  {
+   "fieldname": "closing_count",
+   "fieldtype": "Int",
+   "label": "Closing Count",
+   "in_list_view": 0
   }
  ],
  "istable": 1,

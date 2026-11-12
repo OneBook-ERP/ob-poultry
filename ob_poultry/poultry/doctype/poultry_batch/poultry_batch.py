@@ -263,12 +263,12 @@ class PoultryBatch(Document):
 	@frappe.whitelist()
 	def transfer_shed(
 		self,
-		new_shed,
-		from_shed=None,
-		transfer_date=None,
-		birds_to_transfer=None,
-		transit_mortality=0,
-		notes=None,
+		new_shed: str,
+		from_shed: str | None = None,
+		transfer_date: str | None = None,
+		birds_to_transfer: int | None = None,
+		transit_mortality: int = 0,
+		notes: str | None = None,
 	):
 		if self.status == "Closed":
 			frappe.throw(_("Batch {0} is closed and cannot be transferred").format(self.name))
@@ -375,12 +375,12 @@ class PoultryBatch(Document):
 	@frappe.whitelist()
 	def transfer_to_layer_house(
 		self,
-		new_shed,
-		from_shed=None,
-		transfer_date=None,
-		transit_mortality=0,
-		notes=None,
-		birds_to_transfer=None,
+		new_shed: str,
+		from_shed: str | None = None,
+		transfer_date: str | None = None,
+		transit_mortality: int = 0,
+		notes: str | None = None,
+		birds_to_transfer: int | None = None,
 	):
 		return self.transfer_shed(
 			new_shed=new_shed,

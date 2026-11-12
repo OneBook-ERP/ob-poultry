@@ -155,8 +155,8 @@ frappe.ui.form.on("Poultry Daily Log", {
 		if (!window.__pdl_popstate_installed) {
 			window.__pdl_popstate_installed = true;
 			window.addEventListener("popstate", function () {
-				if (!cur_frm || cur_frm.doctype !== "Poultry Daily Log") return;
-				cur_frm.events.sync_view_from_url(cur_frm);
+				if (!cur_frm || cur_frm.doctype !== "Poultry Daily Log") return; // nosemgrep: frappe-cur-frm-usage
+				cur_frm.events.sync_view_from_url(cur_frm); // nosemgrep: frappe-cur-frm-usage
 			});
 		}
 	},

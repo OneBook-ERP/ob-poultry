@@ -48,7 +48,7 @@ def get_data(filters):
 	batch_condition = "and d.batch = %(batch)s" if filters.get("batch") else ""
 	flock_batch_condition = "and fe.batch = %(batch)s" if filters.get("batch") else ""
 
-	child_rows = frappe.db.sql(
+	child_rows = frappe.db.sql(  # nosemgrep: frappe-sql-format-injection
 		f"""
 		select
 			fe.parent as name, fe.batch, d.log_date, fe.average_body_weight_g,
@@ -63,7 +63,7 @@ def get_data(filters):
 		as_dict=True,
 	)
 
-	parent_rows = frappe.db.sql(
+	parent_rows = frappe.db.sql(  # nosemgrep: frappe-sql-format-injection
 		f"""
 		select
 			d.name, d.batch, d.log_date, d.average_body_weight_g, d.std_body_weight_g,

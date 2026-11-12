@@ -62,8 +62,7 @@
    "fieldtype": "Date",
    "in_list_view": 1,
    "label": "Log Date",
-   "reqd": 1,
-   "unique": 1
+   "reqd": 1
   },
   {
    "fieldname": "day_of_week",
@@ -372,7 +371,7 @@
    "options": "Stock Entry"
   }
  ],
- "is_submittable": 0,
+ "is_submittable": 1,
  "links": [],
  "modified": "2026-10-31 04:26:00.000000",
  "modified_by": "Administrator",
@@ -390,7 +389,9 @@
    "read": 1,
    "role": "System Manager",
    "share": 1,
-   "write": 1
+   "write": 1,
+   "submit": 1,
+   "cancel": 1
   },
   {
    "create": 1,
@@ -401,7 +402,9 @@
    "read": 1,
    "role": "Poultry Manager",
    "share": 1,
-   "write": 1
+   "write": 1,
+   "submit": 1,
+   "cancel": 1
   },
   {
    "create": 1,
@@ -410,7 +413,8 @@
    "read": 1,
    "role": "Poultry Attendant",
    "share": 1,
-   "write": 1
+   "write": 1,
+   "submit": 1
   }
  ],
  "row_format": "Dynamic",

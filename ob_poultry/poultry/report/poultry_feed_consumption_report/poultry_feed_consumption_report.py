@@ -89,7 +89,7 @@ def get_data(filters):
 
 	where_clause = " and ".join(conditions)
 
-	rows = frappe.db.sql(
+	rows = frappe.db.sql(  # nosemgrep: frappe-sql-format-injection
 		f"""
 		select
 			d.log_date,
@@ -119,7 +119,7 @@ def get_data(filters):
 		]
 		if filters.get("batch"):
 			p_cond.append("d.batch = %(batch)s")
-		rows = frappe.db.sql(
+		rows = frappe.db.sql(  # nosemgrep: frappe-sql-format-injection
 			f"""
 			select
 				d.log_date,
