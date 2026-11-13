@@ -39,7 +39,15 @@ def get_formulas(filters):
 
 
 def get_base_columns():
-	return [{"label": _("Raw Material"), "fieldname": "raw_material", "fieldtype": "Link", "options": "Item", "width": 200}]
+	return [
+		{
+			"label": _("Raw Material"),
+			"fieldname": "raw_material",
+			"fieldtype": "Link",
+			"options": "Item",
+			"width": 200,
+		}
+	]
 
 
 def get_columns(formulas):
@@ -67,12 +75,8 @@ def get_data(formulas, formula_fieldnames, ingredient_rows):
 		quantities_by_ingredient.setdefault(row.raw_material, {})[row.formula] = row.quantity_kg
 		category_by_ingredient.setdefault(row.raw_material, row.category or "Raw Material")
 
-	raw_material_ingredients = sorted(
-		[i for i, cat in category_by_ingredient.items() if cat != "Medicine"]
-	)
-	medicine_ingredients = sorted(
-		[i for i, cat in category_by_ingredient.items() if cat == "Medicine"]
-	)
+	raw_material_ingredients = sorted([i for i, cat in category_by_ingredient.items() if cat != "Medicine"])
+	medicine_ingredients = sorted([i for i, cat in category_by_ingredient.items() if cat == "Medicine"])
 
 	data = []
 	for ingredient in raw_material_ingredients:

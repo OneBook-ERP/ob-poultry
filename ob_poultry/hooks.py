@@ -43,7 +43,11 @@ app_license = "mit"
 # page_js = {"page" : "public/js/file.js"}
 
 # include js in doctype views
-# doctype_js = {"doctype" : "public/js/doctype.js"}
+doctype_js = {
+	"Sales Order": "public/js/sales_order_custom.js",
+	"Delivery Note": "public/js/delivery_note_custom.js",
+	"Sales Invoice": "public/js/sales_invoice_custom.js",
+}
 # doctype_list_js = {"doctype" : "public/js/doctype_list.js"}
 # doctype_tree_js = {"doctype" : "public/js/doctype_tree.js"}
 # doctype_calendar_js = {"doctype" : "public/js/doctype_calendar.js"}
@@ -87,6 +91,7 @@ app_license = "mit"
 
 # before_install = "ob_poultry.install.before_install"
 # after_install = "ob_poultry.install.after_install"
+after_migrate = "ob_poultry.setup.after_migrate"
 
 # Uninstallation
 # ------------
@@ -144,34 +149,23 @@ app_license = "mit"
 # ---------------
 # Hook on document methods and events
 
-# doc_events = {
-# 	"*": {
-# 		"on_update": "method",
-# 		"on_cancel": "method",
-# 		"on_trash": "method"
-# 	}
-# }
+doc_events = {
+	"Sales Order": {
+		"validate": "ob_poultry.poultry.controllers.sales_custom.validate_sales_order",
+	},
+}
 
 # Scheduled Tasks
 # ---------------
 
-# scheduler_events = {
-# 	"all": [
-# 		"ob_poultry.tasks.all"
-# 	],
-# 	"daily": [
-# 		"ob_poultry.tasks.daily"
-# 	],
-# 	"hourly": [
-# 		"ob_poultry.tasks.hourly"
-# 	],
-# 	"weekly": [
-# 		"ob_poultry.tasks.weekly"
-# 	],
-# 	"monthly": [
-# 		"ob_poultry.tasks.monthly"
-# 	],
-# }
+scheduler_events = {
+	"cron": {
+		# Daily sync at 1:30 PM IST (post-NECC declaration window)
+		"30 13 * * *": ["ob_poultry.poultry.utils.mkisan_api.scheduled_fetch_egg_rates"],
+		# Backup check at 2:15 PM IST if 1:30 PM was pending
+		"15 14 * * *": ["ob_poultry.poultry.utils.mkisan_api.scheduled_backup_fetch_egg_rates"],
+	},
+}
 
 # Testing
 # -------
@@ -261,4 +255,3 @@ app_license = "mit"
 # ------------
 # List of apps whose translatable strings should be excluded from this app's translations.
 # ignore_translatable_strings_from = []
-

@@ -15,16 +15,16 @@ frappe.query_reports["Poultry Mortality Report"] = {
 			reqd: 1,
 		},
 		{
-			fieldname: "batch",
-			label: __("Batch"),
-			fieldtype: "Link",
-			options: "Poultry Batch",
-		},
-		{
 			fieldname: "shed",
 			label: __("Shed"),
 			fieldtype: "Link",
 			options: "Poultry Shed",
+		},
+		{
+			fieldname: "batch",
+			label: __("Batch"),
+			fieldtype: "Link",
+			options: "Poultry Batch",
 		},
 		{
 			fieldname: "breed",
@@ -36,7 +36,8 @@ frappe.query_reports["Poultry Mortality Report"] = {
 			fieldname: "cause",
 			label: __("Cause"),
 			fieldtype: "Select",
-			options: "\nDisease\nInjury\nHeat Stress\nCulled (Runt or Weak)\nPredator\nUnknown\nOther",
+			options:
+				"\nNormal / Natural\nHeat Stress\nProlapse / Peritonitis\nCannibalism / Pecking\nBacterial / E. Coli\nRespiratory\nEgg Bound\nUnknown / Other",
 		},
 	],
 };
