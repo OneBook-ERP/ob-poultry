@@ -296,6 +296,22 @@ class TestLayerFarming(IntegrationTestCase):
 		# Ensure shed has default_egg_warehouse set
 		frappe.db.set_value("Poultry Shed", "Test Layer Shed", "default_egg_warehouse", wh)
 
+		# Ensure warehouse company has stock_adjustment_account configured
+		wh_company = frappe.db.get_value("Warehouse", wh, "company")
+		if wh_company:
+			diff_acc = (
+				frappe.db.get_value("Company", wh_company, "stock_adjustment_account")
+				or frappe.db.get_value(
+					"Account", {"company": wh_company, "account_type": "Stock Adjustment"}, "name"
+				)
+				or frappe.db.get_value(
+					"Account", {"company": wh_company, "is_group": 0, "root_type": "Expense"}, "name"
+				)
+				or frappe.db.get_value("Account", {"company": wh_company, "is_group": 0}, "name")
+			)
+			if diff_acc:
+				frappe.db.set_value("Company", wh_company, "stock_adjustment_account", diff_acc)
+
 		# Baseline Bin qty
 		init_bin_qty = flt(
 			frappe.db.get_value("Bin", {"item_code": item, "warehouse": wh}, "actual_qty") or 0.0

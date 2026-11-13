@@ -776,16 +776,39 @@ class PoultryDailyLog(Document):
 				"Global Defaults", "default_company"
 			)
 
-		stock_entry = frappe.get_doc(
-			{
-				"doctype": "Stock Entry",
-				"stock_entry_type": stock_entry_type,
-				"company": company,
-				"posting_date": self.log_date or nowdate(),
-				"items": items,
-				"remarks": f"{remarks_prefix} for Poultry Daily Log {self.name} ({self.log_date})",
-			}
+		diff_account = (
+			frappe.db.get_value("Company", company, "stock_adjustment_account")
+			or frappe.db.get_value("Company", company, "default_expense_account")
+			or frappe.db.get_value(
+				"Account", {"company": company, "account_type": "Stock Adjustment"}, "name"
+			)
+			or frappe.db.get_value(
+				"Account", {"company": company, "is_group": 0, "root_type": "Expense"}, "name"
+			)
+			or frappe.db.get_value("Account", {"company": company, "is_group": 0}, "name")
 		)
+		if diff_account and not frappe.db.get_value("Company", company, "stock_adjustment_account"):
+			try:
+				frappe.db.set_value("Company", company, "stock_adjustment_account", diff_account)
+			except Exception:
+				pass
+
+		for item in items:
+			if not item.get("expense_account") and diff_account:
+				item["expense_account"] = diff_account
+
+		stock_entry_dict = {
+			"doctype": "Stock Entry",
+			"stock_entry_type": stock_entry_type,
+			"company": company,
+			"posting_date": self.log_date or nowdate(),
+			"items": items,
+			"remarks": f"{remarks_prefix} for Poultry Daily Log {self.name} ({self.log_date})",
+		}
+		if diff_account:
+			stock_entry_dict["difference_account"] = diff_account
+
+		stock_entry = frappe.get_doc(stock_entry_dict)
 		stock_entry.insert(ignore_permissions=True)
 		stock_entry.submit()
 		self.db_set(fieldname, stock_entry.name)
