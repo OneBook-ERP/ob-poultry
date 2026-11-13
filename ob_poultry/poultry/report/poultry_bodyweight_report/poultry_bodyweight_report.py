@@ -66,7 +66,7 @@ def get_data(filters):
 	parent_rows = frappe.db.sql(  # nosemgrep: frappe-sql-format-injection
 		f"""
 		select
-			d.name, d.batch, d.log_date, d.average_body_weight_g, d.std_body_weight_g,
+			d.name, d.batch, d.log_date, d.average_body_weight_g,
 			b.start_date, b.placement_age_weeks, b.placement_age_days, b.breed, b.breed_type
 		from `tabPoultry Daily Log` d
 		inner join `tabPoultry Batch` b on b.name = d.batch

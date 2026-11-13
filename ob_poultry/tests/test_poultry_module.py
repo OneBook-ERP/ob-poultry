@@ -126,6 +126,13 @@ class TestPoultryModule(IntegrationTestCase):
 	def tearDownClass(cls):
 		# ERPNext's Company controller commits internally while creating default warehouses/accounts,
 		# which escapes IntegrationTestCase's transaction rollback, so it must be deleted explicitly.
+		# Clear BOMs, Work Orders, and Stock Entries linked to the test company first to avoid Company.on_trash validation
+		try:
+			for bom in frappe.get_all("BOM", filters={"company": "Test Poultry Co"}, pluck="name"):
+				frappe.db.set_value("BOM", bom, "docstatus", 0)
+				frappe.delete_doc("BOM", bom, force=1, ignore_permissions=True, ignore_missing=True)
+		except Exception:
+			pass
 		frappe.delete_doc("Company", "Test Poultry Co", force=1, ignore_permissions=True, ignore_missing=True)
 		super().tearDownClass()
 

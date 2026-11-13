@@ -31,6 +31,27 @@ class TestLayerFarming(IntegrationTestCase):
 				}
 			).insert(ignore_permissions=True)
 
+		# Ensure UOM Nos and Item Table Egg exist for layer tests
+		if not frappe.db.exists("UOM", "Nos"):
+			frappe.get_doc({"doctype": "UOM", "uom_name": "Nos"}).insert(ignore_permissions=True)
+
+		if not frappe.db.exists("Item", "Table Egg"):
+			item_group = frappe.db.get_value("Item Group", {"is_group": 0}, "name") or "Products"
+			if not frappe.db.exists("Item Group", item_group):
+				frappe.get_doc(
+					{"doctype": "Item Group", "item_group_name": item_group, "is_group": 0}
+				).insert(ignore_permissions=True)
+			frappe.get_doc(
+				{
+					"doctype": "Item",
+					"item_code": "Table Egg",
+					"item_name": "Table Egg",
+					"item_group": item_group,
+					"stock_uom": "Nos",
+					"is_stock_item": 1,
+				}
+			).insert(ignore_permissions=True)
+
 	def test_pullet_placement_age(self):
 		"""Test that placement_age_weeks and placement_age_days are factored into batch age."""
 		batch = frappe.new_doc("Poultry Batch")

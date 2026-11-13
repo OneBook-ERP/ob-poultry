@@ -156,6 +156,34 @@ def setup_default_egg_cold_room():
 				},
 				"name",
 			)
+		if not egg_item and frappe.db.exists("DocType", "Item"):
+			if not frappe.db.exists("UOM", "Nos"):
+				try:
+					frappe.get_doc({"doctype": "UOM", "uom_name": "Nos"}).insert(ignore_permissions=True)
+				except Exception:
+					pass
+			item_group = frappe.db.get_value("Item Group", {"is_group": 0}, "name") or "Products"
+			if not frappe.db.exists("Item Group", item_group):
+				try:
+					frappe.get_doc(
+						{"doctype": "Item Group", "item_group_name": item_group, "is_group": 0}
+					).insert(ignore_permissions=True)
+				except Exception:
+					pass
+			try:
+				new_item = frappe.get_doc(
+					{
+						"doctype": "Item",
+						"item_code": "Table Egg",
+						"item_name": "Table Egg",
+						"item_group": item_group,
+						"stock_uom": "Nos" if frappe.db.exists("UOM", "Nos") else "Unit",
+						"is_stock_item": 1,
+					}
+				).insert(ignore_permissions=True)
+				egg_item = new_item.name
+			except Exception:
+				pass
 		if egg_item:
 			settings.default_egg_item = egg_item
 			save_settings = True
