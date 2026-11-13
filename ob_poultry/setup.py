@@ -140,8 +140,15 @@ def setup_default_egg_cold_room():
 
 	settings = frappe.get_single("Poultry Settings")
 	save_settings = False
-	if not settings.default_egg_warehouse and default_wh_candidate:
+	if (
+		not settings.default_egg_warehouse
+		or not frappe.db.exists("Warehouse", settings.default_egg_warehouse)
+	) and default_wh_candidate:
 		settings.default_egg_warehouse = default_wh_candidate
+		save_settings = True
+
+	if settings.default_egg_item and not frappe.db.exists("Item", settings.default_egg_item):
+		settings.default_egg_item = None
 		save_settings = True
 
 	if not settings.default_egg_item:

@@ -35,6 +35,29 @@ class TestLayerFarming(IntegrationTestCase):
 		if not frappe.db.exists("UOM", "Nos"):
 			frappe.get_doc({"doctype": "UOM", "uom_name": "Nos"}).insert(ignore_permissions=True)
 
+		if not frappe.db.exists("Company", "Test Poultry Co"):
+			frappe.get_doc(
+				{
+					"doctype": "Company",
+					"company_name": "Test Poultry Co",
+					"abbr": "TPC",
+					"default_currency": "USD",
+					"country": "United States",
+				}
+			).insert(ignore_permissions=True)
+
+		diff_acc = (
+			frappe.db.get_value(
+				"Account", {"company": "Test Poultry Co", "account_type": "Stock Adjustment"}, "name"
+			)
+			or frappe.db.get_value(
+				"Account", {"company": "Test Poultry Co", "is_group": 0, "root_type": "Expense"}, "name"
+			)
+			or frappe.db.get_value("Account", {"company": "Test Poultry Co", "is_group": 0}, "name")
+		)
+		if diff_acc:
+			frappe.db.set_value("Company", "Test Poultry Co", "stock_adjustment_account", diff_acc)
+
 		if not frappe.db.exists("Item", "Table Egg"):
 			item_group = frappe.db.get_value("Item Group", {"is_group": 0}, "name") or "Products"
 			if not frappe.db.exists("Item Group", item_group):
@@ -290,7 +313,40 @@ class TestLayerFarming(IntegrationTestCase):
 
 		setup_default_egg_cold_room()
 
-		wh = frappe.db.get_single_value("Poultry Settings", "default_egg_warehouse") or "Egg Cold Room - P"
+		wh = frappe.db.get_single_value("Poultry Settings", "default_egg_warehouse")
+		if not wh or not frappe.db.exists("Warehouse", wh):
+			wh = frappe.db.get_value("Warehouse", {"warehouse_name": "Egg Cold Room", "is_group": 0}, "name")
+			if not wh:
+				company = (
+					frappe.db.get_value("Company", {"abbr": "TPC"}, "name")
+					or frappe.get_all("Company", pluck="name")[0]
+				)
+				company_abbr = frappe.db.get_value("Company", company, "abbr")
+				parent_wh = f"All Warehouses - {company_abbr}"
+				if not frappe.db.exists("Warehouse", parent_wh):
+					frappe.get_doc(
+						{
+							"doctype": "Warehouse",
+							"warehouse_name": "All Warehouses",
+							"company": company,
+							"is_group": 1,
+						}
+					).insert(ignore_permissions=True)
+				wh = (
+					frappe.get_doc(
+						{
+							"doctype": "Warehouse",
+							"warehouse_name": "Egg Cold Room",
+							"parent_warehouse": parent_wh,
+							"company": company,
+							"is_group": 0,
+						}
+					)
+					.insert(ignore_permissions=True)
+					.name
+				)
+			frappe.db.set_single_value("Poultry Settings", "default_egg_warehouse", wh)
+
 		item = frappe.db.get_single_value("Poultry Settings", "default_egg_item") or "Table Egg"
 
 		# Ensure shed has default_egg_warehouse set
