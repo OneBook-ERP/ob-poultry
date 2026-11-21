@@ -1,0 +1,52 @@
+# CodeRabbit review settings for ob_poultry (a Frappe v16 app on ERPNext).
+# yaml-language-server: $schema=https://coderabbit.ai/integrations/schema.v2.json
+language: en-US
+reviews:
+  profile: assertive
+  request_changes_workflow: true
+  high_level_summary: true
+  poem: false
+  collapse_walkthrough: true
+  sequence_diagrams: false
+  auto_review:
+    enabled: true
+    drafts: false
+    base_branches:
+      - develop
+      - main
+  path_filters:
+    - "!ob_poultry/public/dist/**"
+    - "!**/*.min.js"
+  path_instructions:
+    - path: "ob_poultry/**/*.py"
+      instructions: |
+        Frappe v16 app on ERPNext. Check in particular:
+        - Permissions: every @frappe.whitelist() checks the caller's rights (frappe.has_permission / doc.check_permission)
+          before reading or writing; ignore_permissions=True is justified, never on user-chosen records without a check.
+        - Derived state: batch counts, FCR/CFCR, mortality, egg counts and HDEP% are computed from submitted rows
+          (recalculate_performance, validate, on_submit), never added as parallel editable fields.
+        - Reuse ERPNext (Item, BOM, Work Order, Stock Entry, UOM conversion, valuation) instead of reimplementing it.
+        - SQL: parameters are bound, never formatted from user input; prefer frappe.qb / frappe.get_all.
+        - No frappe.db.commit() inside request handlers or doc events.
+        - Errors are not swallowed with a bare `except Exception: pass`.
+    - path: "ob_poultry/patches/**"
+      instructions: |
+        Patches run once per site on migrate and must be idempotent and safe on real data. Check the entry is in
+        patches.txt. Throwaway verification scripts must not be committed.
+    - path: "ob_poultry/**/doctype/**/*.json"
+      instructions: |
+        DocType JSON is written by Frappe's DocType form. Flag hand edits that break its formatting, and autoname
+        using the dotted naming-series syntax instead of "format:PB-{YYYY}-{#####}" with naming_rule "Expression (old style)".
+        Flag icon names that do not exist in the lucide, espresso or timeless sets.
+    - path: "ob_poultry/tests/**"
+      instructions: |
+        Tests use frappe.tests.IntegrationTestCase, one test_epicN_* method per epic, TC-IDs kept as comments. Check that
+        tests assert behaviour and that test data stays synthetic.
+    - path: "ob_poultry/**/*.js"
+      instructions: |
+        Desk form scripts: frm.call needs doc: frm.doc; use server-side checks, never rely on the client for validation.
+    - path: "docs/**"
+      instructions: |
+        BRD, FIT_GAP_ANALYSIS, FRD, ROADMAP and TASKS_AND_TEST_CASES must stay in sync with the change.
+chat:
+  auto_reply: true

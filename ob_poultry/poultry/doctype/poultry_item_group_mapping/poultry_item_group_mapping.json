@@ -1,0 +1,51 @@
+{
+ "actions": [],
+ "creation": "2026-11-03 18:20:00.000000",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "place",
+  "item_group",
+  "description"
+ ],
+ "fields": [
+  {
+   "columns": 3,
+   "fieldname": "place",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Place / Usage",
+   "options": "Feed Items\nFeed Raw Materials\nEgg Items\nLive Bird Items\nPoultry Sales Items\nMedicines & Vaccines\nBy-Products",
+   "reqd": 1
+  },
+  {
+   "columns": 4,
+   "fieldname": "item_group",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Item Group",
+   "options": "Item Group",
+   "reqd": 1
+  },
+  {
+   "columns": 4,
+   "fieldname": "description",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Description"
+  }
+ ],
+ "istable": 1,
+ "module": "Poultry",
+ "name": "Poultry Item Group Mapping",
+ "naming_rule": "Random",
+ "owner": "Administrator",
+ "permissions": [],
+ "row_format": "Dynamic",
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}
+

@@ -1,0 +1,30 @@
+name: Feature request
+description: Ask for a new capability or a change to how a flow works
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: need
+    attributes:
+      label: What do you need to do, and who does it?
+      description: The task and the role (e.g. "a shed supervisor needs to record a mid-day egg count").
+    validations:
+      required: true
+  - type: textarea
+    id: today
+    attributes:
+      label: How is it done today?
+      description: The current steps or workaround, if any.
+    validations:
+      required: true
+  - type: textarea
+    id: requirement
+    attributes:
+      label: Related requirement
+      description: A BR-* id from docs/BRD.md, or the farm practice behind the request.
+  - type: textarea
+    id: done
+    attributes:
+      label: How will we know it is done?
+      description: Acceptance criteria as a checklist.
+      placeholder: |
+        - [ ] ...

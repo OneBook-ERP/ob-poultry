@@ -1,0 +1,124 @@
+{
+ "actions": [],
+ "autoname": "format:{rate_date}-{market}",
+ "creation": "2026-10-27 16:20:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "rate_date",
+  "market",
+  "trend",
+  "column_break_rates",
+  "rate_per_piece",
+  "rate_per_tray",
+  "rate_per_100",
+  "rate_per_peti",
+  "column_break_meta",
+  "national_average",
+  "synced_at",
+  "source"
+ ],
+ "fields": [
+  {
+   "fieldname": "rate_date",
+   "fieldtype": "Date",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Rate Date",
+   "reqd": 1
+  },
+  {
+   "fieldname": "market",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Market",
+   "options": "Ahmedabad\nAjmer\nAllahabad\nBarwala\nBengaluru\nBhopal\nBrahmapur\nChennai\nChittoor\nDelhi\nE.Godavari\nHospet\nHyderabad\nIndore\nJabalpur\nKanpur\nKolkata\nLudhiana\nLucknow\nMuzaffarpur\nMysuru\nNagpur\nNamakkal\nPatna\nPune\nRaipur\nRanchi\nSurat\nVaranasi\nVijayawada\nVizag\nW.Godavari\nWarangal",
+   "reqd": 1
+  },
+  {
+   "fieldname": "trend",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Trend",
+   "options": "Up\nDown\nStable"
+  },
+  {
+   "fieldname": "column_break_rates",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "rate_per_piece",
+   "fieldtype": "Currency",
+   "in_list_view": 1,
+   "label": "Rate / Piece (\u20b9)",
+   "reqd": 1
+  },
+  {
+   "fieldname": "rate_per_tray",
+   "fieldtype": "Currency",
+   "in_list_view": 1,
+   "label": "Rate / Tray (30 eggs)"
+  },
+  {
+   "fieldname": "rate_per_100",
+   "fieldtype": "Currency",
+   "label": "Rate / 100 Eggs"
+  },
+  {
+   "fieldname": "rate_per_peti",
+   "fieldtype": "Currency",
+   "label": "Rate / Peti (210 eggs)"
+  },
+  {
+   "fieldname": "column_break_meta",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "national_average",
+   "fieldtype": "Currency",
+   "label": "National Average"
+  },
+  {
+   "fieldname": "synced_at",
+   "fieldtype": "Datetime",
+   "label": "Synced At",
+   "read_only": 1
+  },
+  {
+   "default": "MKisan NECC API",
+   "fieldname": "source",
+   "fieldtype": "Data",
+   "label": "Source",
+   "read_only": 1
+  }
+ ],
+ "links": [],
+ "modified": "2026-10-27 16:20:00.000000",
+ "modified_by": "Administrator",
+ "module": "Poultry",
+ "name": "Poultry Daily Egg Rate",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "read": 1,
+   "role": "System Manager",
+   "write": 1
+  },
+  {
+   "create": 1,
+   "read": 1,
+   "role": "Poultry Manager",
+   "write": 1
+  },
+  {
+   "read": 1,
+   "role": "Poultry Attendant"
+  }
+ ],
+ "sort_field": "rate_date",
+ "sort_order": "DESC",
+ "track_changes": 1
+}

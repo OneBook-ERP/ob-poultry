@@ -1,0 +1,116 @@
+{
+ "actions": [],
+ "creation": "2026-10-31 03:40:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "shed",
+  "batch",
+  "week_day",
+  "feed_item",
+  "warehouse",
+  "opening_stock_kg",
+  "feed_spent_kg",
+  "feed_spent_g_per_bird",
+  "currently_available_kg",
+  "rate_per_kg",
+  "total_feed_cost"
+ ],
+ "fields": [
+  {
+   "fieldname": "shed",
+   "fieldtype": "Link",
+   "label": "Shed",
+   "options": "Poultry Shed",
+   "in_list_view": 0
+  },
+  {
+   "fieldname": "batch",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Batch",
+   "options": "Poultry Batch",
+   "reqd": 1
+  },
+  {
+   "fieldname": "week_day",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Week / Day",
+   "read_only": 1
+  },
+  {
+   "fieldname": "feed_item",
+   "fieldtype": "Link",
+   "label": "Feed Item",
+   "options": "Item"
+  },
+  {
+   "fieldname": "warehouse",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Warehouse",
+   "options": "Warehouse",
+   "reqd": 1
+  },
+  {
+   "default": "0",
+   "fieldname": "opening_stock_kg",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "label": "Opening Stock (Kg)",
+   "read_only": 1
+  },
+  {
+   "default": "0",
+   "fieldname": "feed_spent_kg",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "label": "Feed Spent (Kg)"
+  },
+  {
+   "default": "0",
+   "fieldname": "feed_spent_g_per_bird",
+   "fieldtype": "Float",
+   "in_list_view": 0,
+   "label": "Feed Spent (Gram)",
+   "read_only": 1
+  },
+  {
+   "default": "0",
+   "fieldname": "currently_available_kg",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "label": "Currently Available",
+   "read_only": 1
+  },
+  {
+   "default": "0",
+   "fieldname": "rate_per_kg",
+   "fieldtype": "Currency",
+   "in_list_view": 1,
+   "label": "Rate / Kg"
+  },
+  {
+   "default": "0",
+   "fieldname": "total_feed_cost",
+   "fieldtype": "Currency",
+   "in_list_view": 1,
+   "label": "Total Feed Cost",
+   "read_only": 1
+  }
+ ],
+ "istable": 1,
+ "links": [],
+ "modified": "2026-10-31 03:40:00.000000",
+ "modified_by": "Administrator",
+ "module": "Poultry",
+ "name": "Poultry Daily Log Feed Entry",
+ "owner": "Administrator",
+ "permissions": [],
+ "row_format": "Dynamic",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "editable_grid": 1
+}

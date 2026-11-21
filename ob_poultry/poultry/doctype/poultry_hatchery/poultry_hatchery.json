@@ -15,8 +15,19 @@
         },
         {
             "fieldname": "location",
-            "fieldtype": "Data",
-            "label": "Location"
+            "fieldtype": "Select",
+            "label": "Location",
+            "options": "\nNorth Wing\nSouth Wing\nEast Wing\nWest Wing\nCentral Wing",
+            "in_list_view": 1,
+            "in_standard_filter": 1
+        },
+        {
+            "fieldname": "breed_type",
+            "fieldtype": "Select",
+            "label": "Breed Type",
+            "options": "\nBroiler\nLayer\nBreeder\nDual Purpose",
+            "in_list_view": 1,
+            "in_standard_filter": 1
         },
         {
             "fieldname": "column_break_hatchery_1",

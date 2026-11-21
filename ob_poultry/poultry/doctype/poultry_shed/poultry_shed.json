@@ -10,7 +10,9 @@
   "location",
   "column_break_shed",
   "is_active",
-  "default_feed_warehouse"
+  "housing_type",
+  "default_feed_warehouse",
+  "default_egg_warehouse"
  ],
  "fields": [
   {
@@ -45,10 +47,24 @@
    "label": "Is Active"
   },
   {
+   "fieldname": "housing_type",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Housing Type",
+   "options": "Cage\nAviary\nDeep Litter\nEnvironmentally Controlled (EC)"
+  },
+  {
    "description": "Batches placed in this shed default their Feed Warehouse from here if left blank",
    "fieldname": "default_feed_warehouse",
    "fieldtype": "Link",
    "label": "Default Feed Warehouse",
+   "options": "Warehouse"
+  },
+  {
+   "description": "Daily eggs collected from this shed are transferred/received into this Cold Room or Warehouse",
+   "fieldname": "default_egg_warehouse",
+   "fieldtype": "Link",
+   "label": "Default Egg Cold Room / Warehouse",
    "options": "Warehouse"
   }
  ],

@@ -24,9 +24,8 @@ Do this once before placing any flocks. All of it lives under Flock Management, 
 
 1. **ERPNext itself** — Company, Chart of Accounts, at least one Warehouse, an Item Group, a UOM. This app doesn't set these up for you; if a feed-related action throws an error about a missing Company or Item, this is why.
 2. **Poultry Shed** — one record per physical housing unit. Set **Capacity (Birds)** honestly; batch placement is blocked if you try to place more birds than the shed can hold.
-3. **Poultry Breed** — one per breed you raise, with its **Breed Type** (Broiler / Layer / Breeder / Dual Purpose).
-4. **Poultry Benchmark** *(optional but recommended)* — standard mortality %, feed/bird, and body weight for a breed at specific ages. Once these exist, every Daily Log for that breed automatically shows the standard next to the actual figure. You don't need every age covered — the nearest earlier age is used if an exact match isn't there.
-5. **Poultry Vaccination Schedule Template** *(optional but recommended)* — one per breed, listing vaccines by age in days. Once this exists, placing a batch of that breed automatically generates its full vaccination due-list — you stop having to remember what's due when.
+3. **Poultry Breed** — one per breed you raise, with its **Breed Type** (Broiler / Layer / Breeder / Dual Purpose) and **Benchmarks** child table. The benchmark child table comes pre-populated with a default weekly days lineup (0-7 to 560-567) where you enter Standard Mortality %, Standard Feed / Bird (g), Standard Body Weight (g), and Standard FCR. Once these exist, every Daily Log for that breed automatically shows the standard next to the actual figure. You don't need every age covered — the nearest earlier age range is used if an exact match isn't filled.
+4. **Poultry Vaccination Schedule Template** *(optional but recommended)* — one per breed, listing vaccines by age in days. Once this exists, placing a batch of that breed automatically generates its full vaccination due-list — you stop having to remember what's due when.
 6. **Poultry Feed Formula** *(before you produce feed)* — see "Running the Feed Mill" below.
 7. **Poultry Farmer** and **Poultry Growing Charge Scheme** *(only if you place contract flocks)* — see "Contract farming" below.
 8. **Poultry Hatchery** *(only if you hatch your own chicks)* — see "Hatchery" below.
@@ -53,6 +52,24 @@ The moment you save, two things happen automatically: **Current Bird Count** is 
 ### Reading a batch's health
 
 Open the batch itself: **Current Bird Count**, **Total Mortality**, **Cumulative Feed (kg)**, **FCR**, and **CFCR** are always live, always derived from submitted logs — never something you set by hand. If a number here looks wrong, the fix is in the Daily Logs, not on the batch.
+
+### Transferring Birds & Multi-Shed Tracking (Day 0 onwards)
+
+Flocks can be transferred or distributed across multiple sheds (e.g. moving birds from a rearing/grower shed into multiple layer houses or cages):
+
+1. **Transfer Shed Action:**
+   - Available on any active batch from **Day 0**.
+   - If clicked before Week 16, a confirmation prompt checks if you wish to transfer earlier than the standard 16–18 week point of lay.
+2. **Transfer Dialog:**
+   - Shows the source shed, remaining birds in that shed, and flock age.
+   - Enter **Birds to Transfer** (validated so it cannot exceed remaining birds in the source shed) and any **Transit Mortality**.
+   - Select the destination shed (validated against active status and capacity).
+3. **Multi-Shed Distribution & Compression:**
+   - When birds are partially transferred, the newly transferred shed becomes active at the top.
+   - The previous shed with its remaining birds is **compressed into a list at the bottom**.
+   - Clicking **"Expand to Top"** switches that previous shed to the top card, and compresses the other shed into the list at the bottom.
+   - You can also click **"Transfer Remaining"** directly from any compressed shed card to transfer remaining birds to another shed.
+   - Total batch birds, mortality, and feed tracking continue seamlessly across all allocated sheds without breaking flock age or breed benchmarks.
 
 ### Closing a batch
 

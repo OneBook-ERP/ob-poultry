@@ -1,0 +1,73 @@
+name: Bug report
+description: Something in ob_poultry does not work as expected
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use synthetic data only: no real customer names, phone numbers or financial figures.
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - Poultry Batch
+        - Daily Log / readings
+        - Vaccination and health
+        - Feed formula / production
+        - Egg sales
+        - Reports
+        - Other
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Site and version
+      description: Site name, and the commit (`git -C apps/ob_poultry rev-parse --short HEAD`).
+      placeholder: "poultary.localhost, ob_poultry a1b2c3d, Frappe 16.35.0"
+    validations:
+      required: true
+  - type: input
+    id: role
+    attributes:
+      label: Logged in as (role)
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: Numbered steps from a known starting point, with the record names you used.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behaviour
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behaviour
+      description: Include the exact error message.
+    validations:
+      required: true
+  - type: textarea
+    id: traceback
+    attributes:
+      label: Traceback
+      description: For server errors, the full traceback (Error Log).
+      render: python
+  - type: dropdown
+    id: impact
+    attributes:
+      label: Impact
+      options:
+        - Blocks daily farm operations
+        - Wrong data or numbers
+        - Confusing, but there is a workaround
+        - Cosmetic
+    validations:
+      required: true

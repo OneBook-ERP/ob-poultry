@@ -1,0 +1,58 @@
+{
+ "actions": [],
+ "creation": "2026-10-31 03:57:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "shed",
+  "batches_count",
+  "total_birds",
+  "breed"
+ ],
+ "fields": [
+  {
+   "columns": 5,
+   "fieldname": "shed",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Shed Name",
+   "read_only": 1
+  },
+  {
+   "columns": 3,
+   "fieldname": "batches_count",
+   "fieldtype": "Int",
+   "in_list_view": 1,
+   "label": "Batches",
+   "read_only": 1
+  },
+  {
+   "columns": 3,
+   "fieldname": "total_birds",
+   "fieldtype": "Int",
+   "in_list_view": 1,
+   "label": "Total Birds",
+   "read_only": 1
+  },
+  {
+   "columns": 2,
+   "fieldname": "breed",
+   "fieldtype": "Data",
+   "in_list_view": 0,
+   "label": "Breed",
+   "read_only": 1
+  }
+ ],
+ "istable": 1,
+ "links": [],
+ "modified": "2026-10-31 06:25:00.000000",
+ "modified_by": "Administrator",
+ "module": "Poultry",
+ "name": "Poultry Daily Log Shed Entry",
+ "owner": "Administrator",
+ "permissions": [],
+ "row_format": "Dynamic",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

@@ -30,22 +30,28 @@ class PoultryEggSale(Document):
 				)
 
 	def get_available_stock(self, grade):
-		produced = frappe.db.sql(
-			"""
+		produced = (
+			frappe.db.sql(
+				"""
 			select sum(e.production_count)
 			from `tabPoultry Daily Log Egg Entry` e
 			inner join `tabPoultry Daily Log` d on d.name = e.parent
 			where d.batch = %s and d.docstatus = 1 and d.log_date <= %s and e.grade = %s
 			""",
-			(self.batch, self.sale_date, grade),
-		)[0][0] or 0
-		sold_elsewhere = frappe.db.sql(
-			"""
+				(self.batch, self.sale_date, grade),
+			)[0][0]
+			or 0
+		)
+		sold_elsewhere = (
+			frappe.db.sql(
+				"""
 			select sum(i.quantity)
 			from `tabPoultry Egg Sale Item` i
 			inner join `tabPoultry Egg Sale` s on s.name = i.parent
 			where s.batch = %s and s.docstatus = 1 and s.name != %s and s.sale_date <= %s and i.grade = %s
 			""",
-			(self.batch, self.name or "", self.sale_date, grade),
-		)[0][0] or 0
+				(self.batch, self.name or "", self.sale_date, grade),
+			)[0][0]
+			or 0
+		)
 		return produced - sold_elsewhere

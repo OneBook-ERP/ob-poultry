@@ -15,6 +15,12 @@ frappe.query_reports["Poultry Egg Production Cost"] = {
 			reqd: 1,
 		},
 		{
+			fieldname: "shed",
+			label: __("Shed"),
+			fieldtype: "Link",
+			options: "Poultry Shed",
+		},
+		{
 			fieldname: "batch",
 			label: __("Batch"),
 			fieldtype: "Link",
